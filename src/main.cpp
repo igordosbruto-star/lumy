@@ -47,7 +47,9 @@ int main() {
     const unsigned W = 640, H = 360;
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
     window.setFramerateLimit(60);
-    
+
+    // Clock para medir tempo entre frames
+    sf::Clock frameClock;
 
     // Um quadradinho para animar (placeholder do “herói”)
     sf::RectangleShape hero(sf::Vector2f{64.f, 64.f});
@@ -55,9 +57,12 @@ int main() {
     hero.setOrigin(sf::Vector2f{32.f, 32.f});                    // Vector2f
     hero.setPosition(sf::Vector2f{W * 0.5f, H * 0.5f});          // Vector2f
 
-    const float moveStep = 4.f;
+    const float moveSpeed = 200.f;
 
     while (window.isOpen()) {
+        sf::Time dt = frameClock.restart();
+        float moveStep = moveSpeed * dt.asSeconds();
+
         // pollEvent() retorna std::optional<Event>
         while (auto ev = window.pollEvent()) {
             if (ev->is<sf::Event::Closed>()) {
