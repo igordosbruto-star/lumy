@@ -14,7 +14,6 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Mapa `first.tmx` e tileset simples em `examples/hello-town`.
 - Teste básico de inicialização com GoogleTest.
 
-- 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
 - Integração **tmxlite** via `pkg-config` (`PkgConfig::TMXLITE`).
@@ -22,12 +21,12 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Saída dos binários para `build/bin/<Config>`.
 - `src/main.cpp`: movimento do “herói” controlado por teclas **W/A/S/D**.
 - `src/main.cpp`: logs de dimensões e camadas após carregar TMX.
+- `src/main.cpp`: mede tempo entre frames com `sf::Clock`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
 - Erro “Unsupported SFML component: system” (mudança para sintaxe do SFML 3).
 - Erro ao configurar por falta de `src/main.cpp`.
-- 
 ### Docs
 - Adicionado `VISION.md`.
 - Adicionado `ROADMAP.md`.
