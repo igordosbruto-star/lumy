@@ -69,10 +69,10 @@ int main() {
         }
 
         sf::Vector2f pos = hero.getPosition();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) pos.y -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) pos.y += moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) pos.x -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) pos.x += moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) pos.y -= moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) pos.y += moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) pos.x -= moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) pos.x += moveStep;
         hero.setPosition(pos);
 
         window.clear(sf::Color::Black);
