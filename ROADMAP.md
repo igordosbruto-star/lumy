@@ -9,7 +9,6 @@
 - 21-08-2025 — Criação do roadmap inicial (M0–M3).
 - 22-08-2025 — README com descrição da engine e guia de CMakePresets.
 
----
 
 ## Visão geral de marcos (releases)
 
