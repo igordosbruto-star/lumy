@@ -38,6 +38,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Adicionado templates.
 - `README.md`: descrição da engine e passos básicos com `CMakePresets.json`.
 - `ROADMAP.md`: histórico atualizado após revisão do README.
+- `src/main.cpp`: comentários explicando a sequência de renderização (limpar → desenhar → exibir).
 
 
 
