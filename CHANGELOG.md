@@ -11,10 +11,10 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 ### Fixed
 - 
 ### Docs
+- Adicionado VISION.
+- Adicionado ROADMAP.
 - Adicionado CONTRIBUTING.
-- Adicionado PULL REQUEST TEMPLATE.
-- Adicionado bug report.
-- Adicionado feature request.
+- Adicionado templates.
 
 
 

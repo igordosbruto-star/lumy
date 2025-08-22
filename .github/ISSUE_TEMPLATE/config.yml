@@ -1,0 +1,6 @@
+# .github/ISSUE_TEMPLATE/config.yml (opcional)
+blank_issues_enabled: false
+contact_links:
+  - name: Discussões & ideias rápidas
+    url: https://github.com/SEU_USUARIO/Lumy/discussions
+    about: Sugira rascunhos, brainstorm e perguntas gerais aqui.
