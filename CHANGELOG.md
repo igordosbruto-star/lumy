@@ -18,7 +18,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Integração **tmxlite** via `pkg-config` (`PkgConfig::TMXLITE`).
 - Integração **Lua** via `find_package(Lua)` (include/libs do FindLua nativo).
 - Saída dos binários para `build/bin/<Config>`.
-- 
+- `src/main.cpp`: movimento do “herói” controlado por teclas **W/A/S/D**.
+
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
 - Erro “Unsupported SFML component: system” (mudança para sintaxe do SFML 3).
