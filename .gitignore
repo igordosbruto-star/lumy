@@ -68,3 +68,6 @@ ipch/
 # ==== Presets do CMake ====
 # (Mantenha CMakePresets.json sob versão; ignore o user local)
 CMakeUserPresets.json
+
+# ==== Pastas extra ====
+/map
