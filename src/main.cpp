@@ -24,6 +24,15 @@ int main() {
             tmx::Map map;
             if (map.load(tmxPath)) {
                 std::cout << "TMX carregado: " << tmxPath << "\n";
+
+                const auto tileCount = map.getTileCount();
+                std::cout << "Dimensões do mapa: " << tileCount.x << " x " << tileCount.y << " tiles\n";
+
+                const auto& layers = map.getLayers();
+                std::cout << "Camadas (" << layers.size() << "):\n";
+                for (const auto& layer : layers) {
+                    std::cout << " - " << layer->getName() << "\n";
+                }
             } else {
                 std::cout << "Falha ao carregar TMX: " << tmxPath << "\n";
             }
