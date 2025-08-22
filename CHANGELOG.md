@@ -32,6 +32,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Adicionado `ROADMAP.md`.
 - Adicionado `CONTRIBUTING.md`.
 - Adicionado templates.
+- `README.md`: descrição da engine e passos básicos com `CMakePresets.json`.
+- `ROADMAP.md`: histórico atualizado após revisão do README.
 
 
 
