@@ -80,8 +80,11 @@ int main() {
 
         scene.update(deltaTime);
 
+        // 1. Limpar a tela
         window.clear(sf::Color::Black);
+        // 2. Desenhar objetos
         scene.draw(window);
+        // 3. Exibir o frame
         window.display();
     }
 
