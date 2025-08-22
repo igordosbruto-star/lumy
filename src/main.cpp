@@ -53,6 +53,7 @@ int main() {
     sf::Clock frameClock;
     std::size_t fpsFrameCount = 0;
     sf::Time fpsAccumulated = sf::Time::Zero;
+    const float maxDeltaTime = 1.f / 30.f;
 
     // Um quadradinho para animar (placeholder do “herói”)
     Scene scene(sf::Vector2f{W * 0.5f, H * 0.5f});
@@ -60,6 +61,10 @@ int main() {
     while (window.isOpen()) {
         sf::Time elapsed = frameClock.restart();
         float deltaTime = elapsed.asSeconds();
+        if (deltaTime > maxDeltaTime) {
+            std::cout << "[Frame drop] deltaTime: " << deltaTime << "s\n";
+            deltaTime = maxDeltaTime;
+        }
 
         // Média de FPS a cada ~1 segundo
         fpsFrameCount++;
