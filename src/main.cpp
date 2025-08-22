@@ -4,6 +4,7 @@
 #include <tmxlite/Map.hpp>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include "scene.hpp"
 
 int main() {
@@ -46,7 +47,8 @@ int main() {
 
     // Janela SFML
     const unsigned W = 640, H = 360;
-    sf::RenderWindow window(sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
+    auto window = std::make_unique<sf::RenderWindow>(
+        sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
 
     // Limitador manual de FPS
     const sf::Time targetFrameTime = sf::seconds(1.f / 60.f);
@@ -56,9 +58,13 @@ int main() {
     const float maxDeltaTime = 1.f / 30.f;
 
     // Um quadradinho para animar (placeholder do “herói”)
-    Scene scene(sf::Vector2f{W * 0.5f, H * 0.5f});
+    auto scene = std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f});
 
-    while (window.isOpen()) {
+    while (true) {
+        if (!window->isOpen()) {
+            break;
+        }
+
         sf::Time elapsed = frameClock.restart();
         float deltaTime = elapsed.asSeconds();
         if (deltaTime > maxDeltaTime) {
@@ -77,32 +83,32 @@ int main() {
         }
 
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (window->pollEvent(event)) {
             switch (event.type) {
                 case sf::Event::Closed:
-                    window.close();
+                    window->close();
                     break;
 
                 case sf::Event::KeyPressed:
                     if (event.key.code == sf::Keyboard::Key::Escape) {
-                        window.close();
+                        window->close();
                     }
                     break;
 
                 default:
                     break;
             }
-            scene.handleEvent(event);
+            scene->handleEvent(event);
         }
 
-        scene.update(deltaTime);
+        scene->update(deltaTime);
 
         // 1. Limpar a tela
-        window.clear(sf::Color::Black);
+        window->clear(sf::Color::Black);
         // 2. Desenhar objetos
-        scene.draw(window);
+        scene->draw(*window);
         // 3. Exibir o frame
-        window.display();
+        window->display();
 
         // Completar o tempo de frame restante
         sf::Time workTime = frameClock.getElapsedTime();
@@ -110,6 +116,9 @@ int main() {
             sf::sleep(targetFrameTime - workTime);
         }
     }
+
+    scene.reset();
+    window.reset();
 
     std::cout << "Lumy: bye!\n";
     return 0;
