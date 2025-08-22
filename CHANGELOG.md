@@ -19,6 +19,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Integração **Lua** via `find_package(Lua)` (include/libs do FindLua nativo).
 - Saída dos binários para `build/bin/<Config>`.
 - `src/main.cpp`: movimento do “herói” controlado por teclas **W/A/S/D**.
+- `src/main.cpp`: logs de dimensões e camadas após carregar TMX.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
