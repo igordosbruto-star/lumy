@@ -70,6 +70,13 @@ if(EXISTS "${EXAMPLES_DIR}")
   )
 endif()
 
+# ===== Tests =====
+enable_testing()
+find_package(GTest CONFIG REQUIRED)
+add_executable(lumy-tests tests/basic_startup.cpp)
+target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
+add_test(NAME basic_startup COMMAND lumy-tests)
+
 # ===== Instalação opcional =====
 include(GNUInstallDirs)
 install(TARGETS hello-town RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

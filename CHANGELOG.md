@@ -12,6 +12,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `.gitignore` para CMake/VSCode/VS/vcpkg.
 - Regra de **cópia de assets** do `examples/hello-town/` para `bin/<Config>/game/`.
 - Mapa `first.tmx` e tileset simples em `examples/hello-town`.
+- Teste básico de inicialização com GoogleTest.
 
 - 
 ### Changed
