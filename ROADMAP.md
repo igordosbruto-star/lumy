@@ -2,11 +2,12 @@
 
 > Este roadmap é um **documento vivo**.  
 > **Revisão:** quinzenal ou por release.  
-> **Última atualização:** 21-08-2025.  
+> **Última atualização:** 22-08-2025.  
 > **Status:** `Planned` · `In Progress` · `Done` · `Parked` · `Dropped`.
 
 ## Histórico de alterações
 - 21-08-2025 — Criação do roadmap inicial (M0–M3).
+- 22-08-2025 — README com descrição da engine e guia de CMakePresets.
 
 ---
 
