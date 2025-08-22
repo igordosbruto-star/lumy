@@ -13,6 +13,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Regra de **cópia de assets** do `examples/hello-town/` para `bin/<Config>/game/`.
 - Mapa `first.tmx` e tileset simples em `examples/hello-town`.
 - Teste básico de inicialização com GoogleTest.
+- `src/scene.hpp` e `src/scene.cpp`: classe `Scene` com `update(deltaTime)`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -24,6 +25,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: mede tempo entre frames com `sf::Clock`.
 - `src/main.cpp`: armazena `elapsed` e `deltaTime` no início de cada frame.
 - `src/main.cpp`: uso de `sf::Event` no loop e clique do mouse posiciona o herói.
+- `src/main.cpp`: chama `scene.update(deltaTime)` para atualizar o herói.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).

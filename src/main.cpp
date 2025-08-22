@@ -4,6 +4,7 @@
 #include <tmxlite/Map.hpp>
 #include <filesystem>
 #include <iostream>
+#include "scene.hpp"
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -52,17 +53,11 @@ int main() {
     sf::Clock frameClock;
 
     // Um quadradinho para animar (placeholder do “herói”)
-    sf::RectangleShape hero(sf::Vector2f{64.f, 64.f});
-    hero.setFillColor(sf::Color::White);
-    hero.setOrigin(sf::Vector2f{32.f, 32.f});                    // Vector2f
-    hero.setPosition(sf::Vector2f{W * 0.5f, H * 0.5f});          // Vector2f
-
-    const float moveSpeed = 200.f;
+    Scene scene(sf::Vector2f{W * 0.5f, H * 0.5f});
 
     while (window.isOpen()) {
         sf::Time elapsed = frameClock.restart();
         float deltaTime = elapsed.asSeconds();
-        float moveStep = moveSpeed * deltaTime;
 
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -77,27 +72,16 @@ int main() {
                     }
                     break;
 
-                case sf::Event::MouseButtonPressed:
-                    if (event.mouseButton.button == sf::Mouse::Left) {
-                        hero.setPosition(sf::Vector2f{static_cast<float>(event.mouseButton.x),
-                                                      static_cast<float>(event.mouseButton.y)});
-                    }
-                    break;
-
                 default:
                     break;
             }
+            scene.handleEvent(event);
         }
 
-        sf::Vector2f pos = hero.getPosition();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) pos.y -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) pos.y += moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) pos.x -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) pos.x += moveStep;
-        hero.setPosition(pos);
+        scene.update(deltaTime);
 
         window.clear(sf::Color::Black);
-        window.draw(hero);
+        scene.draw(window);
         window.display();
     }
 
