@@ -47,10 +47,12 @@ int main() {
     // Janela SFML
     const unsigned W = 640, H = 360;
     sf::RenderWindow window(sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
-    window.setFramerateLimit(60);
 
-    // Clock para medir tempo entre frames
+    // Limitador manual de FPS
+    const sf::Time targetFrameTime = sf::seconds(1.f / 60.f);
     sf::Clock frameClock;
+    std::size_t fpsFrameCount = 0;
+    sf::Time fpsAccumulated = sf::Time::Zero;
 
     // Um quadradinho para animar (placeholder do “herói”)
     Scene scene(sf::Vector2f{W * 0.5f, H * 0.5f});
@@ -58,6 +60,16 @@ int main() {
     while (window.isOpen()) {
         sf::Time elapsed = frameClock.restart();
         float deltaTime = elapsed.asSeconds();
+
+        // Média de FPS a cada ~1 segundo
+        fpsFrameCount++;
+        fpsAccumulated += elapsed;
+        if (fpsAccumulated >= sf::seconds(1.f)) {
+            float avgFps = static_cast<float>(fpsFrameCount) / fpsAccumulated.asSeconds();
+            std::cout << "FPS médio: " << avgFps << "\n";
+            fpsFrameCount = 0;
+            fpsAccumulated = sf::Time::Zero;
+        }
 
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -86,6 +98,12 @@ int main() {
         scene.draw(window);
         // 3. Exibir o frame
         window.display();
+
+        // Completar o tempo de frame restante
+        sf::Time workTime = frameClock.getElapsedTime();
+        if (workTime < targetFrameTime) {
+            sf::sleep(targetFrameTime - workTime);
+        }
     }
 
     std::cout << "Lumy: bye!\n";
