@@ -1,5 +1,6 @@
 #include "scene.hpp"
 #include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Event.hpp>
 
 Scene::Scene(const sf::Vector2f& startPos) {
     hero.setSize(sf::Vector2f{64.f, 64.f});
@@ -8,13 +9,14 @@ Scene::Scene(const sf::Vector2f& startPos) {
     hero.setPosition(startPos);
 }
 
-// FIX THIS
 void Scene::handleEvent(const sf::Event& event) {
-    if (event.type == sf::Event::MouseButtonPressed &&
-        event.mouseButton.button == sf::Mouse::Left) {
-        hero.setPosition(
-            sf::Vector2f{static_cast<float>(event.mouseButton.x),
-                          static_cast<float>(event.mouseButton.y)});
+    if (event.is<sf::Event::MouseButtonPressed>()) {
+        auto mouse = event.get<sf::Event::MouseButtonPressed>();
+        if (mouse.button == sf::Mouse::Left) {
+            hero.setPosition(sf::Vector2f{
+                static_cast<float>(mouse.position.x),
+                static_cast<float>(mouse.position.y)});
+        }
     }
 }
 
