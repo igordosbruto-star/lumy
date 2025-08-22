@@ -82,24 +82,16 @@ int main() {
             fpsAccumulated = sf::Time::Zero;
         }
 
-        // FIX THIS
-        sf::Event event;
-        while (window->pollEvent(event)) {
-            switch (event.type) {
-                case sf::Event::Closed:
+        while (auto event = window->pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
+                window->close();
+            } else if (event->is<sf::Event::KeyPressed>()) {
+                auto key = event->get<sf::Event::KeyPressed>();
+                if (key.code == sf::Keyboard::Key::Escape) {
                     window->close();
-                    break;
-
-                case sf::Event::KeyPressed:
-                    if (event.key.code == sf::Keyboard::Key::Escape) {
-                        window->close();
-                    }
-                    break;
-
-                default:
-                    break;
+                }
             }
-            scene->handleEvent(event);
+            scene->handleEvent(*event);
         }
 
         scene->update(deltaTime);
