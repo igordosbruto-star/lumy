@@ -27,6 +27,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: uso de `sf::Event` no loop e clique do mouse posiciona o herói.
 - `src/main.cpp`: chama `scene.update(deltaTime)` para atualizar o herói.
 - `src/main.cpp`: limitador manual de 60 FPS com `sf::sleep` e log de FPS médio.
+- `src/main.cpp`: limita `deltaTime` a 30 FPS e registra quedas de frame.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
