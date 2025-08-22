@@ -13,6 +13,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Regra de **cópia de assets** do `examples/hello-town/` para `bin/<Config>/game/`.
 - Mapa `first.tmx` e tileset simples em `examples/hello-town`.
 - Teste básico de inicialização com GoogleTest.
+- `src/scene.hpp` e `src/scene.cpp`: classe `Scene` com `update(deltaTime)`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -22,6 +23,12 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: movimento do “herói” controlado por teclas **W/A/S/D**.
 - `src/main.cpp`: logs de dimensões e camadas após carregar TMX.
 - `src/main.cpp`: mede tempo entre frames com `sf::Clock`.
+- `src/main.cpp`: armazena `elapsed` e `deltaTime` no início de cada frame.
+- `src/main.cpp`: uso de `sf::Event` no loop e clique do mouse posiciona o herói.
+- `src/main.cpp`: chama `scene.update(deltaTime)` para atualizar o herói.
+- `src/main.cpp`: limitador manual de 60 FPS com `sf::sleep` e log de FPS médio.
+- `src/main.cpp`: limita `deltaTime` a 30 FPS e registra quedas de frame.
+- `src/main.cpp`: encerra o loop quando a janela fecha e libera objetos alocados.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
@@ -34,6 +41,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Adicionado templates.
 - `README.md`: descrição da engine e passos básicos com `CMakePresets.json`.
 - `ROADMAP.md`: histórico atualizado após revisão do README.
+- `src/main.cpp`: comentários explicando a sequência de renderização (limpar → desenhar → exibir).
 
 
 

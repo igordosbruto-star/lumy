@@ -4,6 +4,8 @@
 #include <tmxlite/Map.hpp>
 #include <filesystem>
 #include <iostream>
+#include <memory>
+#include "scene.hpp"
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -45,45 +47,78 @@ int main() {
 
     // Janela SFML
     const unsigned W = 640, H = 360;
-    sf::RenderWindow window(sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
-    window.setFramerateLimit(60);
+    auto window = std::make_unique<sf::RenderWindow>(
+        sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
 
-    // Clock para medir tempo entre frames
+    // Limitador manual de FPS
+    const sf::Time targetFrameTime = sf::seconds(1.f / 60.f);
     sf::Clock frameClock;
+    std::size_t fpsFrameCount = 0;
+    sf::Time fpsAccumulated = sf::Time::Zero;
+    const float maxDeltaTime = 1.f / 30.f;
 
     // Um quadradinho para animar (placeholder do “herói”)
-    sf::RectangleShape hero(sf::Vector2f{64.f, 64.f});
-    hero.setFillColor(sf::Color::White);
-    hero.setOrigin(sf::Vector2f{32.f, 32.f});                    // Vector2f
-    hero.setPosition(sf::Vector2f{W * 0.5f, H * 0.5f});          // Vector2f
+    auto scene = std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f});
 
-    const float moveSpeed = 200.f;
-
-    while (window.isOpen()) {
-        sf::Time dt = frameClock.restart();
-        float moveStep = moveSpeed * dt.asSeconds();
-
-        // pollEvent() retorna std::optional<Event>
-        while (auto ev = window.pollEvent()) {
-            if (ev->is<sf::Event::Closed>()) {
-                window.close();
-            } else if (ev->is<sf::Event::KeyPressed>() &&
-                       ev->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Escape) {
-                window.close();
-            }
+    while (true) {
+        if (!window->isOpen()) {
+            break;
         }
 
-        sf::Vector2f pos = hero.getPosition();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) pos.y -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) pos.y += moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) pos.x -= moveStep;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) pos.x += moveStep;
-        hero.setPosition(pos);
+        sf::Time elapsed = frameClock.restart();
+        float deltaTime = elapsed.asSeconds();
+        if (deltaTime > maxDeltaTime) {
+            std::cout << "[Frame drop] deltaTime: " << deltaTime << "s\n";
+            deltaTime = maxDeltaTime;
+        }
 
-        window.clear(sf::Color::Black);
-        window.draw(hero);
-        window.display();
+        // Média de FPS a cada ~1 segundo
+        fpsFrameCount++;
+        fpsAccumulated += elapsed;
+        if (fpsAccumulated >= sf::seconds(1.f)) {
+            float avgFps = static_cast<float>(fpsFrameCount) / fpsAccumulated.asSeconds();
+            std::cout << "FPS médio: " << avgFps << "\n";
+            fpsFrameCount = 0;
+            fpsAccumulated = sf::Time::Zero;
+        }
+
+        sf::Event event;
+        while (window->pollEvent(event)) {
+            switch (event.type) {
+                case sf::Event::Closed:
+                    window->close();
+                    break;
+
+                case sf::Event::KeyPressed:
+                    if (event.key.code == sf::Keyboard::Key::Escape) {
+                        window->close();
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            scene->handleEvent(event);
+        }
+
+        scene->update(deltaTime);
+
+        // 1. Limpar a tela
+        window->clear(sf::Color::Black);
+        // 2. Desenhar objetos
+        scene->draw(*window);
+        // 3. Exibir o frame
+        window->display();
+
+        // Completar o tempo de frame restante
+        sf::Time workTime = frameClock.getElapsedTime();
+        if (workTime < targetFrameTime) {
+            sf::sleep(targetFrameTime - workTime);
+        }
     }
+
+    scene.reset();
+    window.reset();
 
     std::cout << "Lumy: bye!\n";
     return 0;
