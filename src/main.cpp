@@ -63,13 +63,28 @@ int main() {
         sf::Time dt = frameClock.restart();
         float moveStep = moveSpeed * dt.asSeconds();
 
-        // pollEvent() retorna std::optional<Event>
-        while (auto ev = window.pollEvent()) {
-            if (ev->is<sf::Event::Closed>()) {
-                window.close();
-            } else if (ev->is<sf::Event::KeyPressed>() &&
-                       ev->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Escape) {
-                window.close();
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            switch (event.type) {
+                case sf::Event::Closed:
+                    window.close();
+                    break;
+
+                case sf::Event::KeyPressed:
+                    if (event.key.code == sf::Keyboard::Key::Escape) {
+                        window.close();
+                    }
+                    break;
+
+                case sf::Event::MouseButtonPressed:
+                    if (event.mouseButton.button == sf::Mouse::Left) {
+                        hero.setPosition(sf::Vector2f{static_cast<float>(event.mouseButton.x),
+                                                      static_cast<float>(event.mouseButton.y)});
+                    }
+                    break;
+
+                default:
+                    break;
             }
         }
 
