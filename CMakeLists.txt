@@ -9,6 +9,7 @@ endif()
 # ===== Fontes do exemplo =====
 set(HELLO_TOWN_SOURCES
   src/main.cpp
+  src/scene.cpp
 )
 
 add_executable(hello-town ${HELLO_TOWN_SOURCES})
