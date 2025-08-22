@@ -1,0 +1,55 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+
+  "configurePresets": [
+    {
+      "name": "msvc-vcpkg",
+      "displayName": "MSVC + vcpkg (x64)",
+      "description": "Visual Studio 2022, x64, usando vcpkg (manifest mode)",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "binaryDir": "${sourceDir}/build/msvc",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${env.VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VCPKG_APPLOCAL_DEPS": "ON"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "msvc-Debug",
+      "displayName": "Build (Debug)",
+      "configurePreset": "msvc-vcpkg",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-Release",
+      "displayName": "Build (Release)",
+      "configurePreset": "msvc-vcpkg",
+      "configuration": "Release"
+    }
+  ],
+
+  "testPresets": [
+    {
+      "name": "msvc-tests",
+      "displayName": "CTest (Debug)",
+      "configurePreset": "msvc-vcpkg",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+# ==== SO / lixo comum ====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==== CMake (fuja de build in-source) ====
+/build/
+/build*/
+cmake-build-*/
+/CMakeFiles/
+/CMakeCache.txt
+CMakeScripts/
+CTestTestfile.cmake
+cmake_install.cmake
+compile_commands.json
+install_manifest.txt
+Makefile
+
+# ==== Visual Studio (se gerar soluções/projetos) ====
+.vs/
+*.sln
+*.suo
+*.ncb
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.vc.db
+ipch/
+*.pdb
+*.ilk
+
+# ==== VS Code ====
+.vscode/*
+!.vscode/extensions.json
+# Se quiser versionar configs compartilháveis, remova a linha acima e libere:
+#!.vscode/settings.json
+#!.vscode/launch.json
+#!.vscode/tasks.json
+
+# ==== vcpkg (manifest pode criar localmente) ====
+/vcpkg_installed/
+.vcpkg-root
+
+# ==== Binários / intermediários ====
+*.exe
+*.dll
+*.lib
+*.pdb
+*.obj
+*.o
+*.a
+*.so
+*.dylib
+*.log
+*.cache
+
+# ==== Saídas de build ====
+/bin/
+/out/
+/dist/
+/Release/
+/Debug/
+
+# ==== IDEs diversas ====
+.idea/
+*.iml
+
+# ==== Presets do CMake ====
+# (Mantenha CMakePresets.json sob versão; ignore o user local)
+CMakeUserPresets.json

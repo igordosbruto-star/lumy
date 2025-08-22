@@ -1,0 +1,52 @@
+{
+  "actors": [
+    {
+      "id": 1,
+      "name": "Arven",
+      "class": "Guerreiro",
+      "level": 1,
+      "params": { "hp": 120, "mp": 10, "atk": 12, "def": 8, "mat": 3, "mdf": 4, "agi": 10, "luk": 8 },
+      "traits": ["sword","light-armor"],
+      "skills": [1, 2],
+      "statesImmune": ["poison"],
+      "runas": ["lumy-spark"]
+    }
+  ],
+  "skills": [
+    {
+      "id": 1,
+      "name": "Corte Rápido",
+      "type": "physical",
+      "cost": { "mp": 3, "lumy": 0 },
+      "power": 18,
+      "element": "slash",
+      "targets": "enemy",
+      "notes": "Prioriza inimigos com menor HP"
+    }
+  ],
+  "items": [
+    {
+      "id": 101,
+      "name": "Poção",
+      "type": "consumable",
+      "effect": { "hp": "+50" }
+    }
+  ],
+  "states": [
+    { "id": 201, "name": "Veneno", "tickMs": 1000, "onTick": { "hp": "-5%" } }
+  ],
+  "enemies": [
+    {
+      "id": 301,
+      "name": "Slime de Bruma",
+      "params": { "hp": 60, "mp": 0, "atk": 8, "def": 3, "agi": 8 },
+      "drops": [{ "itemId": 101, "rate": 0.2 }]
+    }
+  ],
+  "system": {
+    "currency": "ℒ", 
+    "resolution": { "w": 640, "h": 360, "scale": 2 },
+    "tileset": "overworld.tsx",
+    "battle": { "mode": "turn-based" }
+  }
+}
