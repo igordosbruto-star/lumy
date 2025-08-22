@@ -4,7 +4,6 @@
 #include <tmxlite/Map.hpp>
 #include <filesystem>
 #include <iostream>
-#include <cmath>
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -47,7 +46,7 @@ int main() {
     hero.setOrigin(sf::Vector2f{32.f, 32.f});                    // Vector2f
     hero.setPosition(sf::Vector2f{W * 0.5f, H * 0.5f});          // Vector2f
 
-    sf::Clock clock;
+    const float moveStep = 4.f;
 
     while (window.isOpen()) {
         // pollEvent() retorna std::optional<Event>
@@ -60,9 +59,12 @@ int main() {
             }
         }
 
-        // Movimento bobo só pra ver algo na tela
-        float t = clock.getElapsedTime().asSeconds();
-        hero.setPosition(sf::Vector2f{W * 0.5f + std::sin(t) * 40.f, H * 0.5f});
+        sf::Vector2f pos = hero.getPosition();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) pos.y -= moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) pos.y += moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) pos.x -= moveStep;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) pos.x += moveStep;
+        hero.setPosition(pos);
 
         window.clear(sf::Color::Black);
         window.draw(hero);
