@@ -13,6 +13,9 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 ### Docs
 - Adicionado CONTRIBUTING.
 - Adicionado PULL REQUEST TEMPLATE.
+- Adicionado bug report.
+- Adicionado feature request.
+
 
 
 ## [0.1.0] — 2025-08-21
