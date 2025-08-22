@@ -82,6 +82,7 @@ int main() {
             fpsAccumulated = sf::Time::Zero;
         }
 
+        // FIX THIS
         sf::Event event;
         while (window->pollEvent(event)) {
             switch (event.type) {

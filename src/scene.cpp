@@ -8,6 +8,7 @@ Scene::Scene(const sf::Vector2f& startPos) {
     hero.setPosition(startPos);
 }
 
+// FIX THIS
 void Scene::handleEvent(const sf::Event& event) {
     if (event.type == sf::Event::MouseButtonPressed &&
         event.mouseButton.button == sf::Mouse::Left) {
