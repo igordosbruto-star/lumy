@@ -22,6 +22,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: movimento do “herói” controlado por teclas **W/A/S/D**.
 - `src/main.cpp`: logs de dimensões e camadas após carregar TMX.
 - `src/main.cpp`: mede tempo entre frames com `sf::Clock`.
+- `src/main.cpp`: armazena `elapsed` e `deltaTime` no início de cada frame.
 - `src/main.cpp`: uso de `sf::Event` no loop e clique do mouse posiciona o herói.
 
 ### Fixed

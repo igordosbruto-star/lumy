@@ -60,8 +60,9 @@ int main() {
     const float moveSpeed = 200.f;
 
     while (window.isOpen()) {
-        sf::Time dt = frameClock.restart();
-        float moveStep = moveSpeed * dt.asSeconds();
+        sf::Time elapsed = frameClock.restart();
+        float deltaTime = elapsed.asSeconds();
+        float moveStep = moveSpeed * deltaTime;
 
         sf::Event event;
         while (window.pollEvent(event)) {
