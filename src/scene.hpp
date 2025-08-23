@@ -5,10 +5,11 @@
 class Scene {
 public:
     explicit Scene(const sf::Vector2f& startPos);
+    virtual ~Scene() = default;
 
-    void handleEvent(const sf::Event& event);
-    void update(float deltaTime);
-    void draw(sf::RenderWindow& window) const;
+    virtual void handleEvent(const sf::Event& event);
+    virtual void update(float deltaTime);
+    virtual void draw(sf::RenderWindow& window) const;
 
 private:
     sf::RectangleShape hero;

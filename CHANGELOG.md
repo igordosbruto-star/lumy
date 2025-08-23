@@ -14,6 +14,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Mapa `first.tmx` e tileset simples em `examples/hello-town`.
 - Teste básico de inicialização com GoogleTest.
 - `src/scene.hpp` e `src/scene.cpp`: classe `Scene` com `update(deltaTime)`.
+- `src/scene_stack.hpp` e `src/scene_stack.cpp`: pilha de cenas com push/pop/switch.
+- Testes para `SceneStack`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -32,6 +34,9 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: loop de eventos usa `pollEvent()` opcional, checa `Closed` com `event->is` e lê tecla Escape com `getIf`, repassando para a cena.
 - `src/main.cpp`: condiciona loop à janela aberta e verifica fechamento após eventos.
 - `src/scene.cpp`: `handleEvent` usa ponteiro retornado por `getIf` para cliques do mouse.
+- `src/scene.hpp`: agora serve como classe-base com destrutor e métodos virtuais.
+- `src/main.cpp`: usa `SceneStack` para gerenciar cenas.
+- `CMakeLists.txt`: compila `SceneStack` e adiciona testes.
 - `src/scene.cpp`: correção de sf::Mouse::Left para sf::Mouse::Button::Left da SFML3.
 
 ### Fixed

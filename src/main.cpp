@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include "scene.hpp"
+#include "scene_stack.hpp"
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -58,7 +59,8 @@ int main() {
     const float maxDeltaTime = 1.f / 30.f;
 
     // Um quadradinho para animar (placeholder do “herói”)
-    auto scene = std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f});
+    SceneStack stack;
+    stack.pushScene(std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f}));
 
     while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
@@ -87,19 +89,25 @@ int main() {
                     window->close();
                 }
             }
-            scene->handleEvent(*event);
+            if (auto* current = stack.current()) {
+                current->handleEvent(*event);
+            }
         }
 
         if (!window->isOpen()) {
             break;
         }
 
-        scene->update(deltaTime);
+        if (auto* current = stack.current()) {
+            current->update(deltaTime);
+        }
 
         // 1. Limpar a tela
         window->clear(sf::Color::Black);
         // 2. Desenhar objetos
-        scene->draw(*window);
+        if (auto* current = stack.current()) {
+            current->draw(*window);
+        }
         // 3. Exibir o frame
         window->display();
 
@@ -110,7 +118,6 @@ int main() {
         }
     }
 
-    scene.reset();
     window.reset();
 
     std::cout << "Lumy: bye!\n";
