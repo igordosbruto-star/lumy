@@ -11,7 +11,7 @@ Scene::Scene(const sf::Vector2f& startPos) {
 
 void Scene::handleEvent(const sf::Event& event) {
     if (event.is<sf::Event::MouseButtonPressed>()) {
-        auto mouse = event.get<sf::Event::MouseButtonPressed>();
+        auto mouse = event.getIf<sf::Event::MouseButtonPressed>();
         if (mouse.button == sf::Mouse::Left) {
             hero.setPosition(sf::Vector2f{
                 static_cast<float>(mouse.position.x),

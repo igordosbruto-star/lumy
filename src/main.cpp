@@ -86,7 +86,7 @@ int main() {
             if (event->is<sf::Event::Closed>()) {
                 window->close();
             } else if (event->is<sf::Event::KeyPressed>()) {
-                auto key = event->get<sf::Event::KeyPressed>();
+                auto key = event->getIf<sf::Event::KeyPressed>();
                 if (key.code == sf::Keyboard::Key::Escape) {
                     window->close();
                 }
