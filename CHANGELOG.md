@@ -19,6 +19,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/map_scene.hpp` e `src/map_scene.cpp`: classe `MapScene` com lógica do herói.
 - `src/boot_scene.hpp`/`src/boot_scene.cpp`: cena de boot que carrega recursos e vai para `TitleScene`.
 - `src/title_scene.hpp`/`src/title_scene.cpp`: menu de título com opção Start que abre `MapScene`.
+- Teste de fluxo de cenas Boot → Title → Map.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
