@@ -12,8 +12,8 @@ TitleScene::TitleScene(SceneStack& stack)
 }
 
 void TitleScene::handleEvent(const sf::Event& event) {
-    if (event.is<sf::Event::KeyPressed>() &&
-        event.get<sf::Event::KeyPressed>().code == sf::Keyboard::Key::Enter) {
+    if (const auto* key = event.getIf<sf::Event::KeyPressed>();
+        key && key->code == sf::Keyboard::Key::Enter) {
         stack_.switchScene(std::make_unique<MapScene>(sf::Vector2f{320.f, 180.f}));
     }
 }
