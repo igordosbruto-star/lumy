@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <unordered_map>
+#include <string>
 
 Map::Map(TextureManager &textures) : textures_(textures) {}
 
@@ -65,6 +66,7 @@ bool Map::load(const std::string &path) {
       continue;
 
     const auto &tmxLayer = layer->getLayerAs<tmx::TileLayer>();
+    std::string layerName = layer->getName();
 
     for (const auto &prop : layer->getProperties()) {
       (void)prop;
@@ -74,6 +76,7 @@ bool Map::load(const std::string &path) {
     const auto &tiles = tmxLayer.getTiles();
     TileLayer baseLayer;
     baseLayer.ids.resize(tiles.size());
+    baseLayer.name = layerName;
     const auto tmxTileSize = tmxMap.getTileSize();
     sf::Vector2u tileSizePx{tmxTileSize.x, tmxTileSize.y};
 
@@ -156,6 +159,7 @@ bool Map::load(const std::string &path) {
         tl.texture = texPtr;
         tl.ids = baseLayer.ids;
         tl.vertices = std::move(vertices);
+        tl.name = layerName;
         layers_.push_back(std::move(tl));
       }
     }
@@ -221,10 +225,25 @@ void Map::setTileID(std::size_t layer, unsigned x, unsigned y, std::uint32_t id)
 }
 
 void Map::draw(sf::RenderTarget &target) const {
+  drawRange(0, layers_.size(), target);
+}
+
+void Map::drawLayer(std::size_t index, sf::RenderTarget &target) const {
+  drawRange(index, index + 1, target);
+}
+
+void Map::drawRange(std::size_t first, std::size_t last,
+                     sf::RenderTarget &target) const {
+  if (first >= layers_.size())
+    return;
+  if (last > layers_.size())
+    last = layers_.size();
+
   sf::RenderStates states;
   const sf::Texture *currentTexture = nullptr;
 
-  for (const auto &layer : layers_) {
+  for (std::size_t i = first; i < last; ++i) {
+    const auto &layer = layers_[i];
     if (layer.vertices.getVertexCount() == 0)
       continue;
 
