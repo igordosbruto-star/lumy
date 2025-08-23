@@ -37,7 +37,11 @@ bool Map::load(const std::string &path) {
   std::vector<TilesetInfo> tilesets;
 
   for (const auto &ts : tmxMap.getTilesets()) {
-    auto texPath = base / ts.getImagePath();
+    std::filesystem::path texPath{ts.getImagePath()};
+    if (texPath.string().rfind(base.generic_string(), 0) != 0) {
+      texPath = base / texPath;
+    }
+    texPath = texPath.lexically_normal();
     const sf::Texture &tex = textures_.acquire(texPath);
     int first = static_cast<int>(ts.getFirstGID());
     tilesetTextures_.emplace(first, &tex);
