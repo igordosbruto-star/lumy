@@ -11,6 +11,7 @@ set(HELLO_TOWN_SOURCES
   src/main.cpp
   src/scene.cpp
   src/scene_stack.cpp
+  src/map_scene.cpp
 )
 
 add_executable(hello-town ${HELLO_TOWN_SOURCES})

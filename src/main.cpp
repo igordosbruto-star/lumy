@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include "scene.hpp"
+#include "map_scene.hpp"
 #include "scene_stack.hpp"
 
 int main() {
@@ -60,7 +60,7 @@ int main() {
 
     // Um quadradinho para animar (placeholder do “herói”)
     SceneStack stack;
-    stack.pushScene(std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f}));
+    stack.pushScene(std::make_unique<MapScene>(sf::Vector2f{W * 0.5f, H * 0.5f}));
 
     while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
