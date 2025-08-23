@@ -16,8 +16,9 @@ Este documento descreve o fluxo de cenas do exemplo `hello-town` e como usar o `
 ## Uso básico de `SceneStack`
 
 ```cpp
+TextureManager textures;
 SceneStack stack;
-stack.pushScene(std::make_unique<BootScene>(stack));
+stack.pushScene(std::make_unique<BootScene>(stack, textures));
 
 while (window.isOpen()) {
     while (auto event = window.pollEvent()) {

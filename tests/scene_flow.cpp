@@ -5,10 +5,12 @@
 #include "map_scene.hpp"
 #include "scene_stack.hpp"
 #include "title_scene.hpp"
+#include "texture_manager.hpp"
 
 TEST(SceneFlow, BootTitleMap) {
+    TextureManager textures;
     SceneStack stack;
-    stack.pushScene(std::make_unique<BootScene>(stack));
+    stack.pushScene(std::make_unique<BootScene>(stack, textures));
     EXPECT_EQ(stack.current(), nullptr);
     stack.applyPending();
     EXPECT_NE(dynamic_cast<BootScene*>(stack.current()), nullptr);

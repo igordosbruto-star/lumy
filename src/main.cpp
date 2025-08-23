@@ -8,6 +8,7 @@
 #include "boot_scene.hpp"
 #include "scene_stack.hpp"
 #include "delta_time.hpp"
+#include "texture_manager.hpp"
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -60,8 +61,9 @@ int main() {
     const float maxDeltaTime = 1.f / 30.f;
 
     // Pilha de cenas: inicia em BootScene
+    TextureManager textures;
     SceneStack stack;
-    auto bootScene = std::make_unique<BootScene>(stack);
+    auto bootScene = std::make_unique<BootScene>(stack, textures);
     stack.pushScene(std::move(bootScene));
 
     while (window->isOpen()) {

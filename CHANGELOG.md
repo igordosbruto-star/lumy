@@ -61,7 +61,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/boot_scene.*`: carrega e desenha o mapa `game/first.tmx` ao iniciar.
 - `tests/title_scene.cpp`: define diretório de trabalho relativo ao arquivo de teste.
 - `src/map.hpp`/`src/map.cpp`: `Map` usa `TextureManager` e armazena ponteiros para texturas de tileset.
-- `src/boot_scene.hpp`/`src/boot_scene.cpp`: `BootScene` gerencia `TextureManager` e o fornece ao `Map`.
+- `src/main.cpp`/`src/boot_scene.*`: `TextureManager` global passado por referência ao `Map`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
