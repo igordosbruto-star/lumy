@@ -64,6 +64,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/map.hpp`/`src/map.cpp`: `Map` usa `TextureManager` e armazena ponteiros para texturas de tileset.
 - `src/map.cpp`: constrói `sf::Vector2u` de tamanho do tile explicitamente para evitar conversão implícita.
 - `src/main.cpp`/`src/boot_scene.*`: `TextureManager` global passado por referência ao `Map`.
+- `src/map.cpp`: substitui `sf::Quads` por `sf::PrimitiveType::Triangles` para desenhar tiles.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
