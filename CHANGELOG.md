@@ -51,6 +51,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
 - Erro “Unsupported SFML component: system” (mudança para sintaxe do SFML 3).
 - Erro ao configurar por falta de `src/main.cpp`.
+- `src/main.cpp`: aplica `stack.applyPending()` logo após os eventos para garantir transições antes do fechamento da janela.
 ### Docs
 - Adicionado `VISION.md`.
 - Adicionado `ROADMAP.md`.
