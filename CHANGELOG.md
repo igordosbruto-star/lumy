@@ -17,6 +17,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/scene_stack.hpp` e `src/scene_stack.cpp`: pilha de cenas com push/pop/switch.
 - Testes para `SceneStack`.
 - `src/map_scene.hpp` e `src/map_scene.cpp`: classe `MapScene` com lógica do herói.
+- `src/map.hpp`/`src/map.cpp`: classe `Map` para carregar e desenhar TMX.
 - `src/boot_scene.hpp`/`src/boot_scene.cpp`: cena de boot que carrega recursos e vai para `TitleScene`.
 - `src/title_scene.hpp`/`src/title_scene.cpp`: menu de título com opção Start que abre `MapScene`.
 - Teste de fluxo de cenas Boot → Title → Map.
