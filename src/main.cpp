@@ -81,9 +81,9 @@ int main() {
         while (auto event = window->pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window->close();
-            } else if (event->is<sf::Event::KeyPressed>()) {
-                auto key = event->getIf<sf::Event::KeyPressed>();
-                if (key.code == sf::Keyboard::Key::Escape) {
+            }
+            if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
+                if (key->code == sf::Keyboard::Key::Escape) {
                     window->close();
                 }
             }
