@@ -16,6 +16,7 @@ set(HELLO_TOWN_SOURCES
   src/title_scene.cpp
   src/map_scene.cpp
   src/map.cpp
+  src/texture_manager.cpp
 )
 
 add_executable(hello-town ${HELLO_TOWN_SOURCES})
@@ -94,6 +95,7 @@ add_executable(lumy-tests
   src/title_scene.cpp
   src/map_scene.cpp
   src/map.cpp
+  src/texture_manager.cpp
 )
 target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
 target_include_directories(lumy-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
