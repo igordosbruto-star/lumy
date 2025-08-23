@@ -21,6 +21,6 @@ No VS Code, selecione os mesmos presets e depure o alvo `hello-town` com `F5`.
 
 ## Fluxo de cenas
 
-O exemplo `hello-town` usa `SceneStack` com as cenas Boot → Title → Map. `BootScene` carrega recursos e muda para `TitleScene`, que exibe "Start" (requer `game/font.ttf`) e ao confirmar abre `MapScene` com um herói movido por W/A/S/D.
+O exemplo `hello-town` usa `SceneStack` com as cenas Boot → Title → Map. `BootScene` carrega recursos e muda para `TitleScene`, que exibe "Start" (requer `game/font.ttf`; falha no carregamento lança exceção) e ao confirmar abre `MapScene` com um herói movido por W/A/S/D.
 
 Veja [docs/scene_flow.md](docs/scene_flow.md) para detalhes.

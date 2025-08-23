@@ -24,6 +24,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Teste para encerrar loop ao fechar a janela sem chamar `update`.
 - `src/delta_time.hpp`/`src/delta_time.cpp`: função `clampDeltaTime` limita `deltaTime` e registra quedas de frame.
 - Teste unitário garantindo limitação de `deltaTime` para `maxDeltaTime`.
+- `tests/title_scene.cpp`: testa exceção ao faltar `game/font.ttf`.
+- `game/font.ttf`: fonte padrão para `TitleScene`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -50,12 +52,14 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: fluxo de cenas Boot → Title → Map via `SceneStack`.
 - `src/main.cpp`: inicia `SceneStack` com `BootScene`.
 - `src/title_scene.cpp`: usa `openFromFile`, inicializa `startText` no construtor e verifica cliques com `sf::Vector2f`.
+- `src/title_scene.cpp`: verifica carregamento da fonte e lança exceção se falhar.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
 - Erro “Unsupported SFML component: system” (mudança para sintaxe do SFML 3).
 - Erro ao configurar por falta de `src/main.cpp`.
 - `src/main.cpp`: aplica `stack.applyPending()` logo após os eventos para garantir transições antes do fechamento da janela.
+
 ### Docs
 - Adicionado `VISION.md`.
 - Adicionado `ROADMAP.md`.
@@ -65,6 +69,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `ROADMAP.md`: histórico atualizado após revisão do README.
 - `src/main.cpp`: comentários explicando a sequência de renderização (limpar → desenhar → exibir).
 - `docs/scene_flow.md` e `README.md`: fluxo Boot → Title → Map e uso do `SceneStack`.
+- `docs/scene_flow.md` e `README.md`: documentada exceção ao falhar carregamento da fonte.
 
 
 

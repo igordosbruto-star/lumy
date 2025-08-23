@@ -1,10 +1,13 @@
 #include "title_scene.hpp"
 #include "map_scene.hpp"
 #include <memory>
+#include <stdexcept>
 
 TitleScene::TitleScene(SceneStack& stack)
     : stack_(stack), startText_(font_, "Start", 32) {
-    font_.openFromFile("game/font.ttf");
+    if (!font_.openFromFile("game/font.ttf")) {
+        throw std::runtime_error("failed to load font game/font.ttf");
+    }
     startText_.setPosition({200.f, 150.f});
 }
 

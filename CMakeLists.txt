@@ -84,6 +84,7 @@ add_executable(lumy-tests
   tests/delta_time.cpp
   tests/scene_stack.cpp
   tests/scene_flow.cpp
+  tests/title_scene.cpp
   tests/scene_loop_close.cpp
   src/delta_time.cpp
   src/scene.cpp

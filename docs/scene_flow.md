@@ -5,12 +5,12 @@ Este documento descreve o fluxo de cenas do exemplo `hello-town` e como usar o `
 ## Cenas
 
 1. **BootScene** — carrega recursos essenciais e troca imediatamente para `TitleScene`.
-2. **TitleScene** — exibe o texto "Start" usando a fonte `game/font.ttf`. Pressione **Enter** ou clique para ir para `MapScene`.
+2. **TitleScene** — exibe o texto "Start" usando a fonte `game/font.ttf` (falha no carregamento lança `std::runtime_error`). Pressione **Enter** ou clique para ir para `MapScene`.
 3. **MapScene** — mostra um herói quadrado que se move com **W/A/S/D** ou cliques do mouse.
 
 ## Assets necessários
 
-- `game/font.ttf` — qualquer fonte TrueType para renderizar o texto da `TitleScene`.
+- `game/font.ttf` — qualquer fonte TrueType para renderizar o texto da `TitleScene`(ausência dispara exceção).
 - opcional: `game/first.tmx` — mapa de exemplo utilizado apenas para logs de carregamento.
 
 ## Uso básico de `SceneStack`
