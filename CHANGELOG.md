@@ -17,6 +17,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/scene_stack.hpp` e `src/scene_stack.cpp`: pilha de cenas com push/pop/switch.
 - Testes para `SceneStack`.
 - `src/map_scene.hpp` e `src/map_scene.cpp`: classe `MapScene` com lógica do herói.
+- `src/boot_scene.hpp`/`src/boot_scene.cpp`: cena de boot que carrega recursos e vai para `TitleScene`.
+- `src/title_scene.hpp`/`src/title_scene.cpp`: menu de título com opção Start que abre `MapScene`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -39,6 +41,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: usa `SceneStack` para gerenciar cenas.
 - `CMakeLists.txt`: compila `SceneStack` e adiciona testes.
 - `src/scene.cpp`: correção de sf::Mouse::Left para sf::Mouse::Button::Left da SFML3.
+- `src/main.cpp`: fluxo de cenas Boot → Title → Map via `SceneStack`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).

@@ -11,6 +11,8 @@ set(HELLO_TOWN_SOURCES
   src/main.cpp
   src/scene.cpp
   src/scene_stack.cpp
+  src/boot_scene.cpp
+  src/title_scene.cpp
   src/map_scene.cpp
 )
 

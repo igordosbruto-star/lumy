@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
-#include "map_scene.hpp"
+#include "boot_scene.hpp"
 #include "scene_stack.hpp"
 
 int main() {
@@ -58,9 +58,9 @@ int main() {
     sf::Time fpsAccumulated = sf::Time::Zero;
     const float maxDeltaTime = 1.f / 30.f;
 
-    // Um quadradinho para animar (placeholder do “herói”)
+    // Pilha de cenas: inicia em BootScene
     SceneStack stack;
-    stack.pushScene(std::make_unique<MapScene>(sf::Vector2f{W * 0.5f, H * 0.5f}));
+    stack.pushScene(std::make_unique<BootScene>(stack));
 
     while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
