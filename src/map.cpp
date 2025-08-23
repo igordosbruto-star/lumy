@@ -65,23 +65,25 @@ bool Map::load(const std::string &path) {
     if (layer->getType() != tmx::Layer::Type::Tile)
       continue;
 
-    const auto &tileLayer = layer->getLayerAs<tmx::TileLayer>();
+    const auto &tmxLayer = layer->getLayerAs<tmx::TileLayer>();
 
     for (const auto &prop : layer->getProperties()) {
       (void)prop;
     }
 
     struct Batch {
-      std::vector<std::uint32_t> ids;
       sf::VertexArray vertices;
     };
     std::unordered_map<const sf::Texture *, Batch> batches;
-    const auto &tiles = tileLayer.getTiles();
+    const auto &tiles = tmxLayer.getTiles();
+    TileLayer baseLayer;
+    baseLayer.ids.resize(tiles.size());
     const auto tmxTileSize = tmxMap.getTileSize();
     sf::Vector2u tileSizePx{tmxTileSize.x, tmxTileSize.y};
 
     for (std::size_t i = 0; i < tiles.size(); ++i) {
       const auto &tile = tiles[i];
+      baseLayer.ids[i] = tile.ID;
       if (tile.ID == 0)
         continue;
 
@@ -145,16 +147,18 @@ bool Map::load(const std::string &path) {
       va.append(quad[0]);
       va.append(quad[2]);
       va.append(quad[3]);
-
-      batch.ids.push_back(tile.ID);
     }
 
-    for (auto &[texPtr, batch] : batches) {
-      TileLayer tl;
-      tl.texture = texPtr;
-      tl.ids = std::move(batch.ids);
-      tl.vertices = std::move(batch.vertices);
-      layers_.push_back(std::move(tl));
+    if (batches.empty()) {
+      layers_.push_back(std::move(baseLayer));
+    } else {
+      for (auto &[texPtr, batch] : batches) {
+        TileLayer tl;
+        tl.texture = texPtr;
+        tl.ids = baseLayer.ids;
+        tl.vertices = std::move(batch.vertices);
+        layers_.push_back(std::move(tl));
+      }
     }
   }
 
