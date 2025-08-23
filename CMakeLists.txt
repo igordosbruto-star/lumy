@@ -97,8 +97,18 @@ add_executable(lumy-tests
   src/map.cpp
   src/texture_manager.cpp
 )
-target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
-target_include_directories(lumy-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(lumy-tests PRIVATE
+  GTest::gtest_main
+  SFML::Graphics SFML::Window SFML::Audio SFML::System
+  nlohmann_json::nlohmann_json
+  sol2::sol2
+  ${LUA_LIBRARIES}
+  PkgConfig::TMXLITE
+)
+target_include_directories(lumy-tests PRIVATE
+  ${CMAKE_SOURCE_DIR}/src
+  ${LUA_INCLUDE_DIR}
+)
 set_property(TARGET lumy-tests PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
 if(EXISTS "${EXAMPLES_DIR}")
   add_custom_command(TARGET lumy-tests POST_BUILD
