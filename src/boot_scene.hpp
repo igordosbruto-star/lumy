@@ -7,7 +7,7 @@
 
 class BootScene : public Scene {
 public:
-    explicit BootScene(SceneStack& stack);
+    BootScene(SceneStack& stack, TextureManager& textures);
 
     void handleEvent(const sf::Event& event) override;
     void update(float deltaTime) override;
@@ -15,7 +15,7 @@ public:
 
 private:
     SceneStack& stack_;
-    TextureManager textures_;
+    TextureManager& textures_;
     Map map_;
     bool loaded_ = false;
 };
