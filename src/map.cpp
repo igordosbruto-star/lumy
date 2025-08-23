@@ -27,15 +27,12 @@ bool Map::load(const std::string &path) {
 
   tilesetTextures_.clear();
   layers_.clear();
+  tilesets_.clear();
+  mapWidth_ = tileCount.x;
+  mapHeight_ = tileCount.y;
+  tileSize_ = {tmxMap.getTileSize().x, tmxMap.getTileSize().y};
 
   std::filesystem::path base = std::filesystem::path(path).parent_path();
-
-  struct TilesetInfo {
-    int firstGid{};
-    sf::Vector2u tileSize;
-    unsigned columns{};
-    const sf::Texture *texture{};
-  };
   std::vector<TilesetInfo> tilesets;
 
   for (const auto &ts : tmxMap.getTilesets()) {
@@ -60,6 +57,8 @@ bool Map::load(const std::string &path) {
             [](const TilesetInfo &a, const TilesetInfo &b) {
               return a.firstGid < b.firstGid;
             });
+
+  tilesets_ = tilesets;
 
   for (const auto &layer : tmxMap.getLayers()) {
     if (layer->getType() != tmx::Layer::Type::Tile)
@@ -163,6 +162,62 @@ bool Map::load(const std::string &path) {
   }
 
   return true;
+}
+
+std::uint32_t Map::getTileID(std::size_t layer, unsigned x, unsigned y) const {
+  if (layer >= layers_.size())
+    return 0;
+  const auto &ids = layers_[layer].ids;
+  std::size_t idx = static_cast<std::size_t>(y) * mapWidth_ + x;
+  if (idx >= ids.size())
+    return 0;
+  return ids[idx];
+}
+
+void Map::setTileID(std::size_t layer, unsigned x, unsigned y, std::uint32_t id) {
+  if (layer >= layers_.size())
+    return;
+  TileLayer &tl = layers_[layer];
+  std::size_t idx = static_cast<std::size_t>(y) * mapWidth_ + x;
+  if (idx >= tl.ids.size())
+    return;
+  tl.ids[idx] = id;
+
+  const TilesetInfo *tsInfo = nullptr;
+  for (const auto &info : tilesets_) {
+    if (id >= static_cast<std::uint32_t>(info.firstGid))
+      tsInfo = &info;
+    else
+      break;
+  }
+  if (!tsInfo)
+    return;
+
+  tl.texture = tsInfo->texture;
+
+  std::uint32_t localID = id - tsInfo->firstGid;
+  unsigned tu = localID % tsInfo->columns;
+  unsigned tv = localID / tsInfo->columns;
+  float tx = static_cast<float>(tu * tsInfo->tileSize.x);
+  float ty = static_cast<float>(tv * tsInfo->tileSize.y);
+
+  float px = static_cast<float>(x * tileSize_.x);
+  float py = static_cast<float>(y * tileSize_.y);
+
+  sf::Vertex *quad = &tl.vertices[idx * 6];
+  quad[0].position = {px, py};
+  quad[1].position = {px + tileSize_.x, py};
+  quad[2].position = {px + tileSize_.x, py + tileSize_.y};
+  quad[3].position = {px, py};
+  quad[4].position = {px + tileSize_.x, py + tileSize_.y};
+  quad[5].position = {px, py + tileSize_.y};
+
+  quad[0].texCoords = {tx, ty};
+  quad[1].texCoords = {tx + tsInfo->tileSize.x, ty};
+  quad[2].texCoords = {tx + tsInfo->tileSize.x, ty + tsInfo->tileSize.y};
+  quad[3].texCoords = {tx, ty};
+  quad[4].texCoords = {tx + tsInfo->tileSize.x, ty + tsInfo->tileSize.y};
+  quad[5].texCoords = {tx, ty + tsInfo->tileSize.y};
 }
 
 void Map::draw(sf::RenderTarget &target) const {
