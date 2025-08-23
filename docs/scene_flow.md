@@ -34,5 +34,7 @@ while (window.isOpen()) {
 }
 ```
 
+O `TextureManager` funciona como um cache de texturas: ao carregar tilesets, ele reutiliza instâncias já carregadas e evita duplicar arquivos na memória.
+
 O `SceneStack` mantém apenas a cena ativa no topo e permite `pushScene`, `popScene` e `switchScene` para transições simples.
 

@@ -29,6 +29,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `game/font.ttf`: fonte padrão para `TitleScene`.
 - `DartConfiguration.tcl` com configuração básica para envios ao CDash.
 - `src/texture_manager.hpp`/`src/texture_manager.cpp`: cache simples de texturas.
+- Cache de texturas de tileset via `TextureManager`, evitando carregamentos duplicados.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
