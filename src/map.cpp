@@ -71,7 +71,11 @@ bool Map::load(const std::string &path) {
       (void)prop;
     }
 
-    std::unordered_map<const sf::Texture *, sf::VertexArray> batches;
+    struct Batch {
+      std::vector<std::uint32_t> ids;
+      sf::VertexArray vertices;
+    };
+    std::unordered_map<const sf::Texture *, Batch> batches;
     const auto &tiles = tileLayer.getTiles();
     const auto tmxTileSize = tmxMap.getTileSize();
     sf::Vector2u tileSizePx{tmxTileSize.x, tmxTileSize.y};
@@ -91,7 +95,8 @@ bool Map::load(const std::string &path) {
       if (!tsInfo)
         continue;
 
-      sf::VertexArray &va = batches[tsInfo->texture];
+      Batch &batch = batches[tsInfo->texture];
+      sf::VertexArray &va = batch.vertices;
       va.setPrimitiveType(sf::PrimitiveType::Triangles);
 
       std::uint32_t localID = tile.ID - tsInfo->firstGid;
@@ -140,10 +145,16 @@ bool Map::load(const std::string &path) {
       va.append(quad[0]);
       va.append(quad[2]);
       va.append(quad[3]);
+
+      batch.ids.push_back(tile.ID);
     }
 
-    for (auto &[texPtr, vertices] : batches) {
-      layers_.push_back({texPtr, std::move(vertices)});
+    for (auto &[texPtr, batch] : batches) {
+      TileLayer tl;
+      tl.texture = texPtr;
+      tl.ids = std::move(batch.ids);
+      tl.vertices = std::move(batch.vertices);
+      layers_.push_back(std::move(tl));
     }
   }
 
