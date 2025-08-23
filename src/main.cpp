@@ -60,7 +60,8 @@ int main() {
 
     // Pilha de cenas: inicia em BootScene
     SceneStack stack;
-    stack.pushScene(std::make_unique<BootScene>(stack));
+    auto bootScene = std::make_unique<BootScene>(stack);
+    stack.pushScene(std::move(bootScene));
 
     while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
