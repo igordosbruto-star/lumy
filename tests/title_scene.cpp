@@ -12,6 +12,6 @@ TEST(TitleScene, MissingFontThrows) {
     std::filesystem::current_path(testsDir);
     SceneStack stack;
     TextureManager textures;
-    EXPECT_THROW(TitleScene{stack, textures}, std::runtime_error);
+    EXPECT_THROW((TitleScene{stack, textures}), std::runtime_error);
     std::filesystem::current_path(old);
 }
