@@ -9,6 +9,7 @@ endif()
 # ===== Fontes do exemplo =====
 set(HELLO_TOWN_SOURCES
   src/main.cpp
+  src/delta_time.cpp
   src/scene.cpp
   src/scene_stack.cpp
   src/boot_scene.cpp
@@ -80,8 +81,11 @@ enable_testing()
 find_package(GTest CONFIG REQUIRED)
 add_executable(lumy-tests
   tests/basic_startup.cpp
+  tests/delta_time.cpp
   tests/scene_stack.cpp
   tests/scene_flow.cpp
+  tests/scene_loop_close.cpp
+  src/delta_time.cpp
   src/scene.cpp
   src/scene_stack.cpp
   src/boot_scene.cpp

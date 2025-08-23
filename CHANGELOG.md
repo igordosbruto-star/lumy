@@ -21,6 +21,9 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/title_scene.hpp`/`src/title_scene.cpp`: menu de título com opção Start que abre `MapScene`.
 - Teste de fluxo de cenas Boot → Title → Map.
 - Teste de fluxo de cenas via clique do mouse em Start.
+- Teste para encerrar loop ao fechar a janela sem chamar `update`.
+- `src/delta_time.hpp`/`src/delta_time.cpp`: função `clampDeltaTime` limita `deltaTime` e registra quedas de frame.
+- Teste unitário garantindo limitação de `deltaTime` para `maxDeltaTime`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
@@ -38,6 +41,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: encerra o loop quando a janela fecha e libera objetos alocados.
 - `src/main.cpp`: loop de eventos usa `pollEvent()` opcional, checa `Closed` com `event->is` e lê tecla Escape com `getIf`, repassando para a cena.
 - `src/main.cpp`: condiciona loop à janela aberta e verifica fechamento após eventos.
+- `src/main.cpp`: usa `clampDeltaTime` para restringir o intervalo de atualização.
 - `src/scene.cpp`: `handleEvent` usa ponteiro retornado por `getIf` para cliques do mouse.
 - `src/scene.hpp`/`src/scene.cpp`: `Scene` agora é abstrata e delega lógica à `MapScene`.
 - `src/main.cpp`: usa `SceneStack` para gerenciar cenas.
@@ -51,6 +55,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
 - Erro “Unsupported SFML component: system” (mudança para sintaxe do SFML 3).
 - Erro ao configurar por falta de `src/main.cpp`.
+- `src/main.cpp`: aplica `stack.applyPending()` logo após os eventos para garantir transições antes do fechamento da janela.
 ### Docs
 - Adicionado `VISION.md`.
 - Adicionado `ROADMAP.md`.
