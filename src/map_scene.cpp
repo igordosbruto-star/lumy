@@ -48,6 +48,21 @@ void MapScene::update(float deltaTime) {
 }
 
 void MapScene::draw(sf::RenderWindow& window) const {
-    map_.draw(window);
+    // Draw ground_* layers first
+    for (std::size_t i = 0; i < map_.getLayerCount(); ++i) {
+        const std::string& name = map_.getLayerName(i);
+        if (name.rfind("ground_", 0) == 0) {
+            map_.drawLayer(i, window);
+        }
+    }
+
     window.draw(hero_);
+
+    // Draw object_* and remaining layers
+    for (std::size_t i = 0; i < map_.getLayerCount(); ++i) {
+        const std::string& name = map_.getLayerName(i);
+        if (name.rfind("ground_", 0) != 0) {
+            map_.drawLayer(i, window);
+        }
+    }
 }
