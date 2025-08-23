@@ -70,7 +70,7 @@ ex.: feat(runtime): mover com WASD no hello-town
 
 ## Tarefas comuns (prioridade sugerida)
 - feat/runtime: mover com WASD no hello-town.
-- feat/runtime: carregar examples/hello-town/first.tmx e imprimir dimensões/camadas.
+- feat/runtime: carregar examples/hello-town/hello-town.tmx e imprimir dimensões/camadas.
 - chore/docs: manter CHANGELOG.md e ROADMAP.md atualizados.
 - refactor/build: pequenos ajustes de CMake/presets sem mudar comportamento.
 

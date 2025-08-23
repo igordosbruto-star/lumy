@@ -11,7 +11,7 @@ Este documento descreve o fluxo de cenas do exemplo `hello-town` e como usar o `
 ## Assets necessários
 
 - `game/font.ttf` — qualquer fonte TrueType para renderizar o texto da `TitleScene`(ausência dispara exceção).
-- opcional: `game/first.tmx` — mapa de exemplo utilizado apenas para logs de carregamento.
+- opcional: `game/hello-town.tmx` — mapa de exemplo utilizado apenas para logs de carregamento.
 
 ## Uso básico de `SceneStack`
 

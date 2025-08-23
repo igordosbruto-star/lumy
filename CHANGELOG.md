@@ -11,7 +11,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `.vscode/settings.json` (usar presets, build antes do Run).
 - `.gitignore` para CMake/VSCode/VS/vcpkg.
 - Regra de **cópia de assets** do `examples/hello-town/` para `bin/<Config>/game/`.
-- Mapa `first.tmx` e tileset simples em `examples/hello-town`.
+- Mapa `hello-town.tmx` e tileset simples em `examples/hello-town`.
 - Teste básico de inicialização com GoogleTest.
 - `src/scene.hpp` e `src/scene.cpp`: classe `Scene` com `update(deltaTime)`.
 - `src/scene_stack.hpp` e `src/scene_stack.cpp`: pilha de cenas com push/pop/switch.
@@ -61,7 +61,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `CMakeLists.txt`: define diretório de trabalho dos testes e copia assets necessários.
 - `src/title_scene.cpp`: verifica carregamento da fonte e lança exceção se falhar.
 - `src/title_scene.cpp`: trata tecla Enter usando ponteiro retornado por `getIf`.
-- `src/boot_scene.*`: carrega e desenha o mapa `game/first.tmx` ao iniciar.
+- Mapa de exemplo renomeado para `hello-town.tmx` e referências atualizadas.
+- `src/boot_scene.*`: carrega e desenha o mapa `game/hello-town.tmx` ao iniciar.
 - `tests/title_scene.cpp`: define diretório de trabalho relativo ao arquivo de teste.
 - `src/map.hpp`/`src/map.cpp`: `Map` usa `TextureManager` e armazena ponteiros para texturas de tileset.
 - `src/map.cpp`: constrói `sf::Vector2u` de tamanho do tile explicitamente para evitar conversão implícita.
