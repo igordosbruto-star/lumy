@@ -30,6 +30,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `DartConfiguration.tcl` com configuração básica para envios ao CDash.
 - `src/texture_manager.hpp`/`src/texture_manager.cpp`: cache simples de texturas.
 - Cache de texturas de tileset via `TextureManager`, evitando carregamentos duplicados.
+- `src/map.hpp`/`src/map.cpp`: métodos `getTileID` e `setTileID` com atualização do `VertexArray`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
