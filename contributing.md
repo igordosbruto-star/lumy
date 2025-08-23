@@ -30,6 +30,16 @@ Este guia explica como propor ideias, reportar bugs e enviar PRs de forma eficie
 6. **Atualize o CHANGELOG** (seção **[Unreleased]**).
 7. **Abra o PR** linkando a issue e marcando o checklist.
 
+## Rodando testes
+Após compilar, execute os testes com:
+
+```sh
+ctest --output-on-failure -R <regex>
+```
+
+Use `<regex>` para filtrar pelos nomes desejados.
+A opção `-T test` não é mais necessária.
+
 ## Padrão de commits
 Use mensagens descritivas e no imperativo. Você pode seguir *Conventional Commits* (opcional), por exemplo:
 - `feat(events): adiciona ShowChoice com 2–4 opções`
