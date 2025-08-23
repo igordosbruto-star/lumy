@@ -221,9 +221,20 @@ void Map::setTileID(std::size_t layer, unsigned x, unsigned y, std::uint32_t id)
 }
 
 void Map::draw(sf::RenderTarget &target) const {
+  sf::RenderStates states;
+  const sf::Texture *currentTexture = nullptr;
+
   for (const auto &layer : layers_) {
-    sf::RenderStates states;
-    states.texture = layer.texture;
+    if (layer.vertices.getVertexCount() == 0)
+      continue;
+
+    if (layer.texture != currentTexture) {
+      currentTexture = layer.texture;
+      states.texture = currentTexture;
+    }
+
+    // Future extension: perform view-based culling here to skip drawing tiles
+    // outside the visible area, reducing unnecessary draw calls.
     target.draw(layer.vertices, states);
   }
 }
