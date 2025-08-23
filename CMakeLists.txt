@@ -81,8 +81,12 @@ find_package(GTest CONFIG REQUIRED)
 add_executable(lumy-tests
   tests/basic_startup.cpp
   tests/scene_stack.cpp
+  tests/scene_flow.cpp
   src/scene.cpp
   src/scene_stack.cpp
+  src/boot_scene.cpp
+  src/title_scene.cpp
+  src/map_scene.cpp
 )
 target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
 target_include_directories(lumy-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
