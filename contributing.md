@@ -34,10 +34,10 @@ Este guia explica como propor ideias, reportar bugs e enviar PRs de forma eficie
 Após compilar, execute os testes com:
 
 ```sh
-ctest --output-on-failure -R <regex>
+ctest -C Debug -R basic_startup
 ```
 
-Use `<regex>` para filtrar pelos nomes desejados.
+Use `-R` para filtrar pelos nomes desejados.
 A opção `-T test` não é mais necessária.
 
 ## Padrão de commits

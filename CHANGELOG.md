@@ -96,7 +96,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: comentários explicando a sequência de renderização (limpar → desenhar → exibir).
 - `docs/scene_flow.md` e `README.md`: fluxo Boot → Title → Map e uso do `SceneStack`.
 - `docs/scene_flow.md` e `README.md`: documentada exceção ao falhar carregamento da fonte.
-- `contributing.md`: instruções para rodar testes com `ctest --output-on-failure -R <regex>` sem `-T test`.
+- `README.md` e `contributing.md`: instruções para rodar testes com `ctest -C Debug -R basic_startup`.
 
 
 
