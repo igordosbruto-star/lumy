@@ -29,9 +29,9 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: limitador manual de 60 FPS com `sf::sleep` e log de FPS médio.
 - `src/main.cpp`: limita `deltaTime` a 30 FPS e registra quedas de frame.
 - `src/main.cpp`: encerra o loop quando a janela fecha e libera objetos alocados.
-- `src/main.cpp`: loop de eventos usa `pollEvent()` opcional, checa tipos com `event->is` e repassa para a cena.
+- `src/main.cpp`: loop de eventos usa `pollEvent()` opcional, checa `Closed` com `event->is` e lê tecla Escape com `getIf`, repassando para a cena.
 - `src/main.cpp`: condiciona loop à janela aberta e verifica fechamento após eventos.
-- `src/scene.cpp`: `handleEvent` usa `event.is`/`event.get` para cliques do mouse.
+- `src/scene.cpp`: `handleEvent` usa ponteiro retornado por `getIf` para cliques do mouse.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
