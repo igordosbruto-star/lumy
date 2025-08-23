@@ -95,7 +95,17 @@ add_executable(lumy-tests
 )
 target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
 target_include_directories(lumy-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
-add_test(NAME basic_startup COMMAND lumy-tests)
+set_property(TARGET lumy-tests PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
+if(EXISTS "${EXAMPLES_DIR}")
+  add_custom_command(TARGET lumy-tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando assets de ${EXAMPLES_DIR} para ${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXAMPLES_DIR}" "${OUT_DIR}/game"
+    VERBATIM
+  )
+endif()
+add_test(NAME basic_startup COMMAND lumy-tests WORKING_DIRECTORY ${OUT_DIR})
 
 # ===== Instalação opcional =====
 include(GNUInstallDirs)
