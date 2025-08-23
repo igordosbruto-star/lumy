@@ -19,6 +19,15 @@ build/msvc/bin/Debug/hello-town.exe
 No VS Code, selecione os mesmos presets e depure o alvo `hello-town` com `F5`.
 
 
+## Testes
+
+Após compilar, execute os testes com:
+
+```sh
+ctest -C Debug -R basic_startup
+```
+
+
 ## Fluxo de cenas
 
 O exemplo `hello-town` usa `SceneStack` com as cenas Boot → Title → Map. `BootScene` carrega recursos e muda para `TitleScene`, que exibe "Start" (requer `game/font.ttf`; falha no carregamento lança exceção) e ao confirmar abre `MapScene` com um herói movido por W/A/S/D.
