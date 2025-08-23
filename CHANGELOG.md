@@ -82,6 +82,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: aplica `stack.applyPending()` logo após os eventos para garantir transições antes do fechamento da janela.
 - `CMakeLists.txt`: linka `lumy-tests` com TMXLITE e demais dependências.
 - `src/map.cpp`: inicializa IDs de tiles e trata camadas vazias.
+- `tests/title_scene.cpp`: envolve inicializador em parênteses no `EXPECT_THROW` para evitar erro de compilação.
 
 ### Docs
 - Adicionado `VISION.md`.
