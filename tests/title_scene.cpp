@@ -6,12 +6,24 @@
 #include "title_scene.hpp"
 #include "texture_manager.hpp"
 
+namespace {
+struct ScopedCurrentPath {
+    explicit ScopedCurrentPath(const std::filesystem::path& p)
+        : old_(std::filesystem::current_path()) {
+        std::filesystem::current_path(p);
+    }
+
+    ~ScopedCurrentPath() { std::filesystem::current_path(old_); }
+
+private:
+    std::filesystem::path old_;
+};
+} // namespace
+
 TEST(TitleScene, MissingFontThrows) {
-    auto old = std::filesystem::current_path();
     auto testsDir = std::filesystem::path{__FILE__}.parent_path();
-    std::filesystem::current_path(testsDir);
+    ScopedCurrentPath change{testsDir};
     SceneStack stack;
     TextureManager textures;
     EXPECT_THROW((TitleScene{stack, textures}), std::runtime_error);
-    std::filesystem::current_path(old);
 }
