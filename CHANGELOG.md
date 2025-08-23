@@ -55,6 +55,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/title_scene.cpp`: usa `openFromFile`, inicializa `startText` no construtor e verifica cliques com `sf::Vector2f`.
 - `CMakeLists.txt`: define diretório de trabalho dos testes e copia assets necessários.
 - `src/title_scene.cpp`: verifica carregamento da fonte e lança exceção se falhar.
+- `src/title_scene.cpp`: trata tecla Enter usando `event.is`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).

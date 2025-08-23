@@ -28,9 +28,8 @@ TEST(SceneFlow, BootTitleMap) {
     stack.applyPending();
     EXPECT_NE(dynamic_cast<TitleScene*>(stack.current()), nullptr);
 
-    const sf::Event click =
-        sf::Event::MouseButtonPressed{sf::Mouse::Button::Left, {210, 160}};
-    stack.current()->handleEvent(click);
+    const sf::Event again = sf::Event::KeyPressed{sf::Keyboard::Key::Enter};
+    stack.current()->handleEvent(again);
     EXPECT_NE(dynamic_cast<TitleScene*>(stack.current()), nullptr);
     stack.applyPending();
     EXPECT_NE(dynamic_cast<MapScene*>(stack.current()), nullptr);
