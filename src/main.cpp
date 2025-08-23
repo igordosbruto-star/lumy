@@ -60,11 +60,7 @@ int main() {
     // Um quadradinho para animar (placeholder do “herói”)
     auto scene = std::make_unique<Scene>(sf::Vector2f{W * 0.5f, H * 0.5f});
 
-    while (true) {
-        if (!window->isOpen()) {
-            break;
-        }
-
+    while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
         float deltaTime = elapsed.asSeconds();
         if (deltaTime > maxDeltaTime) {
@@ -92,6 +88,10 @@ int main() {
                 }
             }
             scene->handleEvent(*event);
+        }
+
+        if (!window->isOpen()) {
+            break;
         }
 
         scene->update(deltaTime);
