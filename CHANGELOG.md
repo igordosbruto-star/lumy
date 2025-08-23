@@ -32,6 +32,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: loop de eventos usa `pollEvent()` opcional, checa `Closed` com `event->is` e lê tecla Escape com `getIf`, repassando para a cena.
 - `src/main.cpp`: condiciona loop à janela aberta e verifica fechamento após eventos.
 - `src/scene.cpp`: `handleEvent` usa ponteiro retornado por `getIf` para cliques do mouse.
+- `src/scene.cpp`: correção de sf::Mouse::Left para sf::Mouse::Button::Left da SFML3.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
