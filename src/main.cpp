@@ -53,8 +53,9 @@ int main() {
     auto window = std::make_unique<sf::RenderWindow>(
         sf::VideoMode(sf::Vector2u{W, H}), "Lumy — hello-town");
 
-    // Limitador manual de FPS
-    const sf::Time targetFrameTime = sf::seconds(1.f / 60.f);
+    // Limita o framerate para ~60 FPS via SFML
+    window->setFramerateLimit(60);
+    // Relógio de frame e controle de deltaTime/FPS
     sf::Clock frameClock;
     std::size_t fpsFrameCount = 0;
     sf::Time fpsAccumulated = sf::Time::Zero;
@@ -112,12 +113,6 @@ int main() {
         }
         // 3. Exibir o frame
         window->display();
-
-        // Completar o tempo de frame restante
-        sf::Time workTime = frameClock.getElapsedTime();
-        if (workTime < targetFrameTime) {
-            sf::sleep(targetFrameTime - workTime);
-        }
     }
 
     window.reset();
