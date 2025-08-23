@@ -57,6 +57,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `CMakeLists.txt`: define diretório de trabalho dos testes e copia assets necessários.
 - `src/title_scene.cpp`: verifica carregamento da fonte e lança exceção se falhar.
 - `src/title_scene.cpp`: trata tecla Enter usando ponteiro retornado por `getIf`.
+- `src/boot_scene.*`: carrega e desenha o mapa `game/first.tmx` ao iniciar.
 - `tests/title_scene.cpp`: define diretório de trabalho relativo ao arquivo de teste.
 
 ### Fixed
