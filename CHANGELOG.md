@@ -21,6 +21,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/title_scene.hpp`/`src/title_scene.cpp`: menu de título com opção Start que abre `MapScene`.
 - Teste de fluxo de cenas Boot → Title → Map.
 - Teste de fluxo de cenas via clique do mouse em Start.
+- Teste para encerrar loop ao fechar a janela sem chamar `update`.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
