@@ -73,7 +73,8 @@ bool Map::load(const std::string& path) {
 
         std::unordered_map<const sf::Texture*, sf::VertexArray> batches;
         const auto& tiles = tileLayer.getTiles();
-        sf::Vector2u tileSizePx = tmxMap.getTileSize();
+        const auto tmxTileSize = tmxMap.getTileSize();
+        sf::Vector2u tileSizePx{tmxTileSize.x, tmxTileSize.y};
 
         for (std::size_t i = 0; i < tiles.size(); ++i) {
             const auto& tile = tiles[i];
