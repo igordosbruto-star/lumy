@@ -84,6 +84,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `CMakeLists.txt`: linka `lumy-tests` com TMXLITE e demais dependências.
 - `src/map.cpp`: inicializa IDs de tiles e trata camadas vazias.
 - `tests/title_scene.cpp`: envolve inicializador em parênteses no `EXPECT_THROW` para evitar erro de compilação.
+- `src/map.cpp`: normaliza caminho das texturas de tileset evitando prefixo duplicado.
 
 ### Docs
 - Adicionado `VISION.md`.
