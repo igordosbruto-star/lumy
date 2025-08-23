@@ -12,18 +12,9 @@ TitleScene::TitleScene(SceneStack& stack)
 }
 
 void TitleScene::handleEvent(const sf::Event& event) {
-    if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Enter) {
-            stack_.switchScene(std::make_unique<MapScene>(sf::Vector2f{320.f, 180.f}));
-        }
-    } else if (const auto* mouse = event.getIf<sf::Event::MouseButtonPressed>()) {
-        if (mouse->button == sf::Mouse::Button::Left) {
-            auto bounds = startText_.getGlobalBounds();
-            if (bounds.contains(sf::Vector2f{static_cast<float>(mouse->position.x),
-                                            static_cast<float>(mouse->position.y)})) {
-                stack_.switchScene(std::make_unique<MapScene>(sf::Vector2f{320.f, 180.f}));
-            }
-        }
+    if (event.is<sf::Event::KeyPressed>() &&
+        event.get<sf::Event::KeyPressed>().code == sf::Keyboard::Key::Enter) {
+        stack_.switchScene(std::make_unique<MapScene>(sf::Vector2f{320.f, 180.f}));
     }
 }
 
