@@ -44,6 +44,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/scene.cpp`: correção de sf::Mouse::Left para sf::Mouse::Button::Left da SFML3.
 - `src/main.cpp`: fluxo de cenas Boot → Title → Map via `SceneStack`.
 - `src/main.cpp`: inicia `SceneStack` com `BootScene`.
+- `src/title_scene.cpp`: usa `openFromFile`, inicializa `startText` no construtor e verifica cliques com `sf::Vector2f`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
