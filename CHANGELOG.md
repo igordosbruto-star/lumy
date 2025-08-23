@@ -69,6 +69,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/map.hpp`/`src/map.cpp`: substitui `Layer` por `TileLayer` armazenando IDs de tiles e vértices.
 - `src/map.cpp`: gera vértices percorrendo `TileLayer::ids`, move batches para `TileLayer::vertices` e remove `Layer` intermediário.
 - `src/map.cpp`: otimiza `Map::draw` para um draw por camada/tileset e comenta possíveis extensões de culling.
+- `src/map_scene.hpp`/`src/map_scene.cpp`: carrega TMX via `TextureManager` e posiciona o herói usando `spawn_x`/`spawn_y`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
