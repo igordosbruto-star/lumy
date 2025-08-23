@@ -72,6 +72,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/map.cpp`: otimiza `Map::draw` para um draw por camada/tileset e comenta possíveis extensões de culling.
 - `src/map_scene.hpp`/`src/map_scene.cpp`: carrega TMX via `TextureManager` e posiciona o herói usando `spawn_x`/`spawn_y`.
 - `src/map_scene.cpp`: desenho ordenado de camadas `ground_*` antes do herói e demais depois.
+- `src/main.cpp`: usa `setFramerateLimit` para 60 FPS e remove `sf::sleep` manual.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
