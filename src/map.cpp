@@ -71,10 +71,7 @@ bool Map::load(const std::string &path) {
       (void)prop;
     }
 
-    struct Batch {
-      sf::VertexArray vertices;
-    };
-    std::unordered_map<const sf::Texture *, Batch> batches;
+    std::unordered_map<const sf::Texture *, sf::VertexArray> batches;
     const auto &tiles = tmxLayer.getTiles();
     TileLayer baseLayer;
     baseLayer.ids.resize(tiles.size());
@@ -84,12 +81,16 @@ bool Map::load(const std::string &path) {
     for (std::size_t i = 0; i < tiles.size(); ++i) {
       const auto &tile = tiles[i];
       baseLayer.ids[i] = tile.ID;
-      if (tile.ID == 0)
+    }
+
+    for (std::size_t i = 0; i < baseLayer.ids.size(); ++i) {
+      std::uint32_t id = baseLayer.ids[i];
+      if (id == 0)
         continue;
 
       const TilesetInfo *tsInfo = nullptr;
       for (const auto &info : tilesets) {
-        if (tile.ID >= static_cast<std::uint32_t>(info.firstGid))
+        if (id >= static_cast<std::uint32_t>(info.firstGid))
           tsInfo = &info;
         else
           break;
@@ -97,11 +98,10 @@ bool Map::load(const std::string &path) {
       if (!tsInfo)
         continue;
 
-      Batch &batch = batches[tsInfo->texture];
-      sf::VertexArray &va = batch.vertices;
+      sf::VertexArray &va = batches[tsInfo->texture];
       va.setPrimitiveType(sf::PrimitiveType::Triangles);
 
-      std::uint32_t localID = tile.ID - tsInfo->firstGid;
+      std::uint32_t localID = id - tsInfo->firstGid;
       unsigned tu = localID % tsInfo->columns;
       unsigned tv = localID / tsInfo->columns;
       float tx = static_cast<float>(tu * tsInfo->tileSize.x);
@@ -124,7 +124,7 @@ bool Map::load(const std::string &path) {
                             {tx + tsInfo->tileSize.x, ty + tsInfo->tileSize.y},
                             {tx, ty + tsInfo->tileSize.y}};
 
-      std::uint8_t flip = tile.flipFlags;
+      std::uint8_t flip = tiles[i].flipFlags;
       if (flip & tmx::TileLayer::FlipFlag::Horizontal) {
         std::swap(uv[0], uv[1]);
         std::swap(uv[3], uv[2]);
@@ -152,11 +152,11 @@ bool Map::load(const std::string &path) {
     if (batches.empty()) {
       layers_.push_back(std::move(baseLayer));
     } else {
-      for (auto &[texPtr, batch] : batches) {
+      for (auto &[texPtr, vertices] : batches) {
         TileLayer tl;
         tl.texture = texPtr;
         tl.ids = baseLayer.ids;
-        tl.vertices = std::move(batch.vertices);
+        tl.vertices = std::move(vertices);
         layers_.push_back(std::move(tl));
       }
     }
