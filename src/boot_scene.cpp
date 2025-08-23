@@ -1,7 +1,8 @@
 #include "boot_scene.hpp"
 #include <iostream>
 
-BootScene::BootScene(SceneStack& stack) : stack_(stack) {
+BootScene::BootScene(SceneStack& stack)
+    : stack_(stack), textures_(), map_(textures_) {
     map_.load("game/first.tmx");
 }
 

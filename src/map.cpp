@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <algorithm>
 
+Map::Map(TextureManager& textures) : textures_(textures) {}
+
 bool Map::load(const std::string& path) {
     tmx::Map tmxMap;
     if (!tmxMap.load(path)) {
@@ -37,19 +39,15 @@ bool Map::load(const std::string& path) {
     std::vector<TilesetInfo> tilesets;
 
     for (const auto& ts : tmxMap.getTilesets()) {
-        sf::Texture tex;
         auto texPath = base / ts.getImagePath();
-        if (!tex.loadFromFile(texPath.string())) {
-            std::cerr << "Failed to load tileset texture: " << texPath << '\n';
-            return false;
-        }
+        const sf::Texture& tex = textures_.acquire(texPath);
         int first = static_cast<int>(ts.getFirstGID());
-        auto [it, inserted] = tilesetTextures_.emplace(first, std::move(tex));
+        tilesetTextures_.emplace(first, &tex);
         TilesetInfo info;
         info.firstGid = first;
         info.tileSize = {ts.getTileSize().x, ts.getTileSize().y};
         info.columns = ts.getColumnCount();
-        info.texture = &it->second;
+        info.texture = &tex;
         tilesets.push_back(info);
 
         // store properties for future use
