@@ -105,7 +105,10 @@ if(EXISTS "${EXAMPLES_DIR}")
     VERBATIM
   )
 endif()
-add_test(NAME basic_startup COMMAND lumy-tests WORKING_DIRECTORY ${OUT_DIR})
+add_custom_command(TARGET lumy-tests PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}"
+)
+add_test(NAME basic_startup COMMAND lumy-tests WORKING_DIRECTORY "${OUT_DIR}")
 
 # ===== Instalação opcional =====
 include(GNUInstallDirs)
