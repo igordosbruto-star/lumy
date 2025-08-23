@@ -42,6 +42,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `CMakeLists.txt`: compila `SceneStack` e adiciona testes.
 - `src/scene.cpp`: correção de sf::Mouse::Left para sf::Mouse::Button::Left da SFML3.
 - `src/main.cpp`: fluxo de cenas Boot → Title → Map via `SceneStack`.
+- `src/main.cpp`: inicia `SceneStack` com `BootScene`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).
