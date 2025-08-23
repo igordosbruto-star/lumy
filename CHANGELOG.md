@@ -84,6 +84,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `CMakeLists.txt`: linka `lumy-tests` com TMXLITE e demais dependências.
 - `src/map.cpp`: inicializa IDs de tiles e trata camadas vazias.
 - `tests/title_scene.cpp`: envolve inicializador em parênteses no `EXPECT_THROW` para evitar erro de compilação.
+- `src/map.cpp`: normaliza caminho das texturas de tileset evitando prefixo duplicado.
 
 ### Docs
 - Adicionado `VISION.md`.
@@ -95,7 +96,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/main.cpp`: comentários explicando a sequência de renderização (limpar → desenhar → exibir).
 - `docs/scene_flow.md` e `README.md`: fluxo Boot → Title → Map e uso do `SceneStack`.
 - `docs/scene_flow.md` e `README.md`: documentada exceção ao falhar carregamento da fonte.
-- `contributing.md`: instruções para rodar testes com `ctest --output-on-failure -R <regex>` sem `-T test`.
+- `README.md` e `contributing.md`: instruções para rodar testes com `ctest -C Debug -R basic_startup`.
 
 
 
