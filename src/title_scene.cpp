@@ -3,8 +3,8 @@
 #include <memory>
 #include <stdexcept>
 
-TitleScene::TitleScene(SceneStack& stack)
-    : stack_(stack), startText_(font_, "Start", 32) {
+TitleScene::TitleScene(SceneStack& stack, TextureManager& textures)
+    : stack_(stack), textures_(textures), startText_(font_, "Start", 32) {
     if (!font_.openFromFile("game/font.ttf")) {
         throw std::runtime_error("failed to load font game/font.ttf");
     }
@@ -14,7 +14,7 @@ TitleScene::TitleScene(SceneStack& stack)
 void TitleScene::handleEvent(const sf::Event& event) {
     if (const auto* key = event.getIf<sf::Event::KeyPressed>();
         key && key->code == sf::Keyboard::Key::Enter) {
-        stack_.switchScene(std::make_unique<MapScene>(sf::Vector2f{320.f, 180.f}));
+        stack_.switchScene(std::make_unique<MapScene>(textures_));
     }
 }
 

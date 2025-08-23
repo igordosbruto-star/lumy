@@ -26,7 +26,7 @@ TEST(SceneFlow, BootTitleMap) {
     stack.applyPending();
     EXPECT_NE(dynamic_cast<MapScene*>(stack.current()), nullptr);
 
-    stack.switchScene(std::make_unique<TitleScene>(stack));
+    stack.switchScene(std::make_unique<TitleScene>(stack, textures));
     stack.applyPending();
     EXPECT_NE(dynamic_cast<TitleScene*>(stack.current()), nullptr);
 
