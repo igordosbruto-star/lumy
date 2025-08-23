@@ -16,30 +16,44 @@ TEST(SceneStack, PushPopSwitch) {
     auto first = std::make_unique<DummyScene>();
     Scene* firstPtr = first.get();
     stack.pushScene(std::move(first));
+    EXPECT_EQ(stack.current(), nullptr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), firstPtr);
 
     auto second = std::make_unique<DummyScene>();
     Scene* secondPtr = second.get();
     stack.pushScene(std::move(second));
+    EXPECT_EQ(stack.current(), firstPtr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), secondPtr);
 
     stack.popScene();
+    EXPECT_EQ(stack.current(), secondPtr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), firstPtr);
 
     stack.popScene();
+    EXPECT_EQ(stack.current(), firstPtr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), nullptr);
 
     stack.popScene();
+    EXPECT_EQ(stack.current(), nullptr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), nullptr);
 
     auto third = std::make_unique<DummyScene>();
     Scene* thirdPtr = third.get();
     stack.switchScene(std::move(third));
+    EXPECT_EQ(stack.current(), nullptr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), thirdPtr);
 
     auto fourth = std::make_unique<DummyScene>();
     Scene* fourthPtr = fourth.get();
     stack.switchScene(std::move(fourth));
+    EXPECT_EQ(stack.current(), thirdPtr);
+    stack.applyPending();
     EXPECT_EQ(stack.current(), fourthPtr);
 }
 

@@ -112,6 +112,8 @@ int main() {
         // 3. Exibir o frame
         window->display();
 
+        stack.applyPending();
+
         // Completar o tempo de frame restante
         sf::Time workTime = frameClock.getElapsedTime();
         if (workTime < targetFrameTime) {
