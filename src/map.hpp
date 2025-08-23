@@ -5,6 +5,7 @@
 #include <SFML/Graphics/VertexArray.hpp>
 
 #include <unordered_map>
+#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -21,13 +22,14 @@ public:
     void draw(sf::RenderTarget& target) const;
 
 private:
-    struct Layer {
+    struct TileLayer {
         const sf::Texture* texture{};
+        std::vector<std::uint32_t> ids;
         sf::VertexArray vertices;
     };
 
     TextureManager& textures_;
     std::unordered_map<int, const sf::Texture*> tilesetTextures_;
-    std::vector<Layer> layers_;
+    std::vector<TileLayer> layers_;
 };
 
