@@ -10,6 +10,7 @@ endif()
 set(HELLO_TOWN_SOURCES
   src/main.cpp
   src/scene.cpp
+  src/scene_stack.cpp
 )
 
 add_executable(hello-town ${HELLO_TOWN_SOURCES})
@@ -74,8 +75,14 @@ endif()
 # ===== Tests =====
 enable_testing()
 find_package(GTest CONFIG REQUIRED)
-add_executable(lumy-tests tests/basic_startup.cpp)
+add_executable(lumy-tests
+  tests/basic_startup.cpp
+  tests/scene_stack.cpp
+  src/scene.cpp
+  src/scene_stack.cpp
+)
 target_link_libraries(lumy-tests PRIVATE GTest::gtest_main SFML::Graphics)
+target_include_directories(lumy-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 add_test(NAME basic_startup COMMAND lumy-tests)
 
 # ===== Instalação opcional =====

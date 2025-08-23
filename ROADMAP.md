@@ -76,7 +76,7 @@
 - [ ] Definir esquemas **JSON** (actors/items/states/skills/enemies/system). *(Planned)*
 - [ ] Tabela de **comandos de evento** (10 básicos) com argumentos. *(Planned)*
 - [ ] Carregar **TMX** via tmxlite; desenhar layers e flags de colisão. *(Planned)*
-- [ ] Implementar **SceneStack** e ciclo de jogo. *(Planned)*
+ - [x] Implementar **SceneStack** e ciclo de jogo. *(Done)*
 - [ ] **Save/Load** de switches/variáveis/posição. *(Planned)*
 - [ ] Exemplo `hello-town` + README. *(Planned)*
 
