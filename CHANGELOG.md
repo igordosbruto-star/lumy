@@ -60,6 +60,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/title_scene.cpp`: trata tecla Enter usando ponteiro retornado por `getIf`.
 - `src/boot_scene.*`: carrega e desenha o mapa `game/first.tmx` ao iniciar.
 - `tests/title_scene.cpp`: define diretório de trabalho relativo ao arquivo de teste.
+- `src/map.hpp`/`src/map.cpp`: `Map` usa `TextureManager` e armazena ponteiros para texturas de tileset.
+- `src/boot_scene.hpp`/`src/boot_scene.cpp`: `BootScene` gerencia `TextureManager` e o fornece ao `Map`.
 
 ### Fixed
 - Baseline do vcpkg: `"HEAD"` → SHA real (corrige “builtin-baseline inválido”).

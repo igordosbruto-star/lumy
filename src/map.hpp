@@ -8,8 +8,12 @@
 #include <vector>
 #include <string>
 
+#include "texture_manager.hpp"
+
 class Map {
 public:
+    explicit Map(TextureManager& textures);
+
     // Loads a TMX map from the given path. Returns true on success.
     bool load(const std::string& path);
 
@@ -22,7 +26,8 @@ private:
         sf::VertexArray vertices;
     };
 
-    std::unordered_map<int, sf::Texture> tilesetTextures_;
+    TextureManager& textures_;
+    std::unordered_map<int, const sf::Texture*> tilesetTextures_;
     std::vector<Layer> layers_;
 };
 
