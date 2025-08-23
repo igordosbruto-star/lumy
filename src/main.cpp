@@ -7,6 +7,7 @@
 #include <memory>
 #include "boot_scene.hpp"
 #include "scene_stack.hpp"
+#include "delta_time.hpp"
 
 int main() {
     std::cout << "Lumy: hello-town iniciando...\n";
@@ -65,11 +66,7 @@ int main() {
 
     while (window->isOpen()) {
         sf::Time elapsed = frameClock.restart();
-        float deltaTime = elapsed.asSeconds();
-        if (deltaTime > maxDeltaTime) {
-            std::cout << "[Frame drop] deltaTime: " << deltaTime << "s\n";
-            deltaTime = maxDeltaTime;
-        }
+        float deltaTime = clampDeltaTime(elapsed.asSeconds(), maxDeltaTime);
 
         // Média de FPS a cada ~1 segundo
         fpsFrameCount++;
