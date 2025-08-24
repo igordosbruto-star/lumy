@@ -59,15 +59,22 @@ void MapScene::handleEvent(const sf::Event& event) {
 
 void MapScene::update(float deltaTime) {
     sf::Vector2f pos = hero_.getPosition();
+    sf::Vector2f newPos = pos;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-        pos.y -= moveSpeed_ * deltaTime;
+        newPos.y -= moveSpeed_ * deltaTime;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-        pos.y += moveSpeed_ * deltaTime;
+        newPos.y += moveSpeed_ * deltaTime;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-        pos.x -= moveSpeed_ * deltaTime;
+        newPos.x -= moveSpeed_ * deltaTime;
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-        pos.x += moveSpeed_ * deltaTime;
-    hero_.setPosition(pos);
+        newPos.x += moveSpeed_ * deltaTime;
+
+    const auto &ts = map_.getTileSize();
+    unsigned tileX = static_cast<unsigned>(newPos.x / static_cast<float>(ts.x));
+    unsigned tileY = static_cast<unsigned>(newPos.y / static_cast<float>(ts.y));
+    if (!map_.isCollidable(tileX, tileY)) {
+        hero_.setPosition(newPos);
+    }
 }
 
 void MapScene::draw(sf::RenderWindow& window) const {

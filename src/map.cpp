@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 Map::Map(TextureManager &textures) : textures_(textures) {}
@@ -32,9 +33,12 @@ bool Map::load(const std::string &path) {
   mapWidth_ = tileCount.x;
   mapHeight_ = tileCount.y;
   tileSize_ = {tmxMap.getTileSize().x, tmxMap.getTileSize().y};
+  collision_.clear();
+  collision_.resize(static_cast<std::size_t>(mapWidth_) * mapHeight_, false);
 
   std::filesystem::path base = std::filesystem::path(path).parent_path();
   std::vector<TilesetInfo> tilesets;
+  std::unordered_set<std::uint32_t> collidableTiles;
 
   for (const auto &ts : tmxMap.getTilesets()) {
     std::filesystem::path texPath{ts.getImagePath()};
@@ -52,9 +56,12 @@ bool Map::load(const std::string &path) {
     info.texture = &tex;
     tilesets.push_back(info);
 
-    // store properties for future use
-    for (const auto &prop : ts.getProperties()) {
-      (void)prop;
+    for (const auto &tile : ts.getTiles()) {
+      for (const auto &prop : tile.properties) {
+        if (prop.getName() == "collidable" && prop.getBoolValue()) {
+          collidableTiles.insert(static_cast<std::uint32_t>(first + tile.ID));
+        }
+      }
     }
   }
 
@@ -87,6 +94,9 @@ bool Map::load(const std::string &path) {
     for (std::size_t i = 0; i < tiles.size(); ++i) {
       const auto &tile = tiles[i];
       baseLayer.ids[i] = tile.ID;
+      if (collidableTiles.count(tile.ID)) {
+        collision_[i] = true;
+      }
     }
 
     for (std::size_t i = 0; i < baseLayer.ids.size(); ++i) {
@@ -226,6 +236,15 @@ void Map::setTileID(std::size_t layer, unsigned x, unsigned y, std::uint32_t id)
   quad[3].texCoords = {tx, ty};
   quad[4].texCoords = {tx + tsInfo->tileSize.x, ty + tsInfo->tileSize.y};
   quad[5].texCoords = {tx, ty + tsInfo->tileSize.y};
+}
+
+bool Map::isCollidable(unsigned x, unsigned y) const {
+  if (x >= mapWidth_ || y >= mapHeight_)
+    return true;
+  std::size_t idx = static_cast<std::size_t>(y) * mapWidth_ + x;
+  if (idx >= collision_.size())
+    return true;
+  return collision_[idx];
 }
 
 void Map::draw(sf::RenderTarget &target) const {
