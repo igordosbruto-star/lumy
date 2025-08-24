@@ -33,6 +33,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Cache de texturas de tileset via `TextureManager`, evitando carregamentos duplicados.
 - `src/map.hpp`/`src/map.cpp`: métodos `getTileID` e `setTileID` com atualização do `VertexArray`.
 - `Map` (`src/map.hpp`/`src/map.cpp`): funções `drawLayer` e `drawRange` para desenhar camadas específicas.
+- `map_loader.py`: função `load_hello_map()` para parsear `hello.tmx` com tratamento de erros.
 
 ### Changed
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
