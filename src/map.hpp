@@ -35,6 +35,11 @@ public:
     std::uint32_t getTileID(std::size_t layer, unsigned x, unsigned y) const;
     void setTileID(std::size_t layer, unsigned x, unsigned y, std::uint32_t id);
 
+    const sf::Vector2u& getTileSize() const { return tileSize_; }
+    unsigned getWidth() const { return mapWidth_; }
+    unsigned getHeight() const { return mapHeight_; }
+    bool isCollidable(unsigned x, unsigned y) const;
+
 private:
     struct TileLayer {
         const sf::Texture* texture{};
@@ -57,5 +62,6 @@ private:
     unsigned mapWidth_{};
     unsigned mapHeight_{};
     sf::Vector2u tileSize_{};
+    std::vector<bool> collision_;
 };
 
