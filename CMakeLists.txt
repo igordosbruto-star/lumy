@@ -88,6 +88,7 @@ add_executable(lumy-tests
   tests/scene_flow.cpp
   tests/title_scene.cpp
   tests/scene_loop_close.cpp
+  tests/collision.cpp
   src/delta_time.cpp
   src/scene.cpp
   src/scene_stack.cpp
@@ -110,12 +111,12 @@ target_include_directories(lumy-tests PRIVATE
   ${LUA_INCLUDE_DIR}
 )
 set_property(TARGET lumy-tests PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
-if(EXISTS "${EXAMPLES_DIR}")
+if(EXISTS "${ASSETS_DIR}")
   add_custom_command(TARGET lumy-tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Copiando assets de ${EXAMPLES_DIR} para ${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando assets de ${ASSETS_DIR} para ${OUT_DIR}/game"
     COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/game"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/game"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXAMPLES_DIR}" "${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${OUT_DIR}/game"
     VERBATIM
   )
 endif()
