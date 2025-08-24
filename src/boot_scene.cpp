@@ -5,7 +5,7 @@
 
 BootScene::BootScene(SceneStack& stack, TextureManager& textures)
     : stack_(stack), textures_(textures), map_(textures_) {
-    map_.load("game/hello-town.tmx");
+    map_.load("game/assets/maps/hello.tmx");
 }
 
 void BootScene::handleEvent(const sf::Event&) {}
