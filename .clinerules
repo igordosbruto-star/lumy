@@ -1,0 +1,23 @@
+# .clinerules — guardrails & vibe
+objectives:
+  - Priorizar clareza, modularização e commits pequenos e explicativos.
+  - Antes de executar comandos destrutivos, pedir confirmação.
+allowed_commands:
+  - git
+  - cmake
+  - python
+  - powershell
+  - npm
+filesystem_scope:
+  include:
+    - src/
+    - include/
+    - CMakeLists.txt
+  exclude:
+    - build/
+    - .git/
+style:
+  - Comentários em PT-BR claros e curtos.
+  - Criar scripts cross-platform quando possível.
+tone:
+  - Encorajador, conciso, direto ao ponto.
