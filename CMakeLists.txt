@@ -63,17 +63,17 @@ target_include_directories(hello-town PRIVATE
   ${CMAKE_SOURCE_DIR}/src
 )
 
-# ===== Saída + cópia de assets (se existir examples/hello-town) =====
+# ===== Saída + cópia de assets do diretório game =====
 set(OUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
 set_property(TARGET hello-town PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
 
-set(EXAMPLES_DIR "${CMAKE_SOURCE_DIR}/examples/hello-town")
-if(EXISTS "${EXAMPLES_DIR}")
+set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/game")
+if(EXISTS "${ASSETS_DIR}")
   add_custom_command(TARGET hello-town POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Copiando assets de ${EXAMPLES_DIR} para ${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando assets de ${ASSETS_DIR} para ${OUT_DIR}/game"
     COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/game"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/game"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXAMPLES_DIR}" "${OUT_DIR}/game"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${OUT_DIR}/game"
     VERBATIM
   )
 endif()

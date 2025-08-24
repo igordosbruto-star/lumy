@@ -27,6 +27,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - Teste unitário garantindo limitação de `deltaTime` para `maxDeltaTime`.
 - `tests/title_scene.cpp`: testa exceção ao faltar `game/font.ttf`.
 - `game/font.ttf`: fonte padrão para `TitleScene`.
+- `game/assets/maps/hello.tmx` e tileset correspondente.
 - `DartConfiguration.tcl` com configuração básica para envios ao CDash.
 - `src/texture_manager.hpp`/`src/texture_manager.cpp`: cache simples de texturas.
 - Cache de texturas de tileset via `TextureManager`, evitando carregamentos duplicados.
@@ -62,7 +63,9 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `src/title_scene.cpp`: verifica carregamento da fonte e lança exceção se falhar.
 - `src/title_scene.cpp`: trata tecla Enter usando ponteiro retornado por `getIf`.
 - Mapa de exemplo renomeado para `hello-town.tmx` e referências atualizadas.
-- `src/boot_scene.*`: carrega e desenha o mapa `game/hello-town.tmx` ao iniciar.
+- `CMakeLists.txt`: copia assets do diretório `game/` para `bin/<Config>/game`.
+- `src/main.cpp`, `src/map_scene.hpp` e `src/boot_scene.cpp`: carregam mapa de `game/assets/maps/hello.tmx`.
+- `docs/scene_flow.md`: referência ao novo caminho do mapa de exemplo.
 - `tests/title_scene.cpp`: define diretório de trabalho relativo ao arquivo de teste.
 - `tests/title_scene.cpp`: restaura diretório de trabalho via RAII para segurança em exceções.
 - `src/map.hpp`/`src/map.cpp`: `Map` usa `TextureManager` e armazena ponteiros para texturas de tileset.

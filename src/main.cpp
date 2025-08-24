@@ -24,7 +24,7 @@ int main() {
 
     // Teste opcional de TMX (não é obrigatório ter o arquivo)
     try {
-        const char* tmxPath = "game/hello-town.tmx"; // será copiado se você criar examples/hello-town/hello-town.tmx
+        const char* tmxPath = "game/assets/maps/hello.tmx"; // mapa de exemplo em assets/maps
         if (std::filesystem::exists(tmxPath)) {
             tmx::Map map;
             if (map.load(tmxPath)) {

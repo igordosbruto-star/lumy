@@ -8,7 +8,7 @@
 
 class MapScene : public Scene {
 public:
-    explicit MapScene(TextureManager& textures, const std::string& tmxPath = "game/hello-town.tmx");
+    explicit MapScene(TextureManager& textures, const std::string& tmxPath = "game/assets/maps/hello.tmx");
 
     void handleEvent(const sf::Event& event) override;
     void update(float deltaTime) override;
