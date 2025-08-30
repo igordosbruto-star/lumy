@@ -17,6 +17,8 @@ set(HELLO_TOWN_SOURCES
   src/map_scene.cpp
   src/map.cpp
   src/texture_manager.cpp
+  src/event_system.cpp
+  src/save_system.cpp
 )
 
 add_executable(hello-town ${HELLO_TOWN_SOURCES})
@@ -97,6 +99,8 @@ add_executable(lumy-tests
   src/map_scene.cpp
   src/map.cpp
   src/texture_manager.cpp
+  src/event_system.cpp
+  src/save_system.cpp
 )
 target_link_libraries(lumy-tests PRIVATE
   GTest::gtest_main
