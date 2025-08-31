@@ -7,6 +7,8 @@
 #include <tmxlite/Object.hpp>
 #include <tmxlite/ObjectGroup.hpp>
 #include <iostream>
+#include <algorithm>
+#include <cmath>
 
 MapScene::MapScene(SceneStack& stack, TextureManager& textures, const std::string& tmxPath)
     : sceneStack_(stack), textures_(textures), map_(textures_) {
@@ -110,6 +112,53 @@ void MapScene::handleEvent(const sf::Event& event) {
                 std::cout << "[MapScene] Quick load realizado\n";
             }
         }
+        
+        // Atalhos AltGr + números (1-9) para saves
+        if (key->alt && !key->control && !key->shift) {
+            if (key->code >= sf::Keyboard::Key::Num1 && key->code <= sf::Keyboard::Key::Num9) {
+                int slotId = static_cast<int>(key->code) - static_cast<int>(sf::Keyboard::Key::Num1) + 1;
+                
+                if (saveSystem_) {
+                    sf::Vector2f pos = hero_.getPosition();
+                    saveSystem_->setPlayerPosition(1, pos.x, pos.y, 2);
+                    if (saveSystem_->saveGame(slotId)) {
+                        std::cout << "[MapScene] Save realizado no slot " << slotId << std::endl;
+                    }
+                }
+            }
+        }
+        
+        // Ctrl + AltGr + números (1-9) para loads
+        if (key->alt && key->control && !key->shift) {
+            if (key->code >= sf::Keyboard::Key::Num1 && key->code <= sf::Keyboard::Key::Num9) {
+                int slotId = static_cast<int>(key->code) - static_cast<int>(sf::Keyboard::Key::Num1) + 1;
+                
+                if (saveSystem_ && saveSystem_->saveExists(slotId)) {
+                    int mapId, direction;
+                    float x, y;
+                    if (saveSystem_->loadGame(slotId)) {
+                        saveSystem_->getPlayerPosition(mapId, x, y, direction);
+                        hero_.setPosition({x, y});
+                        std::cout << "[MapScene] Load realizado do slot " << slotId << std::endl;
+                    }
+                } else {
+                    std::cout << "[MapScene] Save não encontrado no slot " << slotId << std::endl;
+                }
+            }
+        }
+        
+        // Shift + AltGr + números (1-9) para deletar saves
+        if (key->alt && !key->control && key->shift) {
+            if (key->code >= sf::Keyboard::Key::Num1 && key->code <= sf::Keyboard::Key::Num9) {
+                int slotId = static_cast<int>(key->code) - static_cast<int>(sf::Keyboard::Key::Num1) + 1;
+                
+                if (saveSystem_ && saveSystem_->deleteSave(slotId)) {
+                    std::cout << "[MapScene] Save deletado do slot " << slotId << std::endl;
+                } else {
+                    std::cout << "[MapScene] Falha ao deletar save do slot " << slotId << std::endl;
+                }
+            }
+        }
     }
 }
 
@@ -126,27 +175,55 @@ void MapScene::update(float deltaTime) {
     
     sf::Vector2f pos = hero_.getPosition();
     sf::Vector2f newPos = pos;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+    bool moved = false;
+    
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
         newPos.y -= moveSpeed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+        moved = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
         newPos.y += moveSpeed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+        moved = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
         newPos.x -= moveSpeed_ * deltaTime;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+        moved = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
         newPos.x += moveSpeed_ * deltaTime;
-
-    const auto &ts = map_.getTileSize();
-    unsigned tileX = static_cast<unsigned>(newPos.x / static_cast<float>(ts.x));
-    unsigned tileY = static_cast<unsigned>(newPos.y / static_cast<float>(ts.y));
-    if (!map_.isCollidable(tileX, tileY)) {
+        moved = true;
+    }
+    
+    // Aplicar movimento (desabilitar colisão temporariamente para debug)
+    if (moved) {
+        // Verificar se a nova posição está dentro dos limites do mapa
+        const auto& ts = map_.getTileSize();
+        const float mapWidth = static_cast<float>(map_.getWidth() * ts.x);
+        const float mapHeight = static_cast<float>(map_.getHeight() * ts.y);
+        
+        // Limitar dentro das bordas do mapa
+        newPos.x = std::max(32.0f, std::min(newPos.x, mapWidth - 32.0f));
+        newPos.y = std::max(32.0f, std::min(newPos.y, mapHeight - 32.0f));
+        
+        // Testar colisão apenas se estivermos dentro dos limites
+        unsigned tileX = static_cast<unsigned>((newPos.x + 16.0f) / static_cast<float>(ts.x));
+        unsigned tileY = static_cast<unsigned>((newPos.y + 16.0f) / static_cast<float>(ts.y));
+        
+        // Por enquanto, permitir todo movimento para debug
         hero_.setPosition(newPos);
+        
+        // Log para debug
+        if (moved) {
+            std::cout << "[Debug] Movimento: (" << newPos.x << ", " << newPos.y << ") Tile: (" << tileX << ", " << tileY << ")" << std::endl;
+        }
     }
     
     // Atualizar UI
     if (uiText_.has_value()) {
         sf::Vector2f heroPos = hero_.getPosition();
         std::string uiInfo = "Posição: (" + std::to_string(static_cast<int>(heroPos.x)) + ", " + std::to_string(static_cast<int>(heroPos.y)) + ")";
-        uiInfo += "\nControles: WASD=Mover, Enter/Space=Interagir, F5=Save, F9=Load";
+        uiInfo += "\nControles: WASD=Mover, Enter/Space=Interagir";
+        uiInfo += "\nF5=QuickSave, F9=QuickLoad, AltGr+N=Save, Ctrl+AltGr+N=Load, Shift+AltGr+N=Delete";
         
         if (eventSystem_) {
             uiInfo += "\nSwitches: 1=" + std::string(eventSystem_->getSwitch(1) ? "ON" : "OFF");

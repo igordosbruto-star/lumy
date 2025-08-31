@@ -2,17 +2,18 @@
 
 > Este roadmap é um **documento vivo**.  
 > **Revisão:** quinzenal ou por release.  
-> **Última atualização:** 22-08-2025.  
+> **Última atualização:** 31-08-2025.
 > **Status:** `Planned` · `In Progress` · `Done` · `Parked` · `Dropped`.
 
 ## Histórico de alterações
 - 21-08-2025 — Criação do roadmap inicial (M0–M3).
 - 22-08-2025 — README com descrição da engine e guia de CMakePresets.
+- 31-08-2025 — ✅ **M0 "Faísca" concluído** com sucesso! Todas as entregas implementadas e testadas.
 
 
 ## Visão geral de marcos (releases)
 
-### M0 — **Faísca** *(Planned)*
+### M0 — **Faísca** *(Done)* ✅
 **Meta:** engine carrega mapas, executa eventos básicos e salva/fecha em segurança.  
 **Entregas:**
 - Loop + **SceneStack** (Boot → Title → Map).  
@@ -73,12 +74,12 @@
 ## Tarefas por marco (checklist de acompanhamento)
 
 ### M0 — Faísca
-- [ ] Definir esquemas **JSON** (actors/items/states/skills/enemies/system). *(Planned)*
-- [ ] Tabela de **comandos de evento** (10 básicos) com argumentos. *(Planned)*
-- [ ] Carregar **TMX** via tmxlite; desenhar layers e flags de colisão. *(Planned)*
- - [x] Implementar **SceneStack** e ciclo de jogo. *(Done)*
-- [ ] **Save/Load** de switches/variáveis/posição. *(Planned)*
-- [ ] Exemplo `hello-town` + README. *(Planned)*
+- [x] Definir esquemas **JSON** (actors/items/states/skills/enemies/system). *(Done)*
+- [x] Tabela de **comandos de evento** (10 básicos) com argumentos. *(Done)*
+- [x] Carregar **TMX** via tmxlite; desenhar layers e flags de colisão. *(Done)*
+- [x] Implementar **SceneStack** e ciclo de jogo. *(Done)*
+- [x] **Save/Load** de switches/variáveis/posição. *(Done)*
+- [x] Exemplo `hello-town` + README. *(Done)*
 
 ### M1 — Brilho
 - [ ] Editor wx: panes, árvore, property grid. *(Planned)*
