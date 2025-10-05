@@ -72,8 +72,13 @@ set(EDITOR_SOURCES
     editor/project_tree_panel.cpp
     editor/property_grid_panel.cpp
     editor/viewport_panel.cpp
+    editor/tileset_panel.cpp
+    editor/map.cpp
+    editor/map_manager.cpp
     editor/file_watcher.cpp
     editor/editor_events.cpp
+    editor/project_manager.cpp
+    editor/new_project_dialog.cpp
 )
 
 # wxWidgets
@@ -85,6 +90,7 @@ target_compile_features(lumy-editor PRIVATE cxx_std_20)
 # wxWidgets setup
 target_link_libraries(lumy-editor PRIVATE
   wx::core wx::base wx::aui wx::propgrid wx::gl
+  nlohmann_json::nlohmann_json
 )
 
 # Definir flags específicas do wxWidgets para Windows
@@ -107,7 +113,7 @@ target_include_directories(lumy-editor PRIVATE
 
 # Warnings para o editor
 if(MSVC)
-  target_compile_options(lumy-editor PRIVATE /W4 /permissive- /EHsc)
+  target_compile_options(lumy-editor PRIVATE /W4 /permissive- /EHsc /utf-8)
 else()
   target_compile_options(lumy-editor PRIVATE -Wall -Wextra -Wpedantic)
 endif()

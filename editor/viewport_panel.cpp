@@ -6,6 +6,7 @@
 
 #include "viewport_panel.h"
 #include "utf8_strings.h"
+#include "map_manager.h"
 #include <GL/gl.h>
 #include <cmath>
 
@@ -35,6 +36,7 @@ wxEND_EVENT_TABLE()
 
 ViewportPanel::ViewportPanel(wxWindow* parent)
     : wxPanel(parent, wxID_ANY)
+    , m_mapManager(nullptr)
 {
     CreateControls();
 }
@@ -68,11 +70,11 @@ void ViewportPanel::CreateToolbar()
     wxBitmap zoomOutBmp = CreateSimpleBitmap(wxColour(120, 120, 120)); // Cinza escuro
     wxBitmap resetBmp = CreateSimpleBitmap(wxColour(180, 180, 180)); // Cinza claro
     
-    // Ferramentas de edição
-    m_toolbar->AddTool(ID_TOOL_SELECT, "Selecionar", selectBmp, UTF8("Ferramenta de seleção"));
-    m_toolbar->AddTool(ID_TOOL_PAINT, "Pintar", paintBmp, "Ferramenta de pintura");
-    m_toolbar->AddTool(ID_TOOL_ERASE, "Apagar", eraseBmp, "Ferramenta de apagar");
-    m_toolbar->AddTool(ID_TOOL_COLLISION, UTF8("Colisão"), collisionBmp, UTF8("Editar colisão"));
+    // Ferramentas de edição (usar AddCheckTool para ter estado visual de pressionado)
+    m_toolbar->AddCheckTool(ID_TOOL_SELECT, "Selecionar", selectBmp, wxNullBitmap, UTF8("Ferramenta de seleção"));
+    m_toolbar->AddCheckTool(ID_TOOL_PAINT, "Pintar", paintBmp, wxNullBitmap, "Ferramenta de pintura");
+    m_toolbar->AddCheckTool(ID_TOOL_ERASE, "Apagar", eraseBmp, wxNullBitmap, "Ferramenta de apagar");
+    m_toolbar->AddCheckTool(ID_TOOL_COLLISION, UTF8("Colisão"), collisionBmp, wxNullBitmap, UTF8("Editar colisão"));
     
     m_toolbar->AddSeparator();
     
@@ -245,55 +247,119 @@ void ViewportPanel::GLCanvas::DrawGrid()
 
 void ViewportPanel::GLCanvas::DrawMap()
 {
-    // Desenhar mapa baseado nos dados reais m_mapTiles
-    glBegin(GL_QUADS);
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
     
-    for (int y = 0; y < MAP_HEIGHT; ++y) {
-        for (int x = 0; x < MAP_WIDTH; ++x) {
-            int tileType = m_mapTiles[y][x];
-            float xPos = x * TILE_SIZE;
-            float yPos = y * TILE_SIZE;
-            
-            // Cores baseadas no tipo do tile
-            switch (tileType) {
-                case 0: // Grass
-                    glColor4f(0.4f, 0.8f, 0.4f, 1.0f);
-                    break;
-                case 1: // Wall
-                    glColor4f(0.6f, 0.4f, 0.2f, 1.0f);
-                    break;
-                case 2: // Collision (special)
-                    if (m_showCollision) {
-                        glColor4f(1.0f, 0.0f, 0.0f, 0.7f); // Red translucent
-                    } else {
-                        glColor4f(0.4f, 0.8f, 0.4f, 1.0f); // Same as grass
-                    }
-                    break;
-                default: // Empty
-                    continue; // Don't draw anything
+    // Se temos um MapManager com mapa carregado, usar dados reais
+    if (mapManager && mapManager->HasMap()) {
+        int mapWidth = mapManager->GetMapWidth();
+        int mapHeight = mapManager->GetMapHeight();
+        
+        glBegin(GL_QUADS);
+        
+        for (int y = 0; y < mapHeight; ++y) {
+            for (int x = 0; x < mapWidth; ++x) {
+                int tileType = mapManager->GetTile(x, y);
+                float xPos = x * TILE_SIZE;
+                float yPos = y * TILE_SIZE;
+                
+                // Cores baseadas no tipo do tile
+                switch (tileType) {
+                    case 0: // Grass/Empty
+                        glColor4f(0.4f, 0.8f, 0.4f, 1.0f);
+                        break;
+                    case 1: // Wall
+                        glColor4f(0.6f, 0.4f, 0.2f, 1.0f);
+                        break;
+                    case 2: // Water
+                        glColor4f(0.2f, 0.4f, 0.8f, 1.0f);
+                        break;
+                    case 3: // Stone
+                        glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+                        break;
+                    case 4: // Tree
+                        glColor4f(0.2f, 0.6f, 0.2f, 1.0f);
+                        break;
+                    default: // Outros tiles - usar cor baseada no ID
+                        float hue = (tileType % 10) / 10.0f;
+                        glColor4f(0.5f + hue * 0.5f, 0.3f + hue * 0.4f, 0.3f + hue * 0.4f, 1.0f);
+                        break;
+                }
+                
+                glVertex2f(xPos, yPos);
+                glVertex2f(xPos + TILE_SIZE, yPos);
+                glVertex2f(xPos + TILE_SIZE, yPos + TILE_SIZE);
+                glVertex2f(xPos, yPos + TILE_SIZE);
             }
-            
-            glVertex2f(xPos, yPos);
-            glVertex2f(xPos + TILE_SIZE, yPos);
-            glVertex2f(xPos + TILE_SIZE, yPos + TILE_SIZE);
-            glVertex2f(xPos, yPos + TILE_SIZE);
         }
+        
+        glEnd();
+        
+        // Desenhar posição do jogador (círculo azul) - centrado no mapa real
+        glColor4f(0.2f, 0.4f, 1.0f, 0.8f);
+        float playerX = (mapWidth / 2.0f) * TILE_SIZE;
+        float playerY = (mapHeight / 2.0f) * TILE_SIZE;
+        float radius = TILE_SIZE * 0.3f;
+        
+        glBegin(GL_POLYGON);
+        for (int i = 0; i < 16; ++i) {
+            float angle = 2.0f * M_PI * i / 16.0f;
+            glVertex2f(playerX + radius * cos(angle), playerY + radius * sin(angle));
+        }
+        glEnd();
     }
-    
-    glEnd();
-    
-    // Desenhar posição do jogador (círculo azul)
-    glColor4f(0.2f, 0.4f, 1.0f, 0.8f);
-    float playerX = 12.5f * TILE_SIZE; // Centro do mapa
-    float playerY = 7.5f * TILE_SIZE;
-    float radius = TILE_SIZE * 0.3f;
-    
-    glBegin(GL_POLYGON);
-    for (int i = 0; i < 16; ++i) {
-        float angle = 2.0f * M_PI * i / 16.0f;
-        glVertex2f(playerX + radius * cos(angle), playerY + radius * sin(angle));
+    else {
+        // Fallback: usar dados simulados se não há mapa carregado
+        glBegin(GL_QUADS);
+        
+        for (int y = 0; y < MAP_HEIGHT; ++y) {
+            for (int x = 0; x < MAP_WIDTH; ++x) {
+                int tileType = m_mapTiles[y][x];
+                float xPos = x * TILE_SIZE;
+                float yPos = y * TILE_SIZE;
+                
+                // Cores baseadas no tipo do tile
+                switch (tileType) {
+                    case 0: // Grass
+                        glColor4f(0.4f, 0.8f, 0.4f, 1.0f);
+                        break;
+                    case 1: // Wall
+                        glColor4f(0.6f, 0.4f, 0.2f, 1.0f);
+                        break;
+                    case 2: // Collision (special)
+                        if (m_showCollision) {
+                            glColor4f(1.0f, 0.0f, 0.0f, 0.7f); // Red translucent
+                        } else {
+                            glColor4f(0.4f, 0.8f, 0.4f, 1.0f); // Same as grass
+                        }
+                        break;
+                    default: // Empty
+                        continue; // Don't draw anything
+                }
+                
+                glVertex2f(xPos, yPos);
+                glVertex2f(xPos + TILE_SIZE, yPos);
+                glVertex2f(xPos + TILE_SIZE, yPos + TILE_SIZE);
+                glVertex2f(xPos, yPos + TILE_SIZE);
+            }
+        }
+        
+        glEnd();
+        
+        // Desenhar posição do jogador (círculo azul) - mapa simulado
+        glColor4f(0.2f, 0.4f, 1.0f, 0.8f);
+        float playerX = 12.5f * TILE_SIZE; // Centro do mapa simulado
+        float playerY = 7.5f * TILE_SIZE;
+        float radius = TILE_SIZE * 0.3f;
+        
+        glBegin(GL_POLYGON);
+        for (int i = 0; i < 16; ++i) {
+            float angle = 2.0f * M_PI * i / 16.0f;
+            glVertex2f(playerX + radius * cos(angle), playerY + radius * sin(angle));
+        }
+        glEnd();
     }
-    glEnd();
 }
 
 void ViewportPanel::GLCanvas::DrawSelection()
@@ -311,7 +377,20 @@ void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
     wxPoint tilePos = WorldToTile(worldPos);
     
     // Verificar se está dentro dos limites do mapa
-    if (tilePos.x < 0 || tilePos.x >= MAP_WIDTH || tilePos.y < 0 || tilePos.y >= MAP_HEIGHT) {
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    bool isValidPosition = false;
+    if (mapManager && mapManager->HasMap()) {
+        // Usar limites reais do mapa carregado
+        isValidPosition = mapManager->IsValidPosition(tilePos.x, tilePos.y);
+    } else {
+        // Fallback: usar limites simulados
+        isValidPosition = (tilePos.x >= 0 && tilePos.x < MAP_WIDTH && tilePos.y >= 0 && tilePos.y < MAP_HEIGHT);
+    }
+    
+    if (!isValidPosition) {
         return;
     }
     
@@ -358,7 +437,20 @@ void ViewportPanel::GLCanvas::OnMouseMove(wxMouseEvent& event)
         wxPoint worldPos((currentPos.x - m_panX) / m_zoom, (currentPos.y - m_panY) / m_zoom);
         wxPoint tilePos = WorldToTile(worldPos);
         
-        if (tilePos.x >= 0 && tilePos.x < MAP_WIDTH && tilePos.y >= 0 && tilePos.y < MAP_HEIGHT) {
+        // Verificar limites do mapa para pintura contínua
+        ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+        MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+        
+        bool isValidPosition = false;
+        if (mapManager && mapManager->HasMap()) {
+            // Usar limites reais do mapa carregado
+            isValidPosition = mapManager->IsValidPosition(tilePos.x, tilePos.y);
+        } else {
+            // Fallback: usar limites simulados
+            isValidPosition = (tilePos.x >= 0 && tilePos.x < MAP_WIDTH && tilePos.y >= 0 && tilePos.y < MAP_HEIGHT);
+        }
+        
+        if (isValidPosition) {
             switch (m_currentTool) {
                 case TOOL_PAINT:
                     PaintTile(tilePos.x, tilePos.y);
@@ -409,6 +501,7 @@ void ViewportPanel::OnToolSelect(wxCommandEvent& WXUNUSED(event))
     m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
     m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
     m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_ARROW));
 }
 
 void ViewportPanel::OnToolPaint(wxCommandEvent& WXUNUSED(event))
@@ -418,6 +511,7 @@ void ViewportPanel::OnToolPaint(wxCommandEvent& WXUNUSED(event))
     m_toolbar->ToggleTool(ID_TOOL_PAINT, true);
     m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
     m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
 }
 
 void ViewportPanel::OnToolErase(wxCommandEvent& WXUNUSED(event))
@@ -427,6 +521,7 @@ void ViewportPanel::OnToolErase(wxCommandEvent& WXUNUSED(event))
     m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
     m_toolbar->ToggleTool(ID_TOOL_ERASE, true);
     m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_NO_ENTRY));
 }
 
 void ViewportPanel::OnToolCollision(wxCommandEvent& WXUNUSED(event))
@@ -436,6 +531,7 @@ void ViewportPanel::OnToolCollision(wxCommandEvent& WXUNUSED(event))
     m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
     m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
     m_toolbar->ToggleTool(ID_TOOL_COLLISION, true);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
 }
 
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
@@ -459,6 +555,26 @@ void ViewportPanel::OnResetView(wxCommandEvent& WXUNUSED(event))
     m_glCanvas->m_panX = 0.0f;
     m_glCanvas->m_panY = 0.0f;
     m_glCanvas->Refresh();
+}
+
+void ViewportPanel::SetSelectedTile(int tileId)
+{
+    if (m_glCanvas) {
+        m_glCanvas->m_selectedTile = tileId;
+    }
+}
+
+void ViewportPanel::SetMapManager(MapManager* mapManager)
+{
+    m_mapManager = mapManager;
+    RefreshMapDisplay();
+}
+
+void ViewportPanel::RefreshMapDisplay()
+{
+    if (m_glCanvas) {
+        m_glCanvas->Refresh();
+    }
 }
 
 // Implementações das funções auxiliares do GLCanvas
@@ -489,7 +605,21 @@ void ViewportPanel::GLCanvas::OnMouseMiddleDown(wxMouseEvent& event)
 void ViewportPanel::GLCanvas::OnMouseMiddleUp(wxMouseEvent& event)
 {
     m_isPanning = false;
-    SetCursor(wxCursor(wxCURSOR_ARROW));
+    // Restaurar cursor da ferramenta atual
+    switch (m_currentTool) {
+        case TOOL_SELECT:
+            SetCursor(wxCursor(wxCURSOR_ARROW));
+            break;
+        case TOOL_PAINT:
+            SetCursor(wxCursor(wxCURSOR_CROSS));
+            break;
+        case TOOL_ERASE:
+            SetCursor(wxCursor(wxCURSOR_NO_ENTRY));
+            break;
+        case TOOL_COLLISION:
+            SetCursor(wxCursor(wxCURSOR_CROSS));
+            break;
+    }
     event.Skip();
 }
 
@@ -505,28 +635,71 @@ wxPoint ViewportPanel::GLCanvas::TileToWorld(const wxPoint& tilePos)
 
 void ViewportPanel::GLCanvas::PaintTile(int tileX, int tileY)
 {
-    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
-        m_mapTiles[tileY][tileX] = m_selectedTile;
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    if (mapManager && mapManager->HasMap()) {
+        // Usar dados reais do mapa carregado
+        if (mapManager->IsValidPosition(tileX, tileY)) {
+            mapManager->SetTile(tileX, tileY, m_selectedTile);
+        }
+    } else {
+        // Fallback: usar dados simulados se não há mapa carregado
+        if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+            m_mapTiles[tileY][tileX] = m_selectedTile;
+        }
     }
 }
 
 void ViewportPanel::GLCanvas::EraseTile(int tileX, int tileY)
 {
-    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
-        m_mapTiles[tileY][tileX] = 0; // Grass
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    if (mapManager && mapManager->HasMap()) {
+        // Usar dados reais do mapa carregado
+        if (mapManager->IsValidPosition(tileX, tileY)) {
+            mapManager->SetTile(tileX, tileY, 0); // Grass/Empty
+        }
+    } else {
+        // Fallback: usar dados simulados se não há mapa carregado
+        if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+            m_mapTiles[tileY][tileX] = 0; // Grass
+        }
     }
 }
 
 void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
 {
-    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
-        int currentTile = m_mapTiles[tileY][tileX];
-        if (currentTile == 2) {
-            // Se já é collision, volta para grass
-            m_mapTiles[tileY][tileX] = 0;
-        } else {
-            // Se não é collision, torna collision
-            m_mapTiles[tileY][tileX] = 2;
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    if (mapManager && mapManager->HasMap()) {
+        // Usar dados reais do mapa carregado
+        if (mapManager->IsValidPosition(tileX, tileY)) {
+            int currentTile = mapManager->GetTile(tileX, tileY);
+            if (currentTile == 2) {
+                // Se já é collision, volta para grass
+                mapManager->SetTile(tileX, tileY, 0);
+            } else {
+                // Se não é collision, torna collision
+                mapManager->SetTile(tileX, tileY, 2);
+            }
+        }
+    } else {
+        // Fallback: usar dados simulados se não há mapa carregado
+        if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+            int currentTile = m_mapTiles[tileY][tileX];
+            if (currentTile == 2) {
+                // Se já é collision, volta para grass
+                m_mapTiles[tileY][tileX] = 0;
+            } else {
+                // Se não é collision, torna collision
+                m_mapTiles[tileY][tileX] = 2;
+            }
         }
     }
 }

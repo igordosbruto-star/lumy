@@ -7,11 +7,19 @@
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 
+// Forward declarations
+class MapManager;
+
 class ViewportPanel : public wxPanel
 {
 public:
     ViewportPanel(wxWindow* parent);
     virtual ~ViewportPanel() = default;
+    
+    // Interface pública
+    void SetSelectedTile(int tileId);
+    void SetMapManager(MapManager* mapManager);
+    void RefreshMapDisplay();
 
 private:
     void CreateControls();
@@ -93,6 +101,9 @@ private:
     void OnZoomIn(wxCommandEvent& event);
     void OnZoomOut(wxCommandEvent& event);
     void OnResetView(wxCommandEvent& event);
+    
+    // Map Manager
+    MapManager* m_mapManager;
 
     wxDECLARE_EVENT_TABLE();
 };

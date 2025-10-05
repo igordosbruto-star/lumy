@@ -7,6 +7,20 @@
 #include "project_tree_panel.h"
 #include "utf8_strings.h"
 #include <wx/imaglist.h>
+#include <wx/dir.h>
+#include <wx/filename.h>
+#include <wx/ffile.h>
+
+// Classe para armazenar dados do item de mapa
+class MapItemData : public wxTreeItemData
+{
+public:
+    MapItemData(const wxString& path) : filePath(path) {}
+    wxString GetFilePath() const { return filePath; }
+    
+private:
+    wxString filePath;
+};
 
 wxBEGIN_EVENT_TABLE(ProjectTreePanel, wxPanel)
     EVT_TREE_SEL_CHANGED(wxID_ANY, ProjectTreePanel::OnTreeSelChanged)
@@ -60,8 +74,8 @@ void ProjectTreePanel::PopulateTree()
     m_dataId = m_treeCtrl->AppendItem(m_rootId, "Database", -1, -1, nullptr);
     m_assetsId = m_treeCtrl->AppendItem(m_rootId, "Assets", -1, -1, nullptr);
     
-    // Submapas de exemplo (quando há um projeto carregado)
-    m_treeCtrl->AppendItem(m_mapsId, "hello.tmx", -1, -1, nullptr);
+    // Escanear e adicionar mapas reais
+    ScanForMaps();
     
     // Database de exemplo
     m_treeCtrl->AppendItem(m_dataId, "actors.json", -1, -1, nullptr);
@@ -188,7 +202,19 @@ void ProjectTreePanel::NotifySelection(const wxTreeItemId& item)
     SelectionInfo info;
     info.type = GetItemType(item);
     info.displayName = m_treeCtrl->GetItemText(item);
-    info.filePath = info.displayName; // Por enquanto, usar nome como path
+    
+    // Obter caminho completo do arquivo se disponível
+    wxTreeItemData* itemData = m_treeCtrl->GetItemData(item);
+    if (itemData) {
+        MapItemData* mapData = dynamic_cast<MapItemData*>(itemData);
+        if (mapData) {
+            info.filePath = mapData->GetFilePath();
+        } else {
+            info.filePath = info.displayName;
+        }
+    } else {
+        info.filePath = info.displayName;
+    }
     
     // Criar e enviar evento
     SelectionChangeEvent selectionEvent(EVT_SELECTION_CHANGED);
@@ -200,3 +226,126 @@ void ProjectTreePanel::NotifySelection(const wxTreeItemId& item)
         parent->GetEventHandler()->ProcessEvent(selectionEvent);
     }
 }
+
+void ProjectTreePanel::ScanForMaps()
+{
+    // Adicionar mapa exemplo TMX
+    m_treeCtrl->AppendItem(m_mapsId, "hello.tmx", -1, -1, nullptr);
+    
+    // Usar diretório do projeto atual ou diretório de trabalho
+    wxString projectDir = m_projectPath.IsEmpty() ? wxGetCwd() : m_projectPath;
+    
+    // Lista de diretórios para escanear (relativos ao projeto)
+    wxArrayString scanDirs;
+    scanDirs.Add(projectDir);
+    scanDirs.Add(projectDir + "/maps");
+    scanDirs.Add(projectDir + "/data/maps");
+    scanDirs.Add(projectDir + "/game/maps");
+    
+    for (const wxString& dir : scanDirs) {
+        if (wxDirExists(dir)) {
+            ScanDirectoryForMaps(dir);
+        }
+    }
+    
+    wxLogMessage("Escaneamento de mapas concluído para projeto: %s", projectDir);
+}
+
+void ProjectTreePanel::ScanDirectoryForMaps(const wxString& directory)
+{
+    wxDir dir(directory);
+    if (!dir.IsOpened()) {
+        return;
+    }
+    
+    wxString filename;
+    bool cont = dir.GetFirst(&filename, "*.json", wxDIR_FILES);
+    
+    while (cont) {
+        wxString fullPath = wxFileName(directory, filename).GetFullPath();
+        
+        // Verificar se é realmente um mapa (tem estrutura de mapa)
+        if (IsMapFile(fullPath)) {
+            // Adicionar ao nó de mapas
+            wxTreeItemData* itemData = new wxTreeItemData();
+            wxTreeItemId mapItem = m_treeCtrl->AppendItem(m_mapsId, filename, -1, -1, itemData);
+            
+            // Armazenar o caminho completo como dado do item
+            m_treeCtrl->SetItemData(mapItem, new MapItemData(fullPath));
+            
+            wxLogMessage("Mapa encontrado: %s", filename);
+        }
+        
+        cont = dir.GetNext(&filename);
+    }
+}
+
+bool ProjectTreePanel::IsMapFile(const wxString& filePath)
+{
+    // Ler e verificar se é um arquivo de mapa válido
+    wxFFile file(filePath, "r");
+    if (!file.IsOpened()) {
+        return false;
+    }
+    
+    wxString content;
+    if (!file.ReadAll(&content)) {
+        return false;
+    }
+    
+    // Verificação simples: deve conter "width", "height" e "tiles"
+    // ou "metadata" (para nosso formato completo)
+    return (content.Contains("\"width\"") && content.Contains("\"height\"") && 
+            (content.Contains("\"tiles\"") || content.Contains("\"metadata\"")));
+}
+
+void ProjectTreePanel::RefreshMaps()
+{
+    // Limpar mapas existentes (exceto hello.tmx)
+    wxTreeItemIdValue cookie;
+    wxTreeItemId child = m_treeCtrl->GetFirstChild(m_mapsId, cookie);
+    
+    // Coletar itens para deletar
+    wxArrayTreeItemIds itemsToDelete;
+    while (child.IsOk()) {
+        wxString itemText = m_treeCtrl->GetItemText(child);
+        if (itemText.EndsWith(".json")) {
+            itemsToDelete.Add(child);
+        }
+        child = m_treeCtrl->GetNextChild(m_mapsId, cookie);
+    }
+    
+    // Deletar itens coletados
+    for (const wxTreeItemId& item : itemsToDelete) {
+        m_treeCtrl->Delete(item);
+    }
+    
+    // Escanear novamente usando diretório do projeto
+    wxString projectDir = m_projectPath.IsEmpty() ? wxGetCwd() : m_projectPath;
+    wxArrayString scanDirs;
+    scanDirs.Add(projectDir);
+    scanDirs.Add(projectDir + "/maps");
+    scanDirs.Add(projectDir + "/data/maps");
+    scanDirs.Add(projectDir + "/game/maps");
+    
+    for (const wxString& dir : scanDirs) {
+        if (wxDirExists(dir)) {
+            ScanDirectoryForMaps(dir);
+        }
+    }
+}
+
+void ProjectTreePanel::RefreshMapList()
+{
+    RefreshMaps();
+}
+
+void ProjectTreePanel::SetProjectPath(const wxString& path)
+{
+    m_projectPath = path;
+    wxLogMessage("ProjectTree: Caminho do projeto atualizado para: %s", path);
+    
+    // Recarregar árvore com novo caminho
+    PopulateTree();
+}
+

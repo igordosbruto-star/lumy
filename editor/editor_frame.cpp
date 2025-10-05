@@ -8,9 +8,12 @@
 #include "project_tree_panel.h"
 #include "property_grid_panel.h"
 #include "viewport_panel.h"
+#include "tileset_panel.h"
 #include "new_project_dialog.h"
 #include "utf8_strings.h"
 #include <wx/dirdlg.h>
+#include <wx/filedlg.h>
+#include <wx/filename.h>
 
 // Event table
 wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
@@ -19,11 +22,18 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_MENU(ID_NewProject, EditorFrame::OnNewProject)
     EVT_MENU(ID_OpenProject, EditorFrame::OnOpenProject)
     EVT_MENU(ID_SaveProject, EditorFrame::OnSaveProject)
+    // Event handlers para mapas
+    EVT_MENU(ID_NewMap, EditorFrame::OnNewMap)
+    EVT_MENU(ID_OpenMap, EditorFrame::OnOpenMap)
+    EVT_MENU(ID_SaveMap, EditorFrame::OnSaveMap)
+    EVT_MENU(ID_SaveMapAs, EditorFrame::OnSaveMapAs)
     EVT_CLOSE(EditorFrame::OnClose)
     // Eventos customizados para comunicação entre panes
     EVT_SELECTION_CHANGE(EditorFrame::OnSelectionChanged)
     EVT_PROPERTY_CHANGE(EditorFrame::OnPropertyChanged)
     EVT_PROJECT_CHANGE(EditorFrame::OnProjectChanged)
+    // Evento de mudança de tile selecionado
+    EVT_COMMAND(wxID_ANY, TILESET_SELECTION_CHANGED, EditorFrame::OnTilesetSelectionChanged)
 wxEND_EVENT_TABLE()
 
 EditorFrame::EditorFrame()
@@ -51,9 +61,22 @@ EditorFrame::EditorFrame()
     // Inicializar project manager
     m_projectManager = std::make_unique<ProjectManager>();
     
+    // Inicializar map manager
+    m_mapManager = std::make_unique<MapManager>();
+    
+    // Conectar viewport com map manager
+    if (m_viewport) {
+        m_viewport->SetMapManager(m_mapManager.get());
+    }
+    
     // Carregar projeto padrão (diretório atual)
     wxString currentDir = wxGetCwd();
     LoadProject(currentDir);
+    
+    // Configurar caminho do projeto na árvore
+    if (m_projectTree) {
+        m_projectTree->SetProjectPath(currentDir);
+    }
     
     // Status inicial
     SetStatusText("Lumy Editor iniciado - Pronto para criar!");
@@ -76,6 +99,14 @@ void EditorFrame::CreateMenuBar()
     fileMenu->AppendSeparator();
     fileMenu->Append(wxID_EXIT, "Sai&r\tAlt+F4", "Sair do editor");
 
+    // Menu Mapa
+    wxMenu* mapMenu = new wxMenu;
+    mapMenu->Append(ID_NewMap, "&Novo Mapa\tCtrl+Shift+N", "Criar novo mapa");
+    mapMenu->Append(ID_OpenMap, "&Abrir Mapa\tCtrl+Shift+O", "Abrir mapa existente");
+    mapMenu->AppendSeparator();
+    mapMenu->Append(ID_SaveMap, "&Salvar Mapa\tCtrl+Shift+S", "Salvar mapa atual");
+    mapMenu->Append(ID_SaveMapAs, "Salvar Mapa &Como...", "Salvar mapa com novo nome");
+
     // Menu Ajuda
     wxMenu* helpMenu = new wxMenu;
     helpMenu->Append(wxID_ABOUT, "&Sobre", "Informações sobre o Lumy Editor");
@@ -83,6 +114,7 @@ void EditorFrame::CreateMenuBar()
     // Criar barra de menu
     wxMenuBar* menuBar = new wxMenuBar;
     menuBar->Append(fileMenu, "&Arquivo");
+    menuBar->Append(mapMenu, "&Mapa");
     menuBar->Append(helpMenu, "&Ajuda");
 
     SetMenuBar(menuBar);
@@ -102,6 +134,7 @@ void EditorFrame::CreateAuiPanes()
     m_projectTree = std::make_unique<ProjectTreePanel>(this);
     m_propertyGrid = std::make_unique<PropertyGridPanel>(this);
     m_viewport = std::make_unique<ViewportPanel>(this);
+    m_tilesetPanel = std::make_unique<TilesetPanel>(this);
 
     // Adicionar panes ao AUI Manager
     
@@ -125,6 +158,19 @@ void EditorFrame::CreateAuiPanes()
         .Right()
         .MinSize(200, -1)
         .BestSize(300, -1)
+        .CloseButton(false)
+        .MaximizeButton(false)
+    );
+
+    // Tileset Panel (direita inferior)
+    m_auiManager.AddPane(m_tilesetPanel.get(),
+        wxAuiPaneInfo()
+        .Name("TilesetPanel")
+        .Caption(UTF8("Paleta de Tiles"))
+        .Right()
+        .Bottom()
+        .MinSize(200, 300)
+        .BestSize(220, 400)
         .CloseButton(false)
         .MaximizeButton(false)
     );
@@ -255,6 +301,156 @@ void EditorFrame::OnSaveProject(wxCommandEvent& WXUNUSED(event))
     SetStatusText("Pronto", 0);
 }
 
+// Handlers dos eventos de mapa
+void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
+{
+    SetStatusText("Criando novo mapa...", 0);
+    
+    // Por enquanto, criar um mapa 20x15 básico
+    auto newMap = std::make_shared<Map>(20, 15);
+    m_mapManager->SetCurrentMap(newMap);
+    
+    // Atualizar título da janela
+    SetTitle("Lumy Editor - M1 Brilho [Novo Mapa*]");
+    
+    // Atualizar viewport
+    if (m_viewport) {
+        m_viewport->RefreshMapDisplay();
+    }
+    
+        SetStatusText("Novo mapa criado (20x15)", 0);
+        wxLogMessage("Novo mapa criado com dimensões 20x15");
+        
+        // Atualizar árvore do projeto (quando um novo mapa for criado e salvo)
+        // A árvore será atualizada quando o mapa for salvo
+}
+
+void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
+{
+    SetStatusText("Abrindo mapa...", 0);
+    
+    wxFileDialog openDialog(this, "Abrir Mapa", "", "",
+                           "Arquivos de Mapa (*.json)|*.json",
+                           wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    
+    if (openDialog.ShowModal() == wxID_OK) {
+        wxString filePath = openDialog.GetPath();
+        
+        if (m_mapManager->LoadMap(filePath.ToStdString())) {
+            // Mapa carregado com sucesso
+            wxFileName fileName(filePath);
+            SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
+            
+            // Atualizar viewport
+            if (m_viewport) {
+                m_viewport->RefreshMapDisplay();
+            }
+            
+        SetStatusText(wxString::Format("Mapa carregado: %s", fileName.GetName()), 0);
+        wxLogMessage("Mapa carregado com sucesso: %s", filePath);
+        
+        // Atualizar caminho do mapa atual
+        m_currentMapPath = filePath;
+        } else {
+            SetStatusText("Erro ao carregar mapa", 0);
+            wxMessageBox("Erro ao carregar o mapa. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
+        }
+    } else {
+        SetStatusText("Pronto", 0);
+    }
+}
+
+void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
+{
+    SetStatusText("Salvando mapa...", 0);
+    
+    if (!m_mapManager->GetCurrentMap()) {
+        wxMessageBox("Nenhum mapa está carregado para salvar.", "Erro", wxOK | wxICON_WARNING);
+        SetStatusText("Pronto", 0);
+        return;
+    }
+    
+    // Se não temos caminho salvo, usar "Salvar Como"
+    if (m_currentMapPath.IsEmpty()) {
+        wxCommandEvent dummyEvent;
+        OnSaveMapAs(dummyEvent);
+        return;
+    }
+    
+    if (m_mapManager->SaveMap(m_currentMapPath.ToStdString())) {
+        // Remover * do título (indicando que não há mudanças não salvas)
+        wxString currentTitle = GetTitle();
+        if (currentTitle.EndsWith("*]")) {
+            currentTitle = currentTitle.Left(currentTitle.length() - 2) + "]";
+            SetTitle(currentTitle);
+        }
+        
+        SetStatusText("Mapa salvo com sucesso", 0);
+        wxLogMessage("Mapa salvo: %s", m_currentMapPath);
+        
+        // Atualizar árvore do projeto
+        if (m_projectTree) {
+            m_projectTree->RefreshMapList();
+        }
+    } else {
+        SetStatusText("Erro ao salvar mapa", 0);
+        wxMessageBox("Erro ao salvar o mapa. Verifique as permissões do arquivo.", "Erro", wxOK | wxICON_ERROR);
+    }
+}
+
+void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
+{
+    SetStatusText("Salvando mapa como...", 0);
+    
+    if (!m_mapManager->GetCurrentMap()) {
+        wxMessageBox("Nenhum mapa está carregado para salvar.", "Erro", wxOK | wxICON_WARNING);
+        SetStatusText("Pronto", 0);
+        return;
+    }
+    
+    wxFileDialog saveDialog(this, "Salvar Mapa Como", "", "",
+                           "Arquivos de Mapa (*.json)|*.json",
+                           wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    
+    if (saveDialog.ShowModal() == wxID_OK) {
+        wxString filePath = saveDialog.GetPath();
+        
+        if (m_mapManager->SaveMap(filePath.ToStdString())) {
+            m_currentMapPath = filePath;
+            
+            // Atualizar título da janela
+            wxFileName fileName(filePath);
+            SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
+            
+        SetStatusText(wxString::Format("Mapa salvo como: %s", fileName.GetName()), 0);
+        wxLogMessage("Mapa salvo como: %s", filePath);
+        
+        // Atualizar árvore do projeto
+        if (m_projectTree) {
+            m_projectTree->RefreshMapList();
+        }
+        } else {
+            SetStatusText("Erro ao salvar mapa", 0);
+            wxMessageBox("Erro ao salvar o mapa. Verifique as permissões do arquivo.", "Erro", wxOK | wxICON_ERROR);
+        }
+    } else {
+        SetStatusText("Pronto", 0);
+    }
+}
+
+void EditorFrame::OnTilesetSelectionChanged(wxCommandEvent& event)
+{
+    int selectedTile = event.GetInt();
+    
+    // Atualizar o tile selecionado no viewport
+    if (m_viewport) {
+        m_viewport->SetSelectedTile(selectedTile);
+        
+        wxLogMessage("Tile selecionado alterado para: %d", selectedTile);
+        SetStatusText(wxString::Format("Tile para pintura: %d", selectedTile), 0);
+    }
+}
+
 // Hot-reload callbacks
 void EditorFrame::OnMapFileChanged(const wxString& path, const wxString& filename)
 {
@@ -298,9 +494,9 @@ bool EditorFrame::LoadProject(const wxString& projectPath)
     // Configurar hot-reload
     SetupHotReload();
     
-    // Atualizar árvore do projeto
+    // Atualizar árvore do projeto com novo caminho
     if (m_projectTree) {
-        // TODO: Implementar carregamento real da árvore do projeto
+        m_projectTree->SetProjectPath(projectPath);
     }
     
     // Atualizar status bar
@@ -347,6 +543,16 @@ void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
     const SelectionInfo& info = event.GetSelectionInfo();
     
     wxLogMessage("Selection changed: type=%d, name=%s", static_cast<int>(info.type), info.displayName);
+    
+    // Carregar mapa automaticamente se for um arquivo de mapa JSON
+    if (info.type == SelectionType::DATA_FILE && info.displayName.EndsWith(".json") && 
+        wxFileExists(info.filePath)) {
+        
+        // Verificar se é um mapa (no contexto da árvore de mapas)
+        if (info.filePath.Contains("map") || IsMapInMapsFolder(info.filePath)) {
+            LoadMapFromPath(info.filePath);
+        }
+    }
     
     // Atualizar property grid com base na seleção
     if (m_propertyGrid) {
@@ -472,4 +678,41 @@ void EditorFrame::BroadcastProjectChange(const wxString& projectPath, bool loade
     
     // Processar no frame principal
     GetEventHandler()->ProcessEvent(event);
+}
+
+// Métodos auxiliares para carregamento de mapas
+bool EditorFrame::IsMapInMapsFolder(const wxString& filePath)
+{
+    // Verificar se o caminho contém pastas relacionadas a mapas
+    wxString lowerPath = filePath.Lower();
+    return lowerPath.Contains("map") || 
+           lowerPath.Contains("level") || 
+           lowerPath.Contains("stage") ||
+           lowerPath.Contains("world");
+}
+
+void EditorFrame::LoadMapFromPath(const wxString& filePath)
+{
+    SetStatusText("Carregando mapa da árvore...", 0);
+    
+    if (m_mapManager->LoadMap(filePath.ToStdString())) {
+        // Mapa carregado com sucesso
+        wxFileName fileName(filePath);
+        SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
+        
+        // Atualizar viewport
+        if (m_viewport) {
+            m_viewport->RefreshMapDisplay();
+        }
+        
+        // Atualizar caminho do mapa atual
+        m_currentMapPath = filePath;
+        
+        SetStatusText(wxString::Format("Mapa carregado da árvore: %s", fileName.GetName()), 0);
+        wxLogMessage("Mapa carregado da árvore com sucesso: %s", filePath);
+    } else {
+        SetStatusText("Erro ao carregar mapa da árvore", 0);
+        wxLogError("Erro ao carregar o mapa da árvore: %s", filePath);
+        wxMessageBox("Erro ao carregar o mapa selecionado. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
+    }
 }
