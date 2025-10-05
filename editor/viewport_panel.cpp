@@ -5,8 +5,9 @@
 #pragma execution_character_set("utf-8")
 
 #include "viewport_panel.h"
+#include "editor_frame.h"
 #include "utf8_strings.h"
-#include "map_manager.h"
+#include <wx/toolbar.h>
 #include <GL/gl.h>
 #include <cmath>
 
@@ -577,6 +578,19 @@ void ViewportPanel::RefreshMapDisplay()
     }
 }
 
+void ViewportPanel::NotifyMapModified()
+{
+    // Notificar o EditorFrame (parent) para atualizar o título
+    wxWindow* parent = GetParent();
+    if (parent) {
+        // Assumimos que o parent é EditorFrame
+        EditorFrame* editorFrame = dynamic_cast<EditorFrame*>(parent);
+        if (editorFrame) {
+            editorFrame->UpdateWindowTitle();
+        }
+    }
+}
+
 // Implementações das funções auxiliares do GLCanvas
 
 void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
@@ -643,6 +657,8 @@ void ViewportPanel::GLCanvas::PaintTile(int tileX, int tileY)
         // Usar dados reais do mapa carregado
         if (mapManager->IsValidPosition(tileX, tileY)) {
             mapManager->SetTile(tileX, tileY, m_selectedTile);
+            // Notificar EditorFrame para atualizar título
+            viewportPanel->NotifyMapModified();
         }
     } else {
         // Fallback: usar dados simulados se não há mapa carregado
@@ -662,6 +678,8 @@ void ViewportPanel::GLCanvas::EraseTile(int tileX, int tileY)
         // Usar dados reais do mapa carregado
         if (mapManager->IsValidPosition(tileX, tileY)) {
             mapManager->SetTile(tileX, tileY, 0); // Grass/Empty
+            // Notificar EditorFrame para atualizar título
+            viewportPanel->NotifyMapModified();
         }
     } else {
         // Fallback: usar dados simulados se não há mapa carregado
@@ -688,6 +706,8 @@ void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
                 // Se não é collision, torna collision
                 mapManager->SetTile(tileX, tileY, 2);
             }
+            // Notificar EditorFrame para atualizar título
+            viewportPanel->NotifyMapModified();
         }
     } else {
         // Fallback: usar dados simulados se não há mapa carregado

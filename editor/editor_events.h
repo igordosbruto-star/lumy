@@ -110,10 +110,30 @@ private:
     bool m_isLoaded;
 };
 
+// Evento de solicitação de troca de mapa
+class MapChangeRequestEvent : public wxCommandEvent
+{
+public:
+    MapChangeRequestEvent(wxEventType commandType = wxEVT_NULL, int winid = 0)
+        : wxCommandEvent(commandType, winid) {}
+    
+    MapChangeRequestEvent(const MapChangeRequestEvent& event)
+        : wxCommandEvent(event), m_mapPath(event.m_mapPath) {}
+    
+    wxEvent* Clone() const override { return new MapChangeRequestEvent(*this); }
+    
+    const wxString& GetMapPath() const { return m_mapPath; }
+    void SetMapPath(const wxString& path) { m_mapPath = path; }
+    
+private:
+    wxString m_mapPath;
+};
+
 // Declarar tipos de eventos customizados
 wxDECLARE_EVENT(EVT_SELECTION_CHANGED, SelectionChangeEvent);
 wxDECLARE_EVENT(EVT_PROPERTY_CHANGED, PropertyChangeEvent);
 wxDECLARE_EVENT(EVT_PROJECT_CHANGED, ProjectChangeEvent);
+wxDECLARE_EVENT(EVT_MAP_CHANGE_REQUEST, MapChangeRequestEvent);
 
 // Macros para event table
 #define EVT_SELECTION_CHANGE(func) \
@@ -124,3 +144,6 @@ wxDECLARE_EVENT(EVT_PROJECT_CHANGED, ProjectChangeEvent);
 
 #define EVT_PROJECT_CHANGE(func) \
     wx__DECLARE_EVT0(EVT_PROJECT_CHANGED, &func)
+
+#define EVT_MAP_CHANGE_REQUEST(func) \
+    wx__DECLARE_EVT0(EVT_MAP_CHANGE_REQUEST, &func)

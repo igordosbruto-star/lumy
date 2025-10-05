@@ -44,6 +44,10 @@ private:
     void ScanDirectoryForMaps(const wxString& directory);
     bool IsMapFile(const wxString& filePath);
     
+    // Métodos auxiliares para gerenciamento de mapas
+    bool IsMapInMapsSection(const wxTreeItemId& item) const;
+    void RequestMapChange(const wxString& mapPath);
+    
     // Controles
     wxTreeCtrl* m_treeCtrl;
     

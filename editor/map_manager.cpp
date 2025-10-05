@@ -217,9 +217,18 @@ bool MapManager::PromptSaveIfModified(wxWindow* parent)
         return true; // Nada para salvar
     }
     
+    // Usar nome do arquivo se disponível, senão usar nome interno do mapa
+    wxString mapName;
+    if (!m_currentMapPath.IsEmpty()) {
+        wxFileName fileName(m_currentMapPath);
+        mapName = fileName.GetName();
+    } else {
+        mapName = GetCurrentMapName();
+    }
+    
     wxString message = wxString::Format(
         UTF8("O mapa '%s' foi modificado.\n\nDeseja salvar as alterações antes de continuar?"),
-        GetCurrentMapName()
+        mapName
     );
     
     int result = wxMessageBox(

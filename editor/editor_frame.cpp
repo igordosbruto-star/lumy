@@ -32,6 +32,8 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_SELECTION_CHANGE(EditorFrame::OnSelectionChanged)
     EVT_PROPERTY_CHANGE(EditorFrame::OnPropertyChanged)
     EVT_PROJECT_CHANGE(EditorFrame::OnProjectChanged)
+    // Temporariamente comentado para compilar
+    // EVT_MAP_CHANGE_REQUEST(EditorFrame::OnMapChangeRequest)
     // Evento de mudança de tile selecionado
     EVT_COMMAND(wxID_ANY, TILESET_SELECTION_CHANGED, EditorFrame::OnTilesetSelectionChanged)
 wxEND_EVENT_TABLE()
@@ -310,19 +312,21 @@ void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
     auto newMap = std::make_shared<Map>(20, 15);
     m_mapManager->SetCurrentMap(newMap);
     
+    // Limpar caminho do mapa atual pois é um novo mapa
+    m_currentMapPath.Clear();
+    
     // Atualizar título da janela
-    SetTitle("Lumy Editor - M1 Brilho [Novo Mapa*]");
+    UpdateWindowTitle();
     
     // Atualizar viewport
     if (m_viewport) {
         m_viewport->RefreshMapDisplay();
     }
     
-        SetStatusText("Novo mapa criado (20x15)", 0);
-        wxLogMessage("Novo mapa criado com dimensões 20x15");
-        
-        // Atualizar árvore do projeto (quando um novo mapa for criado e salvo)
-        // A árvore será atualizada quando o mapa for salvo
+    SetStatusText("Novo mapa criado (20x15)", 0);
+    wxLogMessage("Novo mapa criado com dimensões 20x15");
+    
+    // A árvore será atualizada quando o mapa for salvo
 }
 
 void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
@@ -337,20 +341,20 @@ void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
         wxString filePath = openDialog.GetPath();
         
         if (m_mapManager->LoadMap(filePath.ToStdString())) {
-            // Mapa carregado com sucesso
-            wxFileName fileName(filePath);
-            SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
+            // Atualizar caminho do mapa atual
+            m_currentMapPath = filePath;
+            
+            // Atualizar título da janela
+            UpdateWindowTitle();
             
             // Atualizar viewport
             if (m_viewport) {
                 m_viewport->RefreshMapDisplay();
             }
             
-        SetStatusText(wxString::Format("Mapa carregado: %s", fileName.GetName()), 0);
-        wxLogMessage("Mapa carregado com sucesso: %s", filePath);
-        
-        // Atualizar caminho do mapa atual
-        m_currentMapPath = filePath;
+            wxFileName fileName(filePath);
+            SetStatusText(wxString::Format("Mapa carregado: %s", fileName.GetName()), 0);
+            wxLogMessage("Mapa carregado com sucesso: %s", filePath);
         } else {
             SetStatusText("Erro ao carregar mapa", 0);
             wxMessageBox("Erro ao carregar o mapa. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
@@ -378,12 +382,8 @@ void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
     }
     
     if (m_mapManager->SaveMap(m_currentMapPath.ToStdString())) {
-        // Remover * do título (indicando que não há mudanças não salvas)
-        wxString currentTitle = GetTitle();
-        if (currentTitle.EndsWith("*]")) {
-            currentTitle = currentTitle.Left(currentTitle.length() - 2) + "]";
-            SetTitle(currentTitle);
-        }
+        // Atualizar título da janela para remover o asterisco
+        UpdateWindowTitle();
         
         SetStatusText("Mapa salvo com sucesso", 0);
         wxLogMessage("Mapa salvo: %s", m_currentMapPath);
@@ -415,20 +415,19 @@ void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
     if (saveDialog.ShowModal() == wxID_OK) {
         wxString filePath = saveDialog.GetPath();
         
-        if (m_mapManager->SaveMap(filePath.ToStdString())) {
+        if (m_mapManager->SaveMapAs(filePath)) {
             m_currentMapPath = filePath;
             
             // Atualizar título da janela
-            wxFileName fileName(filePath);
-            SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
+            UpdateWindowTitle();
             
-        SetStatusText(wxString::Format("Mapa salvo como: %s", fileName.GetName()), 0);
-        wxLogMessage("Mapa salvo como: %s", filePath);
-        
-        // Atualizar árvore do projeto
-        if (m_projectTree) {
-            m_projectTree->RefreshMapList();
-        }
+            SetStatusText(wxString::Format("Mapa salvo como: %s", wxFileName(filePath).GetName()), 0);
+            wxLogMessage("Mapa salvo como: %s", filePath);
+            
+            // Atualizar árvore do projeto
+            if (m_projectTree) {
+                m_projectTree->RefreshMapList();
+            }
         } else {
             SetStatusText("Erro ao salvar mapa", 0);
             wxMessageBox("Erro ao salvar o mapa. Verifique as permissões do arquivo.", "Erro", wxOK | wxICON_ERROR);
@@ -698,7 +697,6 @@ void EditorFrame::LoadMapFromPath(const wxString& filePath)
     if (m_mapManager->LoadMap(filePath.ToStdString())) {
         // Mapa carregado com sucesso
         wxFileName fileName(filePath);
-        SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", fileName.GetName()));
         
         // Atualizar viewport
         if (m_viewport) {
@@ -708,6 +706,9 @@ void EditorFrame::LoadMapFromPath(const wxString& filePath)
         // Atualizar caminho do mapa atual
         m_currentMapPath = filePath;
         
+        // Atualizar título da janela
+        UpdateWindowTitle();
+        
         SetStatusText(wxString::Format("Mapa carregado da árvore: %s", fileName.GetName()), 0);
         wxLogMessage("Mapa carregado da árvore com sucesso: %s", filePath);
     } else {
@@ -715,4 +716,95 @@ void EditorFrame::LoadMapFromPath(const wxString& filePath)
         wxLogError("Erro ao carregar o mapa da árvore: %s", filePath);
         wxMessageBox("Erro ao carregar o mapa selecionado. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
     }
+}
+
+bool EditorFrame::SafeLoadMapFromPath(const wxString& filePath)
+{
+    // Verificar se já temos esse mapa carregado
+    if (m_currentMapPath == filePath) {
+        SetStatusText("Esse mapa já está carregado", 0);
+        return false;
+    }
+    
+    // Verificar se há mudanças não salvas no mapa atual
+    if (m_mapManager->HasUnsavedChanges()) {
+        SetStatusText("Verificando mudanças não salvas...", 0);
+        
+        // Usar o método PromptSaveIfModified do MapManager que já implementa o diálogo
+        bool canContinue = m_mapManager->PromptSaveIfModified(this);
+        
+        if (!canContinue) {
+            // Usuário cancelou ou precisa de Save As
+            wxString currentMapPath = m_mapManager->GetCurrentMapPath();
+            if (currentMapPath.IsEmpty()) {
+                // Mapa nunca foi salvo - mostrar Save As
+                wxFileDialog saveDialog(this, "Salvar Mapa Como", "", "",
+                                       "Arquivos de Mapa (*.json)|*.json",
+                                       wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+                
+                if (saveDialog.ShowModal() == wxID_OK) {
+                    wxString saveFilePath = saveDialog.GetPath();
+                    if (!m_mapManager->SaveMapAs(saveFilePath)) {
+                        SetStatusText("Erro ao salvar mapa", 0);
+                        wxMessageBox("Erro ao salvar o mapa.", "Erro", wxOK | wxICON_ERROR);
+                        return false;
+                    }
+                    // Atualizar m_currentMapPath após salvar
+                    m_currentMapPath = saveFilePath;
+                    // Atualizar título
+                    UpdateWindowTitle();
+                    // Atualizar árvore do projeto
+                    if (m_projectTree) {
+                        m_projectTree->RefreshMapList();
+                    }
+                } else {
+                    SetStatusText("Troca de mapa cancelada", 0);
+                    return false;
+                }
+            } else {
+                // Erro ao salvar ou usuário cancelou
+                SetStatusText("Troca de mapa cancelada", 0);
+                return false;
+            }
+        }
+    }
+    
+    // Carregar o novo mapa
+    LoadMapFromPath(filePath);
+    return true;
+}
+
+void EditorFrame::UpdateWindowTitle()
+{
+    if (!m_mapManager || !m_mapManager->HasMap()) {
+        SetTitle("Lumy Editor - M1 Brilho");
+        return;
+    }
+    
+    wxString mapName;
+    
+    // Tentar obter nome do arquivo do caminho atual
+    if (!m_currentMapPath.IsEmpty()) {
+        wxFileName fileName(m_currentMapPath);
+        mapName = fileName.GetName();
+    } else {
+        // Usar nome do mapa se não temos caminho
+        mapName = m_mapManager->GetCurrentMapName();
+    }
+    
+    // Adicionar asterisco se há mudanças não salvas
+    if (m_mapManager->HasUnsavedChanges()) {
+        mapName += "*";
+    }
+    
+    SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", mapName));
+}
+
+void EditorFrame::OnMapChangeRequest(MapChangeRequestEvent& event)
+{
+    const wxString& requestedMapPath = event.GetMapPath();
+    
+    wxLogMessage("Solicitação de troca de mapa recebida: %s", requestedMapPath);
+    
+    SafeLoadMapFromPath(requestedMapPath);
 }

@@ -5,6 +5,7 @@
 #pragma execution_character_set("utf-8")
 
 #include "project_tree_panel.h"
+#include "editor_frame.h"
 #include "utf8_strings.h"
 #include <wx/imaglist.h>
 #include <wx/dir.h>
@@ -102,12 +103,8 @@ void ProjectTreePanel::PopulateTree()
 
 void ProjectTreePanel::OnTreeSelChanged(wxTreeEvent& event)
 {
-    wxTreeItemId item = event.GetItem();
-    if (!item.IsOk()) return;
-    
-    // Notificar seleção para outros panes
-    NotifySelection(item);
-    
+    // Apenas seleção simples - não executar ações de carregamento
+    // O carregamento agora é feito apenas no duplo clique
     event.Skip();
 }
 
@@ -118,14 +115,23 @@ void ProjectTreePanel::OnTreeItemActivated(wxTreeEvent& event)
     
     wxString itemText = m_treeCtrl->GetItemText(item);
     
-    // TODO: Abrir item para edição (mapas, database, etc.)
-    // Para M1, apenas mostrar que foi ativado
-    if (itemText.EndsWith(".tmx"))
+    // Verificar se é um mapa JSON (nossos mapas editáveis)
+    if (itemText.EndsWith(".json") && GetItemType(item) == SelectionType::DATA_FILE) {
+        // Obter caminho do arquivo
+        wxTreeItemData* itemData = m_treeCtrl->GetItemData(item);
+        MapItemData* mapData = dynamic_cast<MapItemData*>(itemData);
+        
+        if (mapData && IsMapInMapsSection(item)) {
+            // Notificar o EditorFrame para iniciar processo de troca de mapa
+            RequestMapChange(mapData->GetFilePath());
+        }
+    }
+    else if (itemText.EndsWith(".tmx"))
     {
-        wxMessageBox(wxString::Format("Abrindo mapa: %s\n(Será implementado no viewport GL)", itemText),
+        wxMessageBox(wxString::Format("Abrindo mapa TMX: %s\n(Formato TMX ainda não suportado)", itemText),
             "M1 - Viewport", wxOK | wxICON_INFORMATION);
     }
-    else if (itemText.EndsWith(".json"))
+    else if (itemText.EndsWith(".json") && GetItemType(item) == SelectionType::DATA_FILE)
     {
         wxMessageBox(wxString::Format("Editando database: %s\n(Será implementado no property grid)", itemText),
             "M1 - Database", wxOK | wxICON_INFORMATION);
@@ -347,5 +353,30 @@ void ProjectTreePanel::SetProjectPath(const wxString& path)
     
     // Recarregar árvore com novo caminho
     PopulateTree();
+}
+
+// Métodos auxiliares para gerenciamento de mapas
+bool ProjectTreePanel::IsMapInMapsSection(const wxTreeItemId& item) const
+{
+    if (!item.IsOk()) return false;
+    
+    // Verificar se o item é filho (direto ou indireto) do nó "Mapas"
+    wxTreeItemId parent = m_treeCtrl->GetItemParent(item);
+    while (parent.IsOk()) {
+        if (parent == m_mapsId) {
+            return true;
+        }
+        parent = m_treeCtrl->GetItemParent(parent);
+    }
+    return false;
+}
+
+void ProjectTreePanel::RequestMapChange(const wxString& mapPath)
+{
+    // Usar o método seguro que verifica mudanças não salvas
+    EditorFrame* editorFrame = dynamic_cast<EditorFrame*>(GetParent());
+    if (editorFrame) {
+        editorFrame->SafeLoadMapFromPath(mapPath);
+    }
 }
 

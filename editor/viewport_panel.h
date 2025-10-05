@@ -9,6 +9,7 @@
 
 // Forward declarations
 class MapManager;
+class EditorFrame;
 
 class ViewportPanel : public wxPanel
 {
@@ -20,6 +21,7 @@ public:
     void SetSelectedTile(int tileId);
     void SetMapManager(MapManager* mapManager);
     void RefreshMapDisplay();
+    void NotifyMapModified(); // Notificar EditorFrame sobre modificações no mapa
 
 private:
     void CreateControls();

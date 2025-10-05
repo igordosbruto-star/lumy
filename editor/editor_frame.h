@@ -28,6 +28,11 @@ class EditorFrame : public wxFrame
 public:
     EditorFrame();
     virtual ~EditorFrame();
+    
+    // Métodos públicos para acesso externo
+    void LoadMapFromPath(const wxString& filePath);
+    bool SafeLoadMapFromPath(const wxString& filePath); // Com verificação de salvamento
+    void UpdateWindowTitle(); // Atualizar título da janela com base no estado do mapa
 
 private:
     // UI Setup
@@ -79,10 +84,11 @@ private:
     bool LoadProject(const wxString& projectPath);
     void SetupHotReload();
     
-    // Communication between panes
+    // Communication between panes handlers
     void OnSelectionChanged(SelectionChangeEvent& event);
     void OnPropertyChanged(PropertyChangeEvent& event);
     void OnProjectChanged(ProjectChangeEvent& event);
+    void OnMapChangeRequest(MapChangeRequestEvent& event);
     
     // Broadcasting methods
     void BroadcastSelectionChange(const SelectionInfo& info);
@@ -91,7 +97,6 @@ private:
     
     // Métodos auxiliares para mapas
     bool IsMapInMapsFolder(const wxString& filePath);
-    void LoadMapFromPath(const wxString& filePath);
 
     wxDECLARE_EVENT_TABLE();
 };

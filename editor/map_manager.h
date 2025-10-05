@@ -19,6 +19,7 @@ public:
     bool HasMap() const { return m_currentMap != nullptr; }
     wxString GetCurrentMapPath() const { return m_currentMapPath; }
     wxString GetCurrentMapName() const;
+    bool HasUnsavedChanges() const { return m_hasUnsavedChanges || (m_currentMap && m_currentMap->IsModified()); }
     
     // Setters
     void SetCurrentMap(std::shared_ptr<Map> map);
