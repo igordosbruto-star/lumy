@@ -2,13 +2,14 @@
 
 > Este roadmap é um **documento vivo**.  
 > **Revisão:** quinzenal ou por release.  
-> **Última atualização:** 31-08-2025.
+> **Última atualização:** 05-10-2025.
 > **Status:** `Planned` · `In Progress` · `Done` · `Parked` · `Dropped`.
 
 ## Histórico de alterações
 - 21-08-2025 — Criação do roadmap inicial (M0–M3).
 - 22-08-2025 — README com descrição da engine e guia de CMakePresets.
 - 31-08-2025 — ✅ **M0 "Faísca" concluído** com sucesso! Todas as entregas implementadas e testadas.
+- 05-10-2025 — ✅ **M0 oficialmente fechado** com v0.1.1. 🎆 **M1 "Brilho" iniciado** - foco no editor wxWidgets.
 
 
 ## Visão geral de marcos (releases)
@@ -30,7 +31,7 @@
 
 ---
 
-### M1 — **Brilho** *(Planned)*
+### M1 — **Brilho** *(In Progress)* 📝
 **Meta:** editor wx funcional com edição de mapas/eventos e hot-reload.  
 **Entregas:**
 - Editor: **wxAUI** (docks), **Árvore do Projeto**, **PropertyGrid**, **Viewport GL**.
@@ -82,7 +83,7 @@
 - [x] Exemplo `hello-town` + README. *(Done)*
 
 ### M1 — Brilho
-- [ ] Editor wx: panes, árvore, property grid. *(Planned)*
+- [ ] Editor wx: panes, árvore, property grid. *(In Progress)*
 - [ ] Viewport GL com grade, seleção e pincéis. *(Planned)*
 - [ ] Ferramenta de colisão/regiões. *(Planned)*
 - [ ] Hot-reload de mapas/eventos. *(Planned)*

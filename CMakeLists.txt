@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(Lumy VERSION 0.1.0 LANGUAGES CXX)
+project(Lumy VERSION 0.1.1 LANGUAGES CXX)
 
 # ===== Build type padrão =====
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -64,6 +64,56 @@ target_link_libraries(hello-town PRIVATE PkgConfig::TMXLITE)
 target_include_directories(hello-town PRIVATE
   ${CMAKE_SOURCE_DIR}/src
 )
+
+# ===== Editor Lumy (wxWidgets) =====
+set(EDITOR_SOURCES
+  editor/main.cpp
+  editor/editor_frame.cpp
+  editor/project_tree_panel.cpp
+  editor/property_grid_panel.cpp
+  editor/viewport_panel.cpp
+)
+
+# wxWidgets
+find_package(wxWidgets CONFIG REQUIRED COMPONENTS core base aui propgrid gl)
+
+add_executable(lumy-editor ${EDITOR_SOURCES})
+target_compile_features(lumy-editor PRIVATE cxx_std_20)
+
+# wxWidgets setup
+target_link_libraries(lumy-editor PRIVATE
+  wx::core wx::base wx::aui wx::propgrid wx::gl
+)
+
+# Definir flags específicas do wxWidgets para Windows
+if(WIN32)
+  target_compile_definitions(lumy-editor PRIVATE
+    WXUSINGDLL
+    wxMSVC_VERSION_AUTO
+    _CRT_SECURE_NO_WARNINGS
+  )
+  # Remover console window em release
+  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(lumy-editor PROPERTIES
+      WIN32_EXECUTABLE TRUE
+    )
+  endif()
+endif()
+
+# Incluir diretórios
+target_include_directories(lumy-editor PRIVATE
+  ${CMAKE_SOURCE_DIR}/editor
+)
+
+# Warnings para o editor
+if(MSVC)
+  target_compile_options(lumy-editor PRIVATE /W4 /permissive- /EHsc)
+else()
+  target_compile_options(lumy-editor PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Saída do editor
+set_property(TARGET lumy-editor PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
 
 # ===== Saída + cópia de assets do diretório game =====
 set(OUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
