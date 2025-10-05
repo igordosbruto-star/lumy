@@ -242,76 +242,48 @@ void ViewportPanel::GLCanvas::DrawGrid()
 
 void ViewportPanel::GLCanvas::DrawMap()
 {
-    // Para M1, desenhar um mapa simples de exemplo
-    // Simular o mapa hello.tmx com dimensões 25x15
-    const int mapWidth = 25;
-    const int mapHeight = 15;
-    const int tileSize = 32;
-    
-    // Desenhar tiles de fundo (verde claro para área interna)
-    glColor4f(0.4f, 0.8f, 0.4f, 1.0f);
+    // Desenhar mapa baseado nos dados reais m_mapTiles
     glBegin(GL_QUADS);
     
-    for (int y = 1; y < mapHeight - 1; ++y) {
-        for (int x = 1; x < mapWidth - 1; ++x) {
-            float xPos = x * tileSize;
-            float yPos = y * tileSize;
+    for (int y = 0; y < MAP_HEIGHT; ++y) {
+        for (int x = 0; x < MAP_WIDTH; ++x) {
+            int tileType = m_mapTiles[y][x];
+            float xPos = x * TILE_SIZE;
+            float yPos = y * TILE_SIZE;
+            
+            // Cores baseadas no tipo do tile
+            switch (tileType) {
+                case 0: // Grass
+                    glColor4f(0.4f, 0.8f, 0.4f, 1.0f);
+                    break;
+                case 1: // Wall
+                    glColor4f(0.6f, 0.4f, 0.2f, 1.0f);
+                    break;
+                case 2: // Collision (special)
+                    if (m_showCollision) {
+                        glColor4f(1.0f, 0.0f, 0.0f, 0.7f); // Red translucent
+                    } else {
+                        glColor4f(0.4f, 0.8f, 0.4f, 1.0f); // Same as grass
+                    }
+                    break;
+                default: // Empty
+                    continue; // Don't draw anything
+            }
             
             glVertex2f(xPos, yPos);
-            glVertex2f(xPos + tileSize, yPos);
-            glVertex2f(xPos + tileSize, yPos + tileSize);
-            glVertex2f(xPos, yPos + tileSize);
+            glVertex2f(xPos + TILE_SIZE, yPos);
+            glVertex2f(xPos + TILE_SIZE, yPos + TILE_SIZE);
+            glVertex2f(xPos, yPos + TILE_SIZE);
         }
-    }
-    glEnd();
-    
-    // Desenhar bordas (marrom escuro)
-    glColor4f(0.6f, 0.4f, 0.2f, 1.0f);
-    glBegin(GL_QUADS);
-    
-    // Borda superior e inferior
-    for (int x = 0; x < mapWidth; ++x) {
-        // Superior
-        float xPos = x * tileSize;
-        float yPos = 0;
-        glVertex2f(xPos, yPos);
-        glVertex2f(xPos + tileSize, yPos);
-        glVertex2f(xPos + tileSize, yPos + tileSize);
-        glVertex2f(xPos, yPos + tileSize);
-        
-        // Inferior
-        yPos = (mapHeight - 1) * tileSize;
-        glVertex2f(xPos, yPos);
-        glVertex2f(xPos + tileSize, yPos);
-        glVertex2f(xPos + tileSize, yPos + tileSize);
-        glVertex2f(xPos, yPos + tileSize);
-    }
-    
-    // Bordas laterais
-    for (int y = 1; y < mapHeight - 1; ++y) {
-        // Esquerda
-        float xPos = 0;
-        float yPos = y * tileSize;
-        glVertex2f(xPos, yPos);
-        glVertex2f(xPos + tileSize, yPos);
-        glVertex2f(xPos + tileSize, yPos + tileSize);
-        glVertex2f(xPos, yPos + tileSize);
-        
-        // Direita
-        xPos = (mapWidth - 1) * tileSize;
-        glVertex2f(xPos, yPos);
-        glVertex2f(xPos + tileSize, yPos);
-        glVertex2f(xPos + tileSize, yPos + tileSize);
-        glVertex2f(xPos, yPos + tileSize);
     }
     
     glEnd();
     
     // Desenhar posição do jogador (círculo azul)
     glColor4f(0.2f, 0.4f, 1.0f, 0.8f);
-    float playerX = 12.5f * tileSize; // Centro do mapa
-    float playerY = 7.5f * tileSize;
-    float radius = tileSize * 0.3f;
+    float playerX = 12.5f * TILE_SIZE; // Centro do mapa
+    float playerY = 7.5f * TILE_SIZE;
+    float radius = TILE_SIZE * 0.3f;
     
     glBegin(GL_POLYGON);
     for (int i = 0; i < 16; ++i) {
@@ -329,24 +301,30 @@ void ViewportPanel::GLCanvas::DrawSelection()
 
 void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
 {
-    // Converter coordenadas do mouse para coordenadas do mundo
-    // wxPoint mousePos = event.GetPosition();
-    // float worldX = (mousePos.x - m_panX) / m_zoom;
-    // float worldY = (mousePos.y - m_panY) / m_zoom;
+    SetFocus(); // Para receber eventos de teclado
+    
+    wxPoint mousePos = event.GetPosition();
+    wxPoint worldPos((mousePos.x - m_panX) / m_zoom, (mousePos.y - m_panY) / m_zoom);
+    wxPoint tilePos = WorldToTile(worldPos);
+    
+    // Verificar se está dentro dos limites do mapa
+    if (tilePos.x < 0 || tilePos.x >= MAP_WIDTH || tilePos.y < 0 || tilePos.y >= MAP_HEIGHT) {
+        return;
+    }
     
     // Ações baseadas na ferramenta atual
     switch (m_currentTool) {
         case TOOL_SELECT:
-            // TODO: Implementar seleção
+            // TODO: Implementar seleção visual
             break;
         case TOOL_PAINT:
-            // TODO: Implementar pintura
+            PaintTile(tilePos.x, tilePos.y);
             break;
         case TOOL_ERASE:
-            // TODO: Implementar apagar
+            EraseTile(tilePos.x, tilePos.y);
             break;
         case TOOL_COLLISION:
-            // TODO: Implementar edição de colisão
+            ToggleCollision(tilePos.x, tilePos.y);
             break;
     }
     
@@ -362,7 +340,40 @@ void ViewportPanel::GLCanvas::OnMouseRightDown(wxMouseEvent& event)
 
 void ViewportPanel::GLCanvas::OnMouseMove(wxMouseEvent& event)
 {
-    // TODO: Implementar pan com mouse middle ou ações de pintura contínua
+    wxPoint currentPos = event.GetPosition();
+    
+    // Pan com mouse do meio
+    if (m_isPanning) {
+        wxPoint delta = currentPos - m_lastMousePos;
+        m_panX += delta.x;
+        m_panY += delta.y;
+        Refresh();
+    }
+    
+    // Pintura contínua quando botão esquerdo está pressionado
+    if (event.LeftIsDown() && (m_currentTool == TOOL_PAINT || m_currentTool == TOOL_ERASE || m_currentTool == TOOL_COLLISION)) {
+        wxPoint worldPos((currentPos.x - m_panX) / m_zoom, (currentPos.y - m_panY) / m_zoom);
+        wxPoint tilePos = WorldToTile(worldPos);
+        
+        if (tilePos.x >= 0 && tilePos.x < MAP_WIDTH && tilePos.y >= 0 && tilePos.y < MAP_HEIGHT) {
+            switch (m_currentTool) {
+                case TOOL_PAINT:
+                    PaintTile(tilePos.x, tilePos.y);
+                    break;
+                case TOOL_ERASE:
+                    EraseTile(tilePos.x, tilePos.y);
+                    break;
+                case TOOL_COLLISION:
+                    ToggleCollision(tilePos.x, tilePos.y);
+                    break;
+                default:
+                    break;
+            }
+            Refresh();
+        }
+    }
+    
+    m_lastMousePos = currentPos;
     event.Skip();
 }
 
@@ -445,4 +456,74 @@ void ViewportPanel::OnResetView(wxCommandEvent& WXUNUSED(event))
     m_glCanvas->m_panX = 0.0f;
     m_glCanvas->m_panY = 0.0f;
     m_glCanvas->Refresh();
+}
+
+// Implementações das funções auxiliares do GLCanvas
+
+void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
+{
+    float rotation = event.GetWheelRotation();
+    if (rotation > 0) {
+        m_zoom *= 1.1f;
+    } else if (rotation < 0) {
+        m_zoom /= 1.1f;
+        if (m_zoom < 0.1f) {
+            m_zoom = 0.1f;
+        }
+    }
+    Refresh();
+    event.Skip();
+}
+
+void ViewportPanel::GLCanvas::OnMouseMiddleDown(wxMouseEvent& event)
+{
+    m_isPanning = true;
+    m_lastMousePos = event.GetPosition();
+    SetCursor(wxCursor(wxCURSOR_SIZING));
+    event.Skip();
+}
+
+void ViewportPanel::GLCanvas::OnMouseMiddleUp(wxMouseEvent& event)
+{
+    m_isPanning = false;
+    SetCursor(wxCursor(wxCURSOR_ARROW));
+    event.Skip();
+}
+
+wxPoint ViewportPanel::GLCanvas::WorldToTile(const wxPoint& worldPos)
+{
+    return wxPoint(worldPos.x / TILE_SIZE, worldPos.y / TILE_SIZE);
+}
+
+wxPoint ViewportPanel::GLCanvas::TileToWorld(const wxPoint& tilePos)
+{
+    return wxPoint(tilePos.x * TILE_SIZE, tilePos.y * TILE_SIZE);
+}
+
+void ViewportPanel::GLCanvas::PaintTile(int tileX, int tileY)
+{
+    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+        m_mapTiles[tileY][tileX] = m_selectedTile;
+    }
+}
+
+void ViewportPanel::GLCanvas::EraseTile(int tileX, int tileY)
+{
+    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+        m_mapTiles[tileY][tileX] = 0; // Grass
+    }
+}
+
+void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
+{
+    if (tileX >= 0 && tileX < MAP_WIDTH && tileY >= 0 && tileY < MAP_HEIGHT) {
+        int currentTile = m_mapTiles[tileY][tileX];
+        if (currentTile == 2) {
+            // Se já é collision, volta para grass
+            m_mapTiles[tileY][tileX] = 0;
+        } else {
+            // Se não é collision, torna collision
+            m_mapTiles[tileY][tileX] = 2;
+        }
+    }
 }
