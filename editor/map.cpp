@@ -13,29 +13,36 @@
 
 // Construtor padrão
 Map::Map()
-    : m_modified(false)
+    : m_layerManager(std::make_unique<LayerManager>())
+    , m_modified(false)
 {
     m_metadata = MapMetadata(); // Usar valores padrão
-    InitializeDefaultMap();
+    InitializeDefaultLayers();
 }
 
 // Construtor com dimensões específicas
 Map::Map(int width, int height, int tileSize)
-    : m_modified(false)
+    : m_layerManager(std::make_unique<LayerManager>())
+    , m_modified(false)
 {
     m_metadata = MapMetadata();
     m_metadata.width = width;
     m_metadata.height = height;
     m_metadata.tileSize = tileSize;
-    InitializeDefaultMap();
+    InitializeDefaultLayers();
 }
 
 // Construtor de cópia
 Map::Map(const Map& other)
     : m_metadata(other.m_metadata)
-    , m_tiles(other.m_tiles)
+    , m_layerManager(std::make_unique<LayerManager>())
     , m_modified(other.m_modified)
 {
+    // Copiar layers do LayerManager
+    if (other.m_layerManager) {
+        wxString layerData = other.m_layerManager->SaveToJson();
+        m_layerManager->LoadFromJson(layerData);
+    }
 }
 
 // Operador de atribuição
@@ -43,19 +50,28 @@ Map& Map::operator=(const Map& other)
 {
     if (this != &other) {
         m_metadata = other.m_metadata;
-        m_tiles = other.m_tiles;
         m_modified = other.m_modified;
+        
+        // Copiar layers do LayerManager
+        if (!m_layerManager) {
+            m_layerManager = std::make_unique<LayerManager>();
+        }
+        
+        if (other.m_layerManager) {
+            wxString layerData = other.m_layerManager->SaveToJson();
+            m_layerManager->LoadFromJson(layerData);
+        }
     }
     return *this;
 }
 
-// Getter para tile
+// Getter para tile (delega ao layer ativo)
 int Map::GetTile(int x, int y) const
 {
-    if (!IsValidPosition(x, y)) {
+    if (!m_layerManager || !IsValidPosition(x, y)) {
         return -1; // Tile inválido
     }
-    return m_tiles[y][x];
+    return m_layerManager->GetTile(x, y);
 }
 
 // Setters
@@ -73,12 +89,13 @@ void Map::SetName(const wxString& name)
 
 void Map::SetTile(int x, int y, int tileId)
 {
-    if (!IsValidPosition(x, y)) {
+    if (!m_layerManager || !IsValidPosition(x, y)) {
         return;
     }
     
-    if (m_tiles[y][x] != tileId) {
-        m_tiles[y][x] = tileId;
+    int oldTile = m_layerManager->GetTile(x, y);
+    if (oldTile != tileId) {
+        m_layerManager->SetTile(x, y, tileId);
         SetModified();
     }
 }
@@ -93,17 +110,24 @@ void Map::SetSize(int width, int height)
 // Operações
 void Map::Clear()
 {
-    Fill(0); // Preencher com grama
+    if (m_layerManager) {
+        Layer* activeLayer = m_layerManager->GetActiveLayer();
+        if (activeLayer) {
+            activeLayer->Clear();
+            SetModified();
+        }
+    }
 }
 
 void Map::Fill(int tileId)
 {
-    for (int y = 0; y < m_metadata.height; ++y) {
-        for (int x = 0; x < m_metadata.width; ++x) {
-            m_tiles[y][x] = tileId;
+    if (m_layerManager) {
+        Layer* activeLayer = m_layerManager->GetActiveLayer();
+        if (activeLayer) {
+            activeLayer->Fill(tileId);
+            SetModified();
         }
     }
-    SetModified();
 }
 
 void Map::Resize(int newWidth, int newHeight, int defaultTile)
@@ -113,21 +137,12 @@ void Map::Resize(int newWidth, int newHeight, int defaultTile)
         return;
     }
     
-    // Criar novo array de tiles
-    std::vector<std::vector<int>> newTiles(newHeight, std::vector<int>(newWidth, defaultTile));
-    
-    // Copiar dados existentes (se houver sobreposição)
-    int copyWidth = std::min(newWidth, m_metadata.width);
-    int copyHeight = std::min(newHeight, m_metadata.height);
-    
-    for (int y = 0; y < copyHeight; ++y) {
-        for (int x = 0; x < copyWidth; ++x) {
-            newTiles[y][x] = m_tiles[y][x];
-        }
+    // Redimensionar todos os layers
+    if (m_layerManager) {
+        m_layerManager->ResizeAllLayers(newWidth, newHeight, defaultTile);
     }
     
-    // Substituir dados
-    m_tiles = std::move(newTiles);
+    // Atualizar metadados
     m_metadata.width = newWidth;
     m_metadata.height = newHeight;
     
@@ -140,6 +155,20 @@ bool Map::IsValidPosition(int x, int y) const
 }
 
 // Estado
+bool Map::IsModified() const
+{
+    if (m_modified) {
+        return true;
+    }
+    
+    // Verificar se algum layer foi modificado
+    if (m_layerManager && m_layerManager->HasUnsavedChanges()) {
+        return true;
+    }
+    
+    return false;
+}
+
 void Map::SetModified(bool modified)
 {
     if (m_modified != modified) {
@@ -153,6 +182,11 @@ void Map::SetModified(bool modified)
 void Map::MarkSaved()
 {
     m_modified = false;
+    
+    // Marcar todos os layers como salvos
+    if (m_layerManager) {
+        m_layerManager->MarkAllLayersSaved();
+    }
 }
 
 // Serialização
@@ -183,24 +217,35 @@ bool Map::LoadFromJson(const wxString& jsonData)
             return false;
         }
         
-        // Carregar dados dos tiles
-        if (root.contains("tiles")) {
+        // Carregar dados dos layers e tiles
+        if (root.contains("layers")) {
+            // Formato novo com layers
+            wxString layersJson = wxString::FromUTF8(root["layers"].dump().c_str());
+            if (!m_layerManager->LoadFromJson(layersJson)) {
+                wxLogError("Erro ao carregar layers do JSON");
+                InitializeDefaultLayers();
+            }
+        } else if (root.contains("tiles")) {
+            // Formato legado com tiles simples - converter para layers
             auto tilesArray = root["tiles"];
             
             if (tilesArray.is_array() && tilesArray.size() == static_cast<size_t>(m_metadata.height)) {
-                // Redimensionar array de tiles
-                m_tiles.resize(m_metadata.height);
+                // Inicializar layers padrão
+                InitializeDefaultLayers();
                 
-                for (int y = 0; y < m_metadata.height; ++y) {
-                    auto row = tilesArray[y];
-                    if (row.is_array() && row.size() == static_cast<size_t>(m_metadata.width)) {
-                        m_tiles[y].resize(m_metadata.width);
-                        for (int x = 0; x < m_metadata.width; ++x) {
-                            m_tiles[y][x] = row[x].get<int>();
+                // Carregar tiles no layer base
+                Layer* baseLayer = m_layerManager->GetLayer(0);
+                if (baseLayer) {
+                    for (int y = 0; y < m_metadata.height; ++y) {
+                        auto row = tilesArray[y];
+                        if (row.is_array() && row.size() == static_cast<size_t>(m_metadata.width)) {
+                            for (int x = 0; x < m_metadata.width; ++x) {
+                                baseLayer->SetTile(x, y, row[x].get<int>());
+                            }
+                        } else {
+                            wxLogError("Linha %d do mapa tem tamanho incorreto", y);
+                            return false;
                         }
-                    } else {
-                        wxLogError("Linha %d do mapa tem tamanho incorreto", y);
-                        return false;
                     }
                 }
             } else {
@@ -208,8 +253,8 @@ bool Map::LoadFromJson(const wxString& jsonData)
                 return false;
             }
         } else {
-            // Se não há dados de tiles, inicializar com padrão
-            InitializeDefaultMap();
+            // Se não há dados de tiles ou layers, inicializar com padrão
+            InitializeDefaultLayers();
         }
         
         m_modified = false;
@@ -245,16 +290,20 @@ wxString Map::SaveToJson() const
         
         root["metadata"] = metadata;
         
-        // Salvar dados dos tiles
-        nlohmann::json tilesArray = nlohmann::json::array();
-        for (int y = 0; y < m_metadata.height; ++y) {
-            nlohmann::json row = nlohmann::json::array();
-            for (int x = 0; x < m_metadata.width; ++x) {
-                row.push_back(m_tiles[y][x]);
+        // Salvar dados dos layers
+        if (m_layerManager) {
+            wxString layersJson = m_layerManager->SaveToJson();
+            if (!layersJson.IsEmpty()) {
+                nlohmann::json layersData = nlohmann::json::parse(layersJson.ToUTF8().data());
+                root["layers"] = layersData;
+            } else {
+                wxLogWarning("Falha ao serializar layers, salvando dados vázios");
+                root["layers"] = nlohmann::json::array();
             }
-            tilesArray.push_back(row);
+        } else {
+            // Se não há LayerManager, criar estrutura vazia
+            root["layers"] = nlohmann::json::array();
         }
-        root["tiles"] = tilesArray;
         
         // Converter para string JSON com formatação
         std::string jsonString = root.dump(2); // 2 espaços de indentação
@@ -281,43 +330,225 @@ void Map::PrintDebugInfo() const
     wxLogMessage("Criado: %s", m_metadata.createdDate);
     wxLogMessage("Modificado: %s", m_metadata.modifiedDate);
     
-    // Contar tipos de tiles
+    // Contar tipos de tiles do layer ativo
     std::map<int, int> tileCount;
-    for (int y = 0; y < m_metadata.height; ++y) {
-        for (int x = 0; x < m_metadata.width; ++x) {
-            tileCount[m_tiles[y][x]]++;
+    if (m_layerManager) {
+        Layer* activeLayer = m_layerManager->GetActiveLayer();
+        if (activeLayer) {
+            for (int y = 0; y < m_metadata.height; ++y) {
+                for (int x = 0; x < m_metadata.width; ++x) {
+                    int tileId = activeLayer->GetTile(x, y);
+                    tileCount[tileId]++;
+                }
+            }
         }
-    }
-    
-    wxLogMessage("Contagem de tiles:");
-    for (const auto& pair : tileCount) {
-        wxLogMessage("  Tile %d: %d vezes", pair.first, pair.second);
+        
+        wxLogMessage("Número de layers: %d", m_layerManager->GetLayerCount());
+        wxLogMessage("Layer ativo: %s", activeLayer ? activeLayer->GetName() : wxString("Nenhum"));
+        wxLogMessage("Contagem de tiles (layer ativo):");
+        for (const auto& pair : tileCount) {
+            wxLogMessage("  Tile %d: %d vezes", pair.first, pair.second);
+        }
+    } else {
+        wxLogMessage("LayerManager não inicializado");
     }
     wxLogMessage("========================");
 }
 
 // Métodos privados
-void Map::InitializeDefaultMap()
+void Map::InitializeDefaultLayers()
 {
-    // Redimensionar array de tiles
-    m_tiles.resize(m_metadata.height);
-    for (int y = 0; y < m_metadata.height; ++y) {
-        m_tiles[y].resize(m_metadata.width);
+    if (!m_layerManager) {
+        m_layerManager = std::make_unique<LayerManager>();
     }
     
-    // Preencher com padrão: bordas = parede, interior = grama
-    for (int y = 0; y < m_metadata.height; ++y) {
-        for (int x = 0; x < m_metadata.width; ++x) {
-            if (x == 0 || x == m_metadata.width - 1 || 
-                y == 0 || y == m_metadata.height - 1) {
-                m_tiles[y][x] = 1; // Parede
-            } else {
-                m_tiles[y][x] = 0; // Grama
+    // Criar layer padrão
+    LayerProperties baseProps;
+    baseProps.name = "Base";
+    baseProps.type = LayerType::TILE_LAYER;
+    baseProps.opacity = 1.0f;
+    baseProps.visible = true;
+    m_layerManager->CreateLayer(baseProps);
+    
+    // Redimensionar todos os layers com as dimensões atuais
+    if (m_metadata.width > 0 && m_metadata.height > 0) {
+        m_layerManager->ResizeAllLayers(m_metadata.width, m_metadata.height, 0);
+        
+        // Preencher com padrão: bordas = parede (1), interior = grama (0)
+        Layer* baseLayer = m_layerManager->GetLayer(0);
+        if (baseLayer) {
+            for (int y = 0; y < m_metadata.height; ++y) {
+                for (int x = 0; x < m_metadata.width; ++x) {
+                    if (x == 0 || x == m_metadata.width - 1 || 
+                        y == 0 || y == m_metadata.height - 1) {
+                        baseLayer->SetTile(x, y, 1); // Parede
+                    } else {
+                        baseLayer->SetTile(x, y, 0); // Grama
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Métodos de gerenciamento de layers
+int Map::GetLayerCount() const
+{
+    return m_layerManager ? m_layerManager->GetLayerCount() : 0;
+}
+
+Layer* Map::GetActiveLayer()
+{
+    return m_layerManager ? m_layerManager->GetActiveLayer() : nullptr;
+}
+
+const Layer* Map::GetActiveLayer() const
+{
+    return m_layerManager ? m_layerManager->GetActiveLayer() : nullptr;
+}
+
+bool Map::SetActiveLayer(int index)
+{
+    return m_layerManager ? m_layerManager->SetActiveLayer(index) : false;
+}
+
+Layer* Map::CreateLayer(const LayerProperties& properties)
+{
+    if (!m_layerManager) {
+        return nullptr;
+    }
+    
+    LayerProperties newProps = properties;
+    if (newProps.name.IsEmpty()) {
+        newProps.name = wxString::Format("Layer %d", m_layerManager->GetLayerCount() + 1);
+    }
+    Layer* newLayer = m_layerManager->CreateLayer(newProps);
+    
+    if (newLayer && m_metadata.width > 0 && m_metadata.height > 0) {
+        newLayer->Resize(m_metadata.width, m_metadata.height, 0);
+        SetModified();
+    }
+    
+    return newLayer;
+}
+
+bool Map::RemoveLayer(int index)
+{
+    if (!m_layerManager) {
+        return false;
+    }
+    
+    bool result = m_layerManager->RemoveLayer(index);
+    if (result) {
+        SetModified();
+    }
+    
+    return result;
+}
+
+// Operações em layers específicos
+int Map::GetTileFromLayer(int layerIndex, int x, int y) const
+{
+    if (!m_layerManager || !IsValidPosition(x, y)) {
+        return -1;
+    }
+    
+    Layer* layer = m_layerManager->GetLayer(layerIndex);
+    return layer ? layer->GetTile(x, y) : -1;
+}
+
+void Map::SetTileInLayer(int layerIndex, int x, int y, int tileId)
+{
+    if (!m_layerManager || !IsValidPosition(x, y)) {
+        return;
+    }
+    
+    Layer* layer = m_layerManager->GetLayer(layerIndex);
+    if (layer) {
+        int oldTile = layer->GetTile(x, y);
+        if (oldTile != tileId) {
+            layer->SetTile(x, y, tileId);
+            SetModified();
+        }
+    }
+}
+
+// Operações adicionais de layers
+void Map::ClearAllLayers()
+{
+    if (m_layerManager) {
+        for (int i = 0; i < m_layerManager->GetLayerCount(); ++i) {
+            Layer* layer = m_layerManager->GetLayer(i);
+            if (layer) {
+                layer->Clear();
+            }
+        }
+        SetModified();
+    }
+}
+
+void Map::FillLayer(int layerIndex, int tileId)
+{
+    if (!m_layerManager) {
+        return;
+    }
+    
+    Layer* layer = m_layerManager->GetLayer(layerIndex);
+    if (layer) {
+        layer->Fill(tileId);
+        SetModified();
+    }
+}
+
+// Operações de área
+void Map::FillRect(int x, int y, int width, int height, int tileId)
+{
+    Layer* activeLayer = GetActiveLayer();
+    if (!activeLayer) {
+        return;
+    }
+    
+    for (int dy = 0; dy < height; ++dy) {
+        for (int dx = 0; dx < width; ++dx) {
+            int px = x + dx;
+            int py = y + dy;
+            if (IsValidPosition(px, py)) {
+                activeLayer->SetTile(px, py, tileId);
             }
         }
     }
     
-    m_modified = false;
+    SetModified();
+}
+
+void Map::CopyRect(int srcX, int srcY, int width, int height, int srcLayer, int destLayer, int destX, int destY)
+{
+    if (!m_layerManager) {
+        return;
+    }
+    
+    Layer* source = m_layerManager->GetLayer(srcLayer);
+    Layer* dest = m_layerManager->GetLayer(destLayer);
+    
+    if (!source || !dest) {
+        return;
+    }
+    
+    for (int dy = 0; dy < height; ++dy) {
+        for (int dx = 0; dx < width; ++dx) {
+            int srcPx = srcX + dx;
+            int srcPy = srcY + dy;
+            int destPx = destX + dx;
+            int destPy = destY + dy;
+            
+            if (IsValidPosition(srcPx, srcPy) && IsValidPosition(destPx, destPy)) {
+                int tileId = source->GetTile(srcPx, srcPy);
+                dest->SetTile(destPx, destPy, tileId);
+            }
+        }
+    }
+    
+    SetModified();
 }
 
 void Map::UpdateModifiedTime()
@@ -428,13 +659,17 @@ bool Map::LoadFromSimpleJson(const wxString& jsonData)
         m_metadata.name = "Mapa Carregado";
         UpdateModifiedTime();
         
-        // Redimensionar e carregar tiles
-        m_tiles.resize(height);
-        for (int y = 0; y < height; ++y) {
-            m_tiles[y].resize(width);
-            for (int x = 0; x < width; ++x) {
-                int index = y * width + x;
-                m_tiles[y][x] = tilesArray[index].get<int>();
+        // Redimensionar layers e carregar tiles no layer ativo
+        if (m_layerManager) {
+            m_layerManager->ResizeAllLayers(width, height, 0);
+            Layer* activeLayer = m_layerManager->GetActiveLayer();
+            if (activeLayer) {
+                for (int y = 0; y < height; ++y) {
+                    for (int x = 0; x < width; ++x) {
+                        int index = y * width + x;
+                        activeLayer->SetTile(x, y, tilesArray[index].get<int>());
+                    }
+                }
             }
         }
         

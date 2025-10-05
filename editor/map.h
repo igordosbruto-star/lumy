@@ -7,6 +7,8 @@
 #include <wx/wx.h>
 #include <vector>
 #include <string>
+#include <memory>
+#include "layer_manager.h"
 
 struct MapMetadata
 {
@@ -49,22 +51,44 @@ public:
     int GetWidth() const { return m_metadata.width; }
     int GetHeight() const { return m_metadata.height; }
     int GetTileSize() const { return m_metadata.tileSize; }
-    int GetTile(int x, int y) const;
+    int GetTile(int x, int y) const;  // Delega ao layer ativo
     
     // Setters
     void SetMetadata(const MapMetadata& metadata);
     void SetName(const wxString& name);
-    void SetTile(int x, int y, int tileId);
+    void SetTile(int x, int y, int tileId);  // Delega ao layer ativo
     void SetSize(int width, int height);
     
+    // Gerenciamento de layers
+    LayerManager* GetLayerManager() { return m_layerManager.get(); }
+    const LayerManager* GetLayerManager() const { return m_layerManager.get(); }
+    
+    // Atalhos para operações de layer comum
+    int GetLayerCount() const;
+    Layer* GetActiveLayer();
+    const Layer* GetActiveLayer() const;
+    bool SetActiveLayer(int index);
+    Layer* CreateLayer(const LayerProperties& properties = LayerProperties());
+    bool RemoveLayer(int index);
+    
+    // Operações em layers específicos
+    int GetTileFromLayer(int layerIndex, int x, int y) const;
+    void SetTileInLayer(int layerIndex, int x, int y, int tileId);
+    
     // Operações
-    void Clear();
-    void Fill(int tileId);
+    void Clear();  // Limpar layer ativo
+    void Fill(int tileId);  // Preencher layer ativo
+    void ClearAllLayers();  // Limpar todos os layers
+    void FillLayer(int layerIndex, int tileId);  // Preencher layer específico
     void Resize(int newWidth, int newHeight, int defaultTile = 0);
     bool IsValidPosition(int x, int y) const;
     
+    // Operações de área
+    void FillRect(int x, int y, int width, int height, int tileId);
+    void CopyRect(int srcX, int srcY, int width, int height, int srcLayer, int destLayer, int destX, int destY);
+    
     // Estado
-    bool IsModified() const { return m_modified; }
+    bool IsModified() const;  // Verifica se algum layer foi modificado
     void SetModified(bool modified = true);
     void MarkSaved();
     
@@ -80,11 +104,12 @@ public:
     void PrintDebugInfo() const;
 
 private:
-    void InitializeDefaultMap();
+    void InitializeDefaultLayers();
     void UpdateModifiedTime();
     bool LoadFromSimpleJson(const wxString& jsonData);
+    void MigrateFromTileArray(const std::vector<std::vector<int>>& tiles);
     
     MapMetadata m_metadata;
-    std::vector<std::vector<int>> m_tiles;
+    std::unique_ptr<LayerManager> m_layerManager;
     bool m_modified;
 };

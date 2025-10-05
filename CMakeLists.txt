@@ -73,6 +73,10 @@ set(EDITOR_SOURCES
     editor/property_grid_panel.cpp
     editor/viewport_panel.cpp
     editor/tileset_panel.cpp
+    editor/tileset_manager.cpp
+    editor/tile_properties_dialog.cpp
+    editor/layer.cpp
+    editor/layer_manager.cpp
     editor/map.cpp
     editor/map_manager.cpp
     editor/file_watcher.cpp
