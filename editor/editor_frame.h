@@ -11,6 +11,7 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/glcanvas.h>
 #include <memory>
+#include "file_watcher.h"
 
 // Forward declarations
 class ProjectTreePanel;
@@ -45,6 +46,18 @@ private:
     std::unique_ptr<ProjectTreePanel> m_projectTree;
     std::unique_ptr<PropertyGridPanel> m_propertyGrid;
     std::unique_ptr<ViewportPanel> m_viewport;
+    
+    // Hot-reload system
+    std::unique_ptr<FileWatcher> m_fileWatcher;
+    wxString m_currentProjectPath;
+    
+    // Hot-reload callbacks
+    void OnMapFileChanged(const wxString& path, const wxString& filename);
+    void OnDataFileChanged(const wxString& path, const wxString& filename);
+    
+    // Project management
+    bool LoadProject(const wxString& projectPath);
+    void SetupHotReload();
 
     wxDECLARE_EVENT_TABLE();
 };

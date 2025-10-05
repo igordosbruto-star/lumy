@@ -16,10 +16,12 @@ public:
 private:
     void CreateControls();
     void CreateToolbar();
+    wxBitmap CreateSimpleBitmap(const wxColour& color);
     
     // OpenGL Canvas para renderização
     class GLCanvas : public wxGLCanvas
     {
+        friend class ViewportPanel; // Permitir acesso aos membros privados
     public:
         GLCanvas(wxWindow* parent);
         virtual ~GLCanvas();
@@ -29,7 +31,17 @@ private:
         void OnMouseLeftDown(wxMouseEvent& event);
         void OnMouseRightDown(wxMouseEvent& event);
         void OnMouseMove(wxMouseEvent& event);
+        void OnMouseWheel(wxMouseEvent& event);
+        void OnMouseMiddleDown(wxMouseEvent& event);
+        void OnMouseMiddleUp(wxMouseEvent& event);
         void OnKeyDown(wxKeyEvent& event);
+        
+        // Helper functions
+        wxPoint WorldToTile(const wxPoint& worldPos);
+        wxPoint TileToWorld(const wxPoint& tilePos);
+        void PaintTile(int tileX, int tileY);
+        void EraseTile(int tileX, int tileY);
+        void ToggleCollision(int tileX, int tileY);
         
     private:
         void InitGL();
@@ -46,6 +58,17 @@ private:
         float m_panX, m_panY;
         bool m_showGrid;
         bool m_showCollision;
+        
+        // Map data (simulated)
+        static const int MAP_WIDTH = 25;
+        static const int MAP_HEIGHT = 15;
+        static const int TILE_SIZE = 32;
+        int m_mapTiles[MAP_HEIGHT][MAP_WIDTH]; // 0=grass, 1=wall, 2=collision
+        
+        // Editing state
+        int m_selectedTile;
+        bool m_isPanning;
+        wxPoint m_lastMousePos;
         
         // Ferramentas de edição
         enum Tool {

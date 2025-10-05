@@ -72,6 +72,7 @@ set(EDITOR_SOURCES
   editor/project_tree_panel.cpp
   editor/property_grid_panel.cpp
   editor/viewport_panel.cpp
+  editor/file_watcher.cpp
 )
 
 # wxWidgets
@@ -92,12 +93,10 @@ if(WIN32)
     wxMSVC_VERSION_AUTO
     _CRT_SECURE_NO_WARNINGS
   )
-  # Remover console window em release
-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_target_properties(lumy-editor PROPERTIES
-      WIN32_EXECUTABLE TRUE
-    )
-  endif()
+  # Configurar como aplicação Windows (não console)
+  set_target_properties(lumy-editor PROPERTIES
+    WIN32_EXECUTABLE TRUE
+  )
 endif()
 
 # Incluir diretórios

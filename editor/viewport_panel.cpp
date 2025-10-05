@@ -24,6 +24,9 @@ wxBEGIN_EVENT_TABLE(ViewportPanel::GLCanvas, wxGLCanvas)
     EVT_LEFT_DOWN(ViewportPanel::GLCanvas::OnMouseLeftDown)
     EVT_RIGHT_DOWN(ViewportPanel::GLCanvas::OnMouseRightDown)
     EVT_MOTION(ViewportPanel::GLCanvas::OnMouseMove)
+    EVT_MOUSEWHEEL(ViewportPanel::GLCanvas::OnMouseWheel)
+    EVT_MIDDLE_DOWN(ViewportPanel::GLCanvas::OnMouseMiddleDown)
+    EVT_MIDDLE_UP(ViewportPanel::GLCanvas::OnMouseMiddleUp)
     EVT_KEY_DOWN(ViewportPanel::GLCanvas::OnKeyDown)
 wxEND_EVENT_TABLE()
 
@@ -51,25 +54,53 @@ void ViewportPanel::CreateControls()
 
 void ViewportPanel::CreateToolbar()
 {
-    m_toolbar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL);
+    m_toolbar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL | wxTB_TEXT);
+    
+    // Criar bitmaps simples (16x16) temporários
+    wxBitmap selectBmp = CreateSimpleBitmap(wxColour(100, 150, 255)); // Azul
+    wxBitmap paintBmp = CreateSimpleBitmap(wxColour(100, 255, 100));  // Verde
+    wxBitmap eraseBmp = CreateSimpleBitmap(wxColour(255, 100, 100));  // Vermelho
+    wxBitmap collisionBmp = CreateSimpleBitmap(wxColour(255, 255, 100)); // Amarelo
+    wxBitmap zoomInBmp = CreateSimpleBitmap(wxColour(150, 150, 150)); // Cinza
+    wxBitmap zoomOutBmp = CreateSimpleBitmap(wxColour(120, 120, 120)); // Cinza escuro
+    wxBitmap resetBmp = CreateSimpleBitmap(wxColour(180, 180, 180)); // Cinza claro
     
     // Ferramentas de edição
-    m_toolbar->AddTool(ID_TOOL_SELECT, "Selecionar", wxNullBitmap, "Ferramenta de seleção");
-    m_toolbar->AddTool(ID_TOOL_PAINT, "Pintar", wxNullBitmap, "Ferramenta de pintura");
-    m_toolbar->AddTool(ID_TOOL_ERASE, "Apagar", wxNullBitmap, "Ferramenta de apagar");
-    m_toolbar->AddTool(ID_TOOL_COLLISION, "Colisão", wxNullBitmap, "Editar colisão");
+    m_toolbar->AddTool(ID_TOOL_SELECT, "Selecionar", selectBmp, "Ferramenta de seleção");
+    m_toolbar->AddTool(ID_TOOL_PAINT, "Pintar", paintBmp, "Ferramenta de pintura");
+    m_toolbar->AddTool(ID_TOOL_ERASE, "Apagar", eraseBmp, "Ferramenta de apagar");
+    m_toolbar->AddTool(ID_TOOL_COLLISION, "Colisão", collisionBmp, "Editar colisão");
     
     m_toolbar->AddSeparator();
     
     // Ferramentas de visualização
-    m_toolbar->AddTool(ID_ZOOM_IN, "Zoom +", wxNullBitmap, "Aumentar zoom");
-    m_toolbar->AddTool(ID_ZOOM_OUT, "Zoom -", wxNullBitmap, "Diminuir zoom");
-    m_toolbar->AddTool(ID_RESET_VIEW, "Reset", wxNullBitmap, "Resetar visualização");
+    m_toolbar->AddTool(ID_ZOOM_IN, "Zoom +", zoomInBmp, "Aumentar zoom");
+    m_toolbar->AddTool(ID_ZOOM_OUT, "Zoom -", zoomOutBmp, "Diminuir zoom");
+    m_toolbar->AddTool(ID_RESET_VIEW, "Reset", resetBmp, "Resetar visualização");
     
     // Selecionar ferramenta inicial
     m_toolbar->ToggleTool(ID_TOOL_SELECT, true);
     
     m_toolbar->Realize();
+}
+
+wxBitmap ViewportPanel::CreateSimpleBitmap(const wxColour& color)
+{
+    // Criar bitmap simples 16x16 com a cor especificada
+    wxImage img(16, 16);
+    img.SetRGB(wxRect(0, 0, 16, 16), color.Red(), color.Green(), color.Blue());
+    
+    // Criar borda preta de 1 pixel
+    for (int x = 0; x < 16; ++x) {
+        img.SetRGB(x, 0, 0, 0, 0);   // Borda superior
+        img.SetRGB(x, 15, 0, 0, 0);  // Borda inferior
+    }
+    for (int y = 0; y < 16; ++y) {
+        img.SetRGB(0, y, 0, 0, 0);   // Borda esquerda
+        img.SetRGB(15, y, 0, 0, 0);  // Borda direita
+    }
+    
+    return wxBitmap(img);
 }
 
 // Implementação do GLCanvas
@@ -83,10 +114,23 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
     , m_panY(0.0f)
     , m_showGrid(true)
     , m_showCollision(false)
+    , m_selectedTile(1) // Padrão: wall tile
+    , m_isPanning(false)
     , m_currentTool(TOOL_SELECT)
 {
     // Criar contexto OpenGL
     m_glContext = new wxGLContext(this);
+    
+    // Inicializar mapa com padrão (bordas = wall, interior = grass)
+    for (int y = 0; y < MAP_HEIGHT; ++y) {
+        for (int x = 0; x < MAP_WIDTH; ++x) {
+            if (x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_HEIGHT - 1) {
+                m_mapTiles[y][x] = 1; // Wall
+            } else {
+                m_mapTiles[y][x] = 0; // Grass
+            }
+        }
+    }
 }
 
 ViewportPanel::GLCanvas::~GLCanvas()
@@ -286,9 +330,9 @@ void ViewportPanel::GLCanvas::DrawSelection()
 void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
 {
     // Converter coordenadas do mouse para coordenadas do mundo
-    wxPoint mousePos = event.GetPosition();
-    float worldX = (mousePos.x - m_panX) / m_zoom;
-    float worldY = (mousePos.y - m_panY) / m_zoom;
+    // wxPoint mousePos = event.GetPosition();
+    // float worldX = (mousePos.x - m_panX) / m_zoom;
+    // float worldY = (mousePos.y - m_panY) / m_zoom;
     
     // Ações baseadas na ferramenta atual
     switch (m_currentTool) {

@@ -6,6 +6,7 @@
 #include "project_tree_panel.h"
 #include "property_grid_panel.h"
 #include "viewport_panel.h"
+#include <wx/dirdlg.h>
 
 // Event table
 wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
@@ -35,6 +36,13 @@ EditorFrame::EditorFrame()
     
     // Aplicar layout
     m_auiManager.Update();
+    
+    // Inicializar hot-reload system
+    m_fileWatcher = std::make_unique<FileWatcher>();
+    
+    // Carregar projeto padrão (diretório atual)
+    wxString currentDir = wxGetCwd();
+    LoadProject(currentDir);
     
     // Status inicial
     SetStatusText("Lumy Editor iniciado - Pronto para criar!");
@@ -71,7 +79,7 @@ void EditorFrame::CreateMenuBar()
 
 void EditorFrame::CreateStatusBar()
 {
-    CreateStatusBar(3);
+    wxFrame::CreateStatusBar(3);
     SetStatusText("Pronto", 0);
     SetStatusText("M1 - Brilho", 1);
     SetStatusText("Nenhum projeto", 2);
@@ -182,9 +190,20 @@ void EditorFrame::OnNewProject(wxCommandEvent& WXUNUSED(event))
 void EditorFrame::OnOpenProject(wxCommandEvent& WXUNUSED(event))
 {
     SetStatusText("Abrindo projeto...", 0);
-    // TODO: Implementar abertura de projeto
-    wxMessageBox("Função 'Abrir Projeto' será implementada em breve!", "M1 - Em Desenvolvimento", wxOK | wxICON_INFORMATION);
-    SetStatusText("Pronto", 0);
+    
+    wxDirDialog dirDialog(this, "Selecionar pasta do projeto Lumy", m_currentProjectPath);
+    
+    if (dirDialog.ShowModal() == wxID_OK) {
+        wxString selectedPath = dirDialog.GetPath();
+        if (LoadProject(selectedPath)) {
+            SetStatusText(wxString::Format("Projeto carregado: %s", selectedPath), 0);
+        } else {
+            SetStatusText("Erro ao carregar projeto", 0);
+            wxMessageBox("Erro ao carregar projeto do diretório selecionado.", "Erro", wxOK | wxICON_ERROR);
+        }
+    } else {
+        SetStatusText("Pronto", 0);
+    }
 }
 
 void EditorFrame::OnSaveProject(wxCommandEvent& WXUNUSED(event))
@@ -193,4 +212,90 @@ void EditorFrame::OnSaveProject(wxCommandEvent& WXUNUSED(event))
     // TODO: Implementar salvamento de projeto
     wxMessageBox("Função 'Salvar Projeto' será implementada em breve!", "M1 - Em Desenvolvimento", wxOK | wxICON_INFORMATION);
     SetStatusText("Pronto", 0);
+}
+
+// Hot-reload callbacks
+void EditorFrame::OnMapFileChanged(const wxString& path, const wxString& filename)
+{
+    wxLogMessage("Mapa modificado: %s", filename);
+    
+    // Recarregar no viewport
+    if (m_viewport) {
+        // TODO: Implementar recarga real do mapa
+        SetStatusText(wxString::Format("Hot-reload: %s", filename), 0);
+        
+        // For now, just refresh the viewport
+        m_viewport->Refresh();
+    }
+}
+
+void EditorFrame::OnDataFileChanged(const wxString& path, const wxString& filename)
+{
+    wxLogMessage("Database modificado: %s", filename);
+    
+    // Recarregar no property grid
+    if (m_propertyGrid) {
+        // TODO: Implementar recarga real da database
+        SetStatusText(wxString::Format("Hot-reload: %s", filename), 0);
+    }
+}
+
+// Project management
+bool EditorFrame::LoadProject(const wxString& projectPath)
+{
+    if (!wxDirExists(projectPath)) {
+        wxLogError("Diretório do projeto não existe: %s", projectPath);
+        return false;
+    }
+    
+    m_currentProjectPath = projectPath;
+    
+    // Atualizar título da janela
+    wxFileName projectDir(projectPath);
+    SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", projectDir.GetName()));
+    
+    // Configurar hot-reload
+    SetupHotReload();
+    
+    // Atualizar árvore do projeto
+    if (m_projectTree) {
+        // TODO: Implementar carregamento real da árvore do projeto
+    }
+    
+    // Atualizar status bar
+    SetStatusText(wxString::Format("Projeto: %s", projectDir.GetName()), 2);
+    
+    wxLogMessage("Projeto carregado: %s", projectPath);
+    return true;
+}
+
+void EditorFrame::SetupHotReload()
+{
+    if (!m_fileWatcher || m_currentProjectPath.IsEmpty()) {
+        return;
+    }
+    
+    // Parar monitoramento anterior
+    m_fileWatcher->StopWatching();
+    
+    // Registrar callbacks para tipos de arquivo
+    m_fileWatcher->RegisterCallback("tmx", [this](const wxString& path, const wxString& filename) {
+        // Usar CallAfter para executar na thread principal
+        CallAfter([this, path, filename]() {
+            OnMapFileChanged(path, filename);
+        });
+    });
+    
+    m_fileWatcher->RegisterCallback("json", [this](const wxString& path, const wxString& filename) {
+        CallAfter([this, path, filename]() {
+            OnDataFileChanged(path, filename);
+        });
+    });
+    
+    // Iniciar monitoramento
+    if (m_fileWatcher->StartWatching(m_currentProjectPath)) {
+        wxLogMessage("Hot-reload configurado para: %s", m_currentProjectPath);
+    } else {
+        wxLogError("Falha ao configurar hot-reload");
+    }
 }
