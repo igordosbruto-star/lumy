@@ -2,7 +2,10 @@
  * Implementação do Project Tree Panel
  */
 
+#pragma execution_character_set("utf-8")
+
 #include "project_tree_panel.h"
+#include "utf8_strings.h"
 #include <wx/imaglist.h>
 
 wxBEGIN_EVENT_TABLE(ProjectTreePanel, wxPanel)

@@ -2,7 +2,10 @@
  * Implementação do Property Grid Panel
  */
 
+#pragma execution_character_set("utf-8")
+
 #include "property_grid_panel.h"
+#include "utf8_strings.h"
 
 wxBEGIN_EVENT_TABLE(PropertyGridPanel, wxPanel)
     EVT_PG_CHANGED(wxID_ANY, PropertyGridPanel::OnPropertyChanged)
@@ -28,7 +31,7 @@ void PropertyGridPanel::CreateControls()
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     
     // Título
-    wxStaticText* title = new wxStaticText(this, wxID_ANY, "Propriedades");
+    wxStaticText* title = new wxStaticText(this, wxID_ANY, UTF8("Propriedades"));
     wxFont titleFont = title->GetFont();
     titleFont.SetWeight(wxFONTWEIGHT_BOLD);
     title->SetFont(titleFont);
@@ -47,7 +50,7 @@ void PropertyGridPanel::PopulateDefaultProperties()
     m_propertyGrid->Append(new wxPropertyCategory("Lumy Editor"));
     
     // Propriedades básicas
-    m_propertyGrid->Append(new wxStringProperty("Versão", "version", "0.1.1"));
+    m_propertyGrid->Append(new wxStringProperty(UTF8("Versão"), "version", "0.1.1"));
     m_propertyGrid->Append(new wxStringProperty("Marco", "milestone", "M1 - Brilho"));
     m_propertyGrid->Append(new wxStringProperty("Status", "status", "Em desenvolvimento"));
     

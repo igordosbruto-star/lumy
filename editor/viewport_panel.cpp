@@ -2,7 +2,10 @@
  * Implementação do Viewport Panel
  */
 
+#pragma execution_character_set("utf-8")
+
 #include "viewport_panel.h"
+#include "utf8_strings.h"
 #include <GL/gl.h>
 #include <cmath>
 
@@ -66,17 +69,17 @@ void ViewportPanel::CreateToolbar()
     wxBitmap resetBmp = CreateSimpleBitmap(wxColour(180, 180, 180)); // Cinza claro
     
     // Ferramentas de edição
-    m_toolbar->AddTool(ID_TOOL_SELECT, "Selecionar", selectBmp, "Ferramenta de seleção");
+    m_toolbar->AddTool(ID_TOOL_SELECT, "Selecionar", selectBmp, UTF8("Ferramenta de seleção"));
     m_toolbar->AddTool(ID_TOOL_PAINT, "Pintar", paintBmp, "Ferramenta de pintura");
     m_toolbar->AddTool(ID_TOOL_ERASE, "Apagar", eraseBmp, "Ferramenta de apagar");
-    m_toolbar->AddTool(ID_TOOL_COLLISION, "Colisão", collisionBmp, "Editar colisão");
+    m_toolbar->AddTool(ID_TOOL_COLLISION, UTF8("Colisão"), collisionBmp, UTF8("Editar colisão"));
     
     m_toolbar->AddSeparator();
     
     // Ferramentas de visualização
     m_toolbar->AddTool(ID_ZOOM_IN, "Zoom +", zoomInBmp, "Aumentar zoom");
     m_toolbar->AddTool(ID_ZOOM_OUT, "Zoom -", zoomOutBmp, "Diminuir zoom");
-    m_toolbar->AddTool(ID_RESET_VIEW, "Reset", resetBmp, "Resetar visualização");
+    m_toolbar->AddTool(ID_RESET_VIEW, "Reset", resetBmp, UTF8("Resetar visualização"));
     
     // Selecionar ferramenta inicial
     m_toolbar->ToggleTool(ID_TOOL_SELECT, true);

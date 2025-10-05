@@ -2,10 +2,14 @@
  * Implementação da EditorFrame
  */
 
+#pragma execution_character_set("utf-8")
+
 #include "editor_frame.h"
 #include "project_tree_panel.h"
 #include "property_grid_panel.h"
 #include "viewport_panel.h"
+#include "new_project_dialog.h"
+#include "utf8_strings.h"
 #include <wx/dirdlg.h>
 
 // Event table
@@ -26,7 +30,7 @@ EditorFrame::EditorFrame()
     : wxFrame(nullptr, wxID_ANY, "Lumy Editor - M1 Brilho", wxDefaultPosition, wxSize(1200, 800))
 {
     // Configurar ícone (se houver)
-    SetIcon(wxICON(sample));
+    // SetIcon(wxICON(sample)); // Comentado temporariamente
 
     // Criar elementos da interface
     CreateMenuBar();
@@ -43,6 +47,9 @@ EditorFrame::EditorFrame()
     
     // Inicializar hot-reload system
     m_fileWatcher = std::make_unique<FileWatcher>();
+    
+    // Inicializar project manager
+    m_projectManager = std::make_unique<ProjectManager>();
     
     // Carregar projeto padrão (diretório atual)
     wxString currentDir = wxGetCwd();
@@ -102,7 +109,7 @@ void EditorFrame::CreateAuiPanes()
     m_auiManager.AddPane(m_projectTree.get(),
         wxAuiPaneInfo()
         .Name("ProjectTree")
-        .Caption("Árvore do Projeto")
+        .Caption(UTF8("Árvore do Projeto"))
         .Left()
         .MinSize(200, -1)
         .BestSize(250, -1)
@@ -114,7 +121,7 @@ void EditorFrame::CreateAuiPanes()
     m_auiManager.AddPane(m_propertyGrid.get(),
         wxAuiPaneInfo()
         .Name("PropertyGrid")
-        .Caption("Propriedades")
+        .Caption(UTF8("Propriedades"))
         .Right()
         .MinSize(200, -1)
         .BestSize(300, -1)
@@ -142,6 +149,7 @@ void EditorFrame::OnExit(wxCommandEvent& WXUNUSED(event))
 void EditorFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
     wxMessageBox(
+        UTF8(
         "Lumy Editor - Marco 1 \"Brilho\"\n"
         "Editor de RPGs 2D com wxWidgets e OpenGL\n\n"
         "Recursos do M1:\n"
@@ -151,8 +159,8 @@ void EditorFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
         "- Viewport OpenGL\n"
         "- Hot-reload de mapas\n\n"
         "Versão: 0.1.1\n"
-        "Engine: C++20 + SFML + wxWidgets",
-        "Sobre o Lumy Editor",
+        "Engine: C++20 + SFML + wxWidgets"),
+        UTF8("Sobre o Lumy Editor"),
         wxOK | wxICON_INFORMATION,
         this
     );
@@ -186,9 +194,38 @@ void EditorFrame::OnClose(wxCloseEvent& event)
 void EditorFrame::OnNewProject(wxCommandEvent& WXUNUSED(event))
 {
     SetStatusText("Criando novo projeto...", 0);
-    // TODO: Implementar criação de projeto
-    wxMessageBox("Função 'Novo Projeto' será implementada em breve!", "M1 - Em Desenvolvimento", wxOK | wxICON_INFORMATION);
-    SetStatusText("Pronto", 0);
+    
+    NewProjectDialog dialog(this);
+    
+    if (dialog.ShowModal() == wxID_OK) {
+        wxString projectPath = dialog.GetProjectPath();
+        ProjectInfo info = dialog.GetProjectInfo();
+        
+        if (m_projectManager->CreateNewProject(projectPath, info)) {
+            // Projeto criado com sucesso
+            m_currentProjectPath = projectPath;
+            
+            // Atualizar título da janela
+            SetTitle(wxString::Format("Lumy Editor - M1 Brilho [%s]", info.projectName));
+            
+            // Configurar hot-reload
+            SetupHotReload();
+            
+            // Broadcast project change
+            BroadcastProjectChange(projectPath, true);
+            
+            // Atualizar status
+            SetStatusText(wxString::Format("Projeto criado: %s", info.projectName), 0);
+            SetStatusText(wxString::Format("Projeto: %s", info.projectName), 2);
+            
+            wxLogMessage("Novo projeto criado com sucesso: %s", projectPath);
+        } else {
+            SetStatusText("Erro ao criar projeto", 0);
+            wxMessageBox("Erro ao criar o projeto. Verifique os logs para mais detalhes.", "Erro", wxOK | wxICON_ERROR);
+        }
+    } else {
+        SetStatusText("Pronto", 0);
+    }
 }
 
 void EditorFrame::OnOpenProject(wxCommandEvent& WXUNUSED(event))
