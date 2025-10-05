@@ -5,6 +5,18 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Fixed
+
+### Docs
+
+
+## [0.1.1] — 2025-10-05 🎯
+**M0 Fechamento - Consolidação do Marco Zero**
+
+### Added
 - **Sistema de Eventos completo**: 10 comandos básicos implementados (`ShowText`, `SetSwitch`, `SetVariable`, `Wait`, `ConditionalBranch`, `EndConditional`, `TransferPlayer`, `ChangeGold`, `PlaySound`, `ShowImage`).
 - **Sistema de Save/Load**: salvamento em múltiplos slots (JSON) com dados de posição, switches, variáveis, party e inventário.
 - **Esquemas JSON de dados**: estruturas para `actors.json`, `items.json`, `states.json`, `skills.json`, `enemies.json` e `system.json` em `game/data/`.
@@ -44,6 +56,8 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `map_loader.py`: função `load_hello_map()` para parsear `hello.tmx` com tratamento de erros.
 - `src/map_scene.cpp`: posiciona o herói usando objeto `player`/`spawn` da camada de objetos do TMX com fallback.
 - `src/map.cpp`/`src/map_scene.cpp`: suporte a tiles colidíveis com bloqueio de movimento.
+- **Sistema de saves funcional**: arquivo `save1.json` com dados persistentes do jogo.
+- **Mapa expandido**: `hello.tmx` atualizado com dimensões 25x15 e estrutura de bordas.
 
 ### Changed
 - **`CMakeLists.txt`**: adicionados `event_system.cpp` e `save_system.cpp` ao build; dependência do Lua para integração com scripts.
