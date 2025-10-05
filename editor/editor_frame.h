@@ -12,6 +12,7 @@
 #include <wx/glcanvas.h>
 #include <memory>
 #include "file_watcher.h"
+#include "editor_events.h"
 
 // Forward declarations
 class ProjectTreePanel;
@@ -58,6 +59,16 @@ private:
     // Project management
     bool LoadProject(const wxString& projectPath);
     void SetupHotReload();
+    
+    // Communication between panes
+    void OnSelectionChanged(SelectionChangeEvent& event);
+    void OnPropertyChanged(PropertyChangeEvent& event);
+    void OnProjectChanged(ProjectChangeEvent& event);
+    
+    // Broadcasting methods
+    void BroadcastSelectionChange(const SelectionInfo& info);
+    void BroadcastPropertyChange(const wxString& propertyName, const wxVariant& value);
+    void BroadcastProjectChange(const wxString& projectPath, bool loaded);
 
     wxDECLARE_EVENT_TABLE();
 };

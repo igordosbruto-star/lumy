@@ -16,6 +16,10 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_MENU(ID_OpenProject, EditorFrame::OnOpenProject)
     EVT_MENU(ID_SaveProject, EditorFrame::OnSaveProject)
     EVT_CLOSE(EditorFrame::OnClose)
+    // Eventos customizados para comunicação entre panes
+    EVT_SELECTION_CHANGE(EditorFrame::OnSelectionChanged)
+    EVT_PROPERTY_CHANGE(EditorFrame::OnPropertyChanged)
+    EVT_PROJECT_CHANGE(EditorFrame::OnProjectChanged)
 wxEND_EVENT_TABLE()
 
 EditorFrame::EditorFrame()
@@ -298,4 +302,137 @@ void EditorFrame::SetupHotReload()
     } else {
         wxLogError("Falha ao configurar hot-reload");
     }
+}
+
+// Communication between panes handlers
+void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
+{
+    const SelectionInfo& info = event.GetSelectionInfo();
+    
+    wxLogMessage("Selection changed: type=%d, name=%s", static_cast<int>(info.type), info.displayName);
+    
+    // Atualizar property grid com base na seleção
+    if (m_propertyGrid) {
+        // TODO: Implementar atualização dinâmica do property grid
+        // Por enquanto, apenas log
+        wxLogMessage("Updating property grid for selection: %s", info.displayName);
+    }
+    
+    // Atualizar viewport se necessário
+    if (m_viewport && info.type == SelectionType::TILE) {
+        // TODO: Highlight tile no viewport
+        wxLogMessage("Highlighting tile at (%d, %d)", info.tilePosition.x, info.tilePosition.y);
+    }
+    
+    // Atualizar status bar
+    if (info.type != SelectionType::NONE) {
+        SetStatusText(wxString::Format("Selecionado: %s", info.displayName), 0);
+    } else {
+        SetStatusText("Pronto", 0);
+    }
+}
+
+void EditorFrame::OnPropertyChanged(PropertyChangeEvent& event)
+{
+    const wxString& propertyName = event.GetPropertyName();
+    const wxVariant& propertyValue = event.GetPropertyValue();
+    
+    wxLogMessage("Property changed: %s = %s", propertyName, propertyValue.GetString());
+    
+    // Propagar mudança para viewport se necessário
+    if (m_viewport) {
+        // TODO: Aplicar mudanças de propriedade no viewport
+        m_viewport->Refresh();
+    }
+    
+    // Atualizar status
+    SetStatusText(wxString::Format("Propriedade alterada: %s", propertyName), 0);
+}
+
+void EditorFrame::OnProjectChanged(ProjectChangeEvent& event)
+{
+    const wxString& projectPath = event.GetProjectPath();
+    bool isLoaded = event.IsLoaded();
+    
+    if (isLoaded) {
+        wxLogMessage("Project loaded: %s", projectPath);
+        
+        // Atualizar todas as panes
+        if (m_projectTree) {
+            // TODO: Recarregar árvore do projeto
+        }
+        
+        if (m_propertyGrid) {
+            // TODO: Limpar property grid
+        }
+        
+        if (m_viewport) {
+            // TODO: Carregar mapa padrão do projeto
+            m_viewport->Refresh();
+        }
+    } else {
+        wxLogMessage("Project unloaded");
+        
+        // Limpar todas as panes
+        SetStatusText("Nenhum projeto carregado", 2);
+    }
+}
+
+// Broadcasting methods
+void EditorFrame::BroadcastSelectionChange(const SelectionInfo& info)
+{
+    SelectionChangeEvent event(EVT_SELECTION_CHANGED);
+    event.SetSelectionInfo(info);
+    
+    // Enviar evento para todos os panes
+    if (m_projectTree) {
+        m_projectTree->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    if (m_propertyGrid) {
+        m_propertyGrid->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    if (m_viewport) {
+        m_viewport->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    // Processar também no frame principal
+    GetEventHandler()->ProcessEvent(event);
+}
+
+void EditorFrame::BroadcastPropertyChange(const wxString& propertyName, const wxVariant& value)
+{
+    PropertyChangeEvent event(EVT_PROPERTY_CHANGED);
+    event.SetPropertyChange(propertyName, value);
+    
+    // Enviar para viewport principalmente
+    if (m_viewport) {
+        m_viewport->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    // Processar no frame principal
+    GetEventHandler()->ProcessEvent(event);
+}
+
+void EditorFrame::BroadcastProjectChange(const wxString& projectPath, bool loaded)
+{
+    ProjectChangeEvent event(EVT_PROJECT_CHANGED);
+    event.SetProjectInfo(projectPath, loaded);
+    
+    // Enviar para todos os panes
+    if (m_projectTree) {
+        m_projectTree->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    if (m_propertyGrid) {
+        m_propertyGrid->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    if (m_viewport) {
+        m_viewport->GetEventHandler()->ProcessEvent(event);
+    }
+    
+    // Processar no frame principal
+    GetEventHandler()->ProcessEvent(event);
 }

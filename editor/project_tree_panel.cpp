@@ -9,6 +9,9 @@ wxBEGIN_EVENT_TABLE(ProjectTreePanel, wxPanel)
     EVT_TREE_SEL_CHANGED(wxID_ANY, ProjectTreePanel::OnTreeSelChanged)
     EVT_TREE_ITEM_ACTIVATED(wxID_ANY, ProjectTreePanel::OnTreeItemActivated)
     EVT_TREE_ITEM_RIGHT_CLICK(wxID_ANY, ProjectTreePanel::OnTreeRightClick)
+    // Eventos customizados
+    EVT_SELECTION_CHANGE(ProjectTreePanel::OnSelectionChanged)
+    EVT_PROJECT_CHANGE(ProjectTreePanel::OnProjectChanged)
 wxEND_EVENT_TABLE()
 
 ProjectTreePanel::ProjectTreePanel(wxWindow* parent)
@@ -85,10 +88,8 @@ void ProjectTreePanel::OnTreeSelChanged(wxTreeEvent& event)
     wxTreeItemId item = event.GetItem();
     if (!item.IsOk()) return;
     
-    wxString itemText = m_treeCtrl->GetItemText(item);
-    
-    // TODO: Notificar outros panes sobre a seleção
-    // Para o M1, apenas mostrar no título do viewport/property grid
+    // Notificar seleção para outros panes
+    NotifySelection(item);
     
     event.Skip();
 }
@@ -133,4 +134,66 @@ void ProjectTreePanel::OnTreeRightClick(wxTreeEvent& event)
     PopupMenu(&contextMenu);
     
     event.Skip();
+}
+
+// Communication event handlers
+void ProjectTreePanel::OnSelectionChanged(SelectionChangeEvent& event)
+{
+    // Reagir a mudanças de seleção de outros panes
+    // Para M1, apenas log
+    const SelectionInfo& info = event.GetSelectionInfo();
+    wxLogMessage("ProjectTree received selection change: %s", info.displayName);
+    event.Skip();
+}
+
+void ProjectTreePanel::OnProjectChanged(ProjectChangeEvent& event)
+{
+    // Recarregar árvore quando projeto muda
+    if (event.IsLoaded()) {
+        wxLogMessage("ProjectTree reloading for project: %s", event.GetProjectPath());
+        // TODO: Recarregar estrutura real do projeto
+        PopulateTree();
+    } else {
+        // Limpar árvore
+        m_treeCtrl->DeleteAllItems();
+    }
+    event.Skip();
+}
+
+// Helper methods
+SelectionType ProjectTreePanel::GetItemType(const wxTreeItemId& item) const
+{
+    if (!item.IsOk()) return SelectionType::NONE;
+    
+    wxString itemText = m_treeCtrl->GetItemText(item);
+    
+    if (itemText.EndsWith(".tmx")) {
+        return SelectionType::MAP_FILE;
+    } else if (itemText.EndsWith(".json")) {
+        return SelectionType::DATA_FILE;
+    } else if (itemText.Contains(".")) {
+        return SelectionType::ASSET_FILE;
+    }
+    
+    return SelectionType::NONE;
+}
+
+void ProjectTreePanel::NotifySelection(const wxTreeItemId& item)
+{
+    if (!item.IsOk()) return;
+    
+    SelectionInfo info;
+    info.type = GetItemType(item);
+    info.displayName = m_treeCtrl->GetItemText(item);
+    info.filePath = info.displayName; // Por enquanto, usar nome como path
+    
+    // Criar e enviar evento
+    SelectionChangeEvent selectionEvent(EVT_SELECTION_CHANGED);
+    selectionEvent.SetSelectionInfo(info);
+    
+    // Enviar para o parent (EditorFrame) que redistribuirá
+    wxWindow* parent = GetParent();
+    if (parent) {
+        parent->GetEventHandler()->ProcessEvent(selectionEvent);
+    }
 }

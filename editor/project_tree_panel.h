@@ -6,6 +6,7 @@
 
 #include <wx/wx.h>
 #include <wx/treectrl.h>
+#include "editor_events.h"
 
 class ProjectTreePanel : public wxPanel
 {
@@ -21,6 +22,14 @@ private:
     void OnTreeSelChanged(wxTreeEvent& event);
     void OnTreeItemActivated(wxTreeEvent& event);
     void OnTreeRightClick(wxTreeEvent& event);
+    
+    // Communication event handlers
+    void OnSelectionChanged(SelectionChangeEvent& event);
+    void OnProjectChanged(ProjectChangeEvent& event);
+    
+    // Helper methods
+    SelectionType GetItemType(const wxTreeItemId& item) const;
+    void NotifySelection(const wxTreeItemId& item);
     
     // Controles
     wxTreeCtrl* m_treeCtrl;

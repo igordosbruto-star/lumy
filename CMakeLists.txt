@@ -67,12 +67,13 @@ target_include_directories(hello-town PRIVATE
 
 # ===== Editor Lumy (wxWidgets) =====
 set(EDITOR_SOURCES
-  editor/main.cpp
-  editor/editor_frame.cpp
-  editor/project_tree_panel.cpp
-  editor/property_grid_panel.cpp
-  editor/viewport_panel.cpp
-  editor/file_watcher.cpp
+    editor/main.cpp
+    editor/editor_frame.cpp
+    editor/project_tree_panel.cpp
+    editor/property_grid_panel.cpp
+    editor/viewport_panel.cpp
+    editor/file_watcher.cpp
+    editor/editor_events.cpp
 )
 
 # wxWidgets
