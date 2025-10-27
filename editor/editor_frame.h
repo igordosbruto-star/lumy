@@ -22,6 +22,10 @@ class ProjectTreePanel;
 class PropertyGridPanel;  
 class ViewportPanel;
 class TilesetPanel;
+class LayerPanel;
+class PropertiesTabsPanel;
+class LeftSidePanel;
+class PaintToolbar;
 
 class EditorFrame : public wxFrame
 {
@@ -60,10 +64,10 @@ private:
     wxAuiManager m_auiManager;
     
     // Panes principais
-    std::unique_ptr<ProjectTreePanel> m_projectTree;
-    std::unique_ptr<PropertyGridPanel> m_propertyGrid;
+    std::unique_ptr<LeftSidePanel> m_leftSidePanel;
+    std::unique_ptr<PropertiesTabsPanel> m_propertiesTabsPanel;
+    std::unique_ptr<PaintToolbar> m_paintToolbar;
     std::unique_ptr<ViewportPanel> m_viewport;
-    std::unique_ptr<TilesetPanel> m_tilesetPanel;
     
     // Hot-reload system
     std::unique_ptr<FileWatcher> m_fileWatcher;

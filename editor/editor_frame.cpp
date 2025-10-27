@@ -5,8 +5,10 @@
 #pragma execution_character_set("utf-8")
 
 #include "editor_frame.h"
+#include "left_side_panel.h"
 #include "project_tree_panel.h"
-#include "property_grid_panel.h"
+#include "properties_tabs_panel.h"
+#include "paint_toolbar.h"
 #include "viewport_panel.h"
 #include "tileset_panel.h"
 #include "new_project_dialog.h"
@@ -76,8 +78,8 @@ EditorFrame::EditorFrame()
     LoadProject(currentDir);
     
     // Configurar caminho do projeto na árvore
-    if (m_projectTree) {
-        m_projectTree->SetProjectPath(currentDir);
+    if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+        m_leftSidePanel->GetProjectTree()->SetProjectPath(currentDir);
     }
     
     // Status inicial
@@ -133,48 +135,47 @@ void EditorFrame::CreateStatusBar()
 void EditorFrame::CreateAuiPanes()
 {
     // Criar panes
-    m_projectTree = std::make_unique<ProjectTreePanel>(this);
-    m_propertyGrid = std::make_unique<PropertyGridPanel>(this);
+    m_leftSidePanel = std::make_unique<LeftSidePanel>(this);
+    m_propertiesTabsPanel = std::make_unique<PropertiesTabsPanel>(this);
+    m_paintToolbar = std::make_unique<PaintToolbar>(this);
     m_viewport = std::make_unique<ViewportPanel>(this);
-    m_tilesetPanel = std::make_unique<TilesetPanel>(this);
 
     // Adicionar panes ao AUI Manager
     
-    // Árvore do projeto (esquerda)
-    m_auiManager.AddPane(m_projectTree.get(),
+    // Painel lateral esquerdo (Árvore + Paleta empilhados)
+    m_auiManager.AddPane(m_leftSidePanel.get(),
         wxAuiPaneInfo()
-        .Name("ProjectTree")
-        .Caption(UTF8("Árvore do Projeto"))
+        .Name("LeftSidePanel")
+        .Caption(UTF8("Projeto & Tiles"))
         .Left()
-        .MinSize(200, -1)
-        .BestSize(250, -1)
+        .MinSize(250, 400)
+        .BestSize(280, 600)
         .CloseButton(false)
         .MaximizeButton(false)
     );
 
-    // Property Grid (direita)
-    m_auiManager.AddPane(m_propertyGrid.get(),
+    // Painel com abas Propriedades/Camadas (direita)
+    m_auiManager.AddPane(m_propertiesTabsPanel.get(),
         wxAuiPaneInfo()
-        .Name("PropertyGrid")
-        .Caption(UTF8("Propriedades"))
+        .Name("PropertiesTabsPanel")
+        .Caption(UTF8("Propriedades & Camadas"))
         .Right()
-        .MinSize(200, -1)
-        .BestSize(300, -1)
+        .MinSize(280, 400)
+        .BestSize(320, 500)
         .CloseButton(false)
         .MaximizeButton(false)
     );
 
-    // Tileset Panel (direita inferior)
-    m_auiManager.AddPane(m_tilesetPanel.get(),
+    // Paint Toolbar (topo do centro)
+    m_auiManager.AddPane(m_paintToolbar.get(),
         wxAuiPaneInfo()
-        .Name("TilesetPanel")
-        .Caption(UTF8("Paleta de Tiles"))
-        .Right()
-        .Bottom()
-        .MinSize(200, 300)
-        .BestSize(220, 400)
+        .Name("PaintToolbar")
+        .Caption("Ferramentas de Pintura")
+        .Top()
+        .MinSize(450, 40)
+        .ToolbarPane()
+        .Gripper(false)
         .CloseButton(false)
-        .MaximizeButton(false)
     );
 
     // Viewport (centro)
@@ -323,6 +324,11 @@ void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
         m_viewport->RefreshMapDisplay();
     }
     
+    // Atualizar painel de layers (via painel de abas)
+    if (m_propertiesTabsPanel) {
+        m_propertiesTabsPanel->SetMap(newMap.get());
+    }
+    
     SetStatusText("Novo mapa criado (20x15)", 0);
     wxLogMessage("Novo mapa criado com dimensões 20x15");
     
@@ -350,6 +356,11 @@ void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
             // Atualizar viewport
             if (m_viewport) {
                 m_viewport->RefreshMapDisplay();
+            }
+            
+            // Atualizar painel de layers (via painel de abas)
+            if (m_propertiesTabsPanel) {
+                m_propertiesTabsPanel->SetMap(m_mapManager->GetCurrentMap().get());
             }
             
             wxFileName fileName(filePath);
@@ -389,8 +400,8 @@ void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
         wxLogMessage("Mapa salvo: %s", m_currentMapPath);
         
         // Atualizar árvore do projeto
-        if (m_projectTree) {
-            m_projectTree->RefreshMapList();
+        if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+            m_leftSidePanel->GetProjectTree()->RefreshMapList();
         }
     } else {
         SetStatusText("Erro ao salvar mapa", 0);
@@ -425,8 +436,8 @@ void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
             wxLogMessage("Mapa salvo como: %s", filePath);
             
             // Atualizar árvore do projeto
-            if (m_projectTree) {
-                m_projectTree->RefreshMapList();
+            if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+                m_leftSidePanel->GetProjectTree()->RefreshMapList();
             }
         } else {
             SetStatusText("Erro ao salvar mapa", 0);
@@ -469,8 +480,8 @@ void EditorFrame::OnDataFileChanged(const wxString& path, const wxString& filena
 {
     wxLogMessage("Database modificado: %s", filename);
     
-    // Recarregar no property grid
-    if (m_propertyGrid) {
+    // Recarregar no property grid (via painel de abas)
+    if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
         // TODO: Implementar recarga real da database
         SetStatusText(wxString::Format("Hot-reload: %s", filename), 0);
     }
@@ -494,8 +505,8 @@ bool EditorFrame::LoadProject(const wxString& projectPath)
     SetupHotReload();
     
     // Atualizar árvore do projeto com novo caminho
-    if (m_projectTree) {
-        m_projectTree->SetProjectPath(projectPath);
+    if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+        m_leftSidePanel->GetProjectTree()->SetProjectPath(projectPath);
     }
     
     // Atualizar status bar
@@ -553,8 +564,8 @@ void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
         }
     }
     
-    // Atualizar property grid com base na seleção
-    if (m_propertyGrid) {
+    // Atualizar property grid com base na seleção (via painel de abas)
+    if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
         // TODO: Implementar atualização dinâmica do property grid
         // Por enquanto, apenas log
         wxLogMessage("Updating property grid for selection: %s", info.displayName);
@@ -600,11 +611,11 @@ void EditorFrame::OnProjectChanged(ProjectChangeEvent& event)
         wxLogMessage("Project loaded: %s", projectPath);
         
         // Atualizar todas as panes
-        if (m_projectTree) {
+        if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
             // TODO: Recarregar árvore do projeto
         }
         
-        if (m_propertyGrid) {
+        if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
             // TODO: Limpar property grid
         }
         
@@ -627,12 +638,12 @@ void EditorFrame::BroadcastSelectionChange(const SelectionInfo& info)
     event.SetSelectionInfo(info);
     
     // Enviar evento para todos os panes
-    if (m_projectTree) {
-        m_projectTree->GetEventHandler()->ProcessEvent(event);
+    if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+        m_leftSidePanel->GetProjectTree()->GetEventHandler()->ProcessEvent(event);
     }
     
-    if (m_propertyGrid) {
-        m_propertyGrid->GetEventHandler()->ProcessEvent(event);
+    if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
+        m_propertiesTabsPanel->GetPropertyGrid()->GetEventHandler()->ProcessEvent(event);
     }
     
     if (m_viewport) {
@@ -663,12 +674,12 @@ void EditorFrame::BroadcastProjectChange(const wxString& projectPath, bool loade
     event.SetProjectInfo(projectPath, loaded);
     
     // Enviar para todos os panes
-    if (m_projectTree) {
-        m_projectTree->GetEventHandler()->ProcessEvent(event);
+    if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+        m_leftSidePanel->GetProjectTree()->GetEventHandler()->ProcessEvent(event);
     }
     
-    if (m_propertyGrid) {
-        m_propertyGrid->GetEventHandler()->ProcessEvent(event);
+    if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
+        m_propertiesTabsPanel->GetPropertyGrid()->GetEventHandler()->ProcessEvent(event);
     }
     
     if (m_viewport) {
@@ -754,8 +765,8 @@ bool EditorFrame::SafeLoadMapFromPath(const wxString& filePath)
                     // Atualizar título
                     UpdateWindowTitle();
                     // Atualizar árvore do projeto
-                    if (m_projectTree) {
-                        m_projectTree->RefreshMapList();
+                    if (m_leftSidePanel && m_leftSidePanel->GetProjectTree()) {
+                        m_leftSidePanel->GetProjectTree()->RefreshMapList();
                     }
                 } else {
                     SetStatusText("Troca de mapa cancelada", 0);

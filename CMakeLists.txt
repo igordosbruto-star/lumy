@@ -71,12 +71,17 @@ set(EDITOR_SOURCES
     editor/editor_frame.cpp
     editor/project_tree_panel.cpp
     editor/property_grid_panel.cpp
+    editor/properties_tabs_panel.cpp
+    editor/left_side_panel.cpp
     editor/viewport_panel.cpp
     editor/tileset_panel.cpp
     editor/tileset_manager.cpp
     editor/tile_properties_dialog.cpp
     editor/layer.cpp
     editor/layer_manager.cpp
+    editor/layer_panel.cpp
+    editor/paint_tools.cpp
+    editor/paint_toolbar.cpp
     editor/map.cpp
     editor/map_manager.cpp
     editor/file_watcher.cpp
