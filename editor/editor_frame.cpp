@@ -84,7 +84,11 @@ EditorFrame::EditorFrame()
     
     // Inicializar map manager
     m_mapManager = std::make_unique<MapManager>();
-    
+
+    if (m_mapTabsPanel) {
+        m_mapTabsPanel->SetMapManager(m_mapManager.get());
+    }
+
     // Conectar viewport com map manager (via MapTabsPanel)
     if (m_mapTabsPanel) {
         ViewportPanel* currentViewport = m_mapTabsPanel->GetCurrentViewport();
@@ -92,7 +96,18 @@ EditorFrame::EditorFrame()
             currentViewport->SetMapManager(m_mapManager.get());
         }
     }
-    
+
+    // Compartilhar TilesetManager com os viewports
+    TilesetPanel* tilesetPanel = m_leftSidePanel ? m_leftSidePanel->GetTilesetPanel() : nullptr;
+    TilesetManager* tilesetManager = tilesetPanel ? tilesetPanel->GetTilesetManager() : nullptr;
+    if (m_mapTabsPanel) {
+        m_mapTabsPanel->SetTilesetManager(tilesetManager);
+        ViewportPanel* currentViewport = m_mapTabsPanel->GetCurrentViewport();
+        if (currentViewport) {
+            currentViewport->SetTilesetManager(tilesetManager);
+        }
+    }
+
     // Carregar projeto padrão (diretório atual)
     wxString currentDir = wxGetCwd();
     LoadProject(currentDir);

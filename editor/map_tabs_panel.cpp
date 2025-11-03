@@ -39,6 +39,8 @@ MapTabsPanel::MapTabsPanel(wxWindow* parent, wxWindowID id)
     , m_nextUntitledNumber(1)
     , m_contextMenu(nullptr)
     , m_contextTabIndex(-1)
+    , m_mapManager(nullptr)
+    , m_tilesetManager(nullptr)
 {
     CreateControls();
     CreateDefaultTab();
@@ -495,9 +497,17 @@ ViewportPanel* MapTabsPanel::CreateViewportForMap(std::shared_ptr<Map> map)
 {
     // Create viewport panel
     ViewportPanel* viewport = new ViewportPanel(m_notebook);
-    
+
+    if (m_mapManager) {
+        viewport->SetMapManager(m_mapManager);
+    }
+
+    if (m_tilesetManager) {
+        viewport->SetTilesetManager(m_tilesetManager);
+    }
+
     // Set the map
     viewport->SetCurrentMap(map.get());
-    
+
     return viewport;
 }

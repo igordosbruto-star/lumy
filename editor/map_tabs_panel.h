@@ -14,6 +14,8 @@
 // Forward declarations
 class ViewportPanel;
 class Map;
+class MapManager;
+class TilesetManager;
 
 struct MapTabInfo
 {
@@ -37,6 +39,9 @@ public:
     bool CloseMap(int tabIndex);
     bool CloseAllMaps();
     void SetActiveMap(int tabIndex);
+
+    void SetMapManager(MapManager* mapManager) { m_mapManager = mapManager; }
+    void SetTilesetManager(TilesetManager* tilesetManager) { m_tilesetManager = tilesetManager; }
     
     // Current map access
     std::shared_ptr<Map> GetCurrentMap();
@@ -82,11 +87,14 @@ private:
     
     // UI Controls
     wxAuiNotebook* m_notebook;
-    
+
     // Data
     std::vector<MapTabInfo> m_mapTabs;
     int m_currentTabIndex;
     int m_nextUntitledNumber;
+
+    MapManager* m_mapManager;
+    TilesetManager* m_tilesetManager;
     
     // Context menu
     wxMenu* m_contextMenu;

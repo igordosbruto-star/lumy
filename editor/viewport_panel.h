@@ -19,6 +19,7 @@ class ShaderProgram;
 class MapRenderer;
 class TextureAtlas;
 class GridRenderer;
+struct TilesetInfo;
 
 class ViewportPanel : public wxPanel
 {
@@ -82,6 +83,7 @@ private:
         void DrawSelection();
         void DrawTilePreview(); // Preview do tile ao pintar
         void DrawMinimap(); // Mini-mapa no canto do viewport
+        bool LoadTilesetTexture(const TilesetInfo* tilesetInfo);
         
         wxGLContext* m_glContext;
         bool m_glInitialized;

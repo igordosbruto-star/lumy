@@ -196,7 +196,7 @@ ViewportPanel::GLCanvas::~GLCanvas()
 void ViewportPanel::GLCanvas::InitGL()
 {
     if (m_glInitialized) return;
-    
+
     wxLogMessage("InitGL: Iniciando inicialização OpenGL");
 
     SetCurrent(*m_glContext);
@@ -238,6 +238,18 @@ void ViewportPanel::GLCanvas::InitGL()
     m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
     m_mapRenderer->SetFrustumCullingEnabled(true);
     wxLogMessage("InitGL: MapRenderer configurado");
+
+    // Carregar tileset inicial do TilesetManager (se disponível)
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    TilesetManager* tilesetManager = viewportPanel ? viewportPanel->m_tilesetManager : nullptr;
+    if (tilesetManager) {
+        const TilesetInfo* tilesetInfo = tilesetManager->GetCurrentTileset();
+        if (!LoadTilesetTexture(tilesetInfo)) {
+            wxLogWarning("InitGL: Falha ao carregar atlas do tileset atual");
+        }
+    } else {
+        wxLogWarning("InitGL: Nenhum TilesetManager disponível ao inicializar o atlas");
+    }
     
     // Inicializar GridRenderer - TEMPORARIAMENTE DESATIVADO PARA DEBUG
     wxLogMessage("InitGL: Pulando GridRenderer (debug)");
@@ -255,6 +267,41 @@ void ViewportPanel::GLCanvas::InitGL()
     
     wxLogMessage("InitGL: Inicialização completa!");
     m_glInitialized = true;
+}
+
+bool ViewportPanel::GLCanvas::LoadTilesetTexture(const TilesetInfo* tilesetInfo)
+{
+    if (!m_tileAtlas) {
+        return false;
+    }
+
+    if (!m_glContext) {
+        wxLogWarning("LoadTilesetTexture: Contexto OpenGL indisponível");
+        return false;
+    }
+
+    SetCurrent(*m_glContext);
+
+    if (!tilesetInfo) {
+        m_tileAtlas->Unload();
+        if (m_mapRenderer) {
+            m_mapRenderer->SetTilesetAtlas(nullptr);
+        }
+        return false;
+    }
+
+    if (!m_tileAtlas->LoadFromTilesetInfo(*tilesetInfo)) {
+        wxLogWarning("LoadTilesetTexture: Falha ao carregar tileset '%s'", tilesetInfo->name);
+        return false;
+    }
+
+    if (m_mapRenderer) {
+        m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
+        m_mapRenderer->RebuildAllLayers(true);
+    }
+
+    wxLogMessage("LoadTilesetTexture: Atlas recarregado para tileset '%s'", tilesetInfo->name);
+    return true;
 }
 
 void ViewportPanel::GLCanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
@@ -1291,6 +1338,14 @@ void ViewportPanel::SetTilesetManager(TilesetManager* tilesetManager)
                         m_glCanvas->m_collisionOverlay.GetStats().collisionTiles);
         } else {
             m_glCanvas->m_collisionOverlay.MarkDirty();
+        }
+
+        // Atualizar atlas de tiles se o contexto já estiver inicializado
+        if (m_glCanvas->m_glInitialized && tilesetManager) {
+            const TilesetInfo* tilesetInfo = tilesetManager->GetCurrentTileset();
+            if (!m_glCanvas->LoadTilesetTexture(tilesetInfo)) {
+                wxLogWarning("ViewportPanel: Falha ao carregar atlas ao trocar TilesetManager");
+            }
         }
     }
     RefreshMapDisplay();
