@@ -593,9 +593,37 @@ void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
     
     // Atualizar property grid com base na seleção (via painel de abas)
     if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
-        // TODO: Implementar atualização dinâmica do property grid
-        // Por enquanto, apenas log
-        wxLogMessage("Updating property grid for selection: %s", info.displayName);
+        PropertyGridPanel* propGrid = m_propertiesTabsPanel->GetPropertyGrid();
+        
+        switch (info.type) {
+            case SelectionType::TILE:
+                // Carregar propriedades do tile selecionado
+                propGrid->LoadTileProperties(
+                    info.tilePosition.x, 
+                    info.tilePosition.y, 
+                    info.tileType,
+                    false  // TODO: obter collision flag real
+                );
+                wxLogMessage("PropertyGrid atualizado para tile em (%d, %d)", 
+                            info.tilePosition.x, info.tilePosition.y);
+                break;
+                
+            case SelectionType::MAP_FILE:
+                // Carregar propriedades do mapa atual se houver
+                if (m_mapManager && m_mapManager->HasMap()) {
+                    // TODO: obter Map* do MapManager
+                    wxLogMessage("TODO: Carregar propriedades do mapa no PropertyGrid");
+                }
+                break;
+                
+            case SelectionType::NONE:
+                propGrid->ClearProperties();
+                break;
+                
+            default:
+                wxLogMessage("Tipo de seleção não tratado: %d", static_cast<int>(info.type));
+                break;
+        }
     }
     
     // Atualizar viewport se necessário
