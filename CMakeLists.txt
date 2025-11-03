@@ -91,10 +91,14 @@ set(EDITOR_SOURCES
     editor/project_manager.cpp
     editor/new_project_dialog.cpp
     editor/i18n.cpp
+    editor/gl_buffer.cpp
 )
 
 # wxWidgets
 find_package(wxWidgets CONFIG REQUIRED COMPONENTS core base aui propgrid gl)
+
+# GLEW para extensões OpenGL
+find_package(GLEW REQUIRED)
 
 add_executable(lumy-editor ${EDITOR_SOURCES})
 target_compile_features(lumy-editor PRIVATE cxx_std_20)
@@ -103,6 +107,8 @@ target_compile_features(lumy-editor PRIVATE cxx_std_20)
 target_link_libraries(lumy-editor PRIVATE
   wx::core wx::base wx::aui wx::propgrid wx::gl
   nlohmann_json::nlohmann_json
+  GLEW::GLEW
+  opengl32
 )
 
 # Definir flags específicas do wxWidgets para Windows
