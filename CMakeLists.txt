@@ -92,6 +92,7 @@ set(EDITOR_SOURCES
     editor/new_project_dialog.cpp
     editor/i18n.cpp
     editor/gl_buffer.cpp
+    editor/texture_atlas.cpp
 )
 
 # wxWidgets
