@@ -7,6 +7,7 @@
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 #include <memory>
+#include "smooth_transform.h"
 
 // Forward declarations
 class MapManager;
@@ -74,8 +75,7 @@ private:
         bool m_glInitialized;
         
         // Estado da visualização
-        float m_zoom;
-        float m_panX, m_panY;
+        SmoothTransform m_smoothTransform;
         bool m_showGrid;
         bool m_showCollision;
         

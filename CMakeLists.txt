@@ -97,6 +97,7 @@ set(EDITOR_SOURCES
     editor/shader_program.cpp
     editor/grid_renderer.cpp
     editor/collision_overlay.cpp
+    editor/smooth_transform.cpp
 )
 
 # wxWidgets

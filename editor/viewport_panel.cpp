@@ -134,9 +134,6 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
     : wxGLCanvas(parent, wxID_ANY, nullptr, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE)
     , m_glContext(nullptr)
     , m_glInitialized(false)
-    , m_zoom(1.0f)
-    , m_panX(0.0f)
-    , m_panY(0.0f)
     , m_showGrid(true)
     , m_showCollision(false)
     , m_selectedTile(1) // Padrão: wall tile
@@ -145,6 +142,13 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
 {
     // Criar contexto OpenGL
     m_glContext = new wxGLContext(this);
+    
+    // Configurar SmoothTransform
+    m_smoothTransform.SetTransform(1.0f, 0.0f, 0.0f);
+    m_smoothTransform.SetUpdateCallback([this](float zoom, float panX, float panY) {
+        (void)zoom; (void)panX; (void)panY;
+        Refresh();
+    });
     
     // Inicializar mapa com padrão (bordas = wall, interior = grass)
     for (int y = 0; y < MAP_HEIGHT; ++y) {
@@ -218,9 +222,13 @@ void ViewportPanel::GLCanvas::Render()
     
     glPushMatrix();
     
-    // Aplicar transformações de câmera
-    glTranslatef(m_panX, m_panY, 0.0f);
-    glScalef(m_zoom, m_zoom, 1.0f);
+    // Aplicar transformações de câmera do SmoothTransform
+    float zoom = m_smoothTransform.GetZoom();
+    float panX = m_smoothTransform.GetPanX();
+    float panY = m_smoothTransform.GetPanY();
+    
+    glTranslatef(panX, panY, 0.0f);
+    glScalef(zoom, zoom, 1.0f);
     
     // Desenhar elementos
     if (m_showGrid) {
@@ -239,11 +247,15 @@ void ViewportPanel::GLCanvas::DrawGrid()
     const int gridSize = 32;
     wxSize canvasSize = GetClientSize();
     
+    float zoom = m_smoothTransform.GetZoom();
+    float panX = m_smoothTransform.GetPanX();
+    float panY = m_smoothTransform.GetPanY();
+    
     // Calcular limites visíveis considerando zoom e pan
-    int startX = static_cast<int>(-m_panX / m_zoom / gridSize) - 1;
-    int startY = static_cast<int>(-m_panY / m_zoom / gridSize) - 1;
-    int endX = startX + static_cast<int>(canvasSize.x / m_zoom / gridSize) + 2;
-    int endY = startY + static_cast<int>(canvasSize.y / m_zoom / gridSize) + 2;
+    int startX = static_cast<int>(-panX / zoom / gridSize) - 1;
+    int startY = static_cast<int>(-panY / zoom / gridSize) - 1;
+    int endX = startX + static_cast<int>(canvasSize.x / zoom / gridSize) + 2;
+    int endY = startY + static_cast<int>(canvasSize.y / zoom / gridSize) + 2;
     
     glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
     glBegin(GL_LINES);
@@ -393,7 +405,10 @@ void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
     SetFocus(); // Para receber eventos de teclado
     
     wxPoint mousePos = event.GetPosition();
-    wxPoint worldPos((mousePos.x - m_panX) / m_zoom, (mousePos.y - m_panY) / m_zoom);
+    float zoom = m_smoothTransform.GetZoom();
+    float panX = m_smoothTransform.GetPanX();
+    float panY = m_smoothTransform.GetPanY();
+    wxPoint worldPos((mousePos.x - panX) / zoom, (mousePos.y - panY) / zoom);
     wxPoint tilePos = WorldToTile(worldPos);
     
     // Verificar se está dentro dos limites do mapa
@@ -470,14 +485,17 @@ void ViewportPanel::GLCanvas::OnMouseMove(wxMouseEvent& event)
     // Pan com mouse do meio
     if (m_isPanning) {
         wxPoint delta = currentPos - m_lastMousePos;
-        m_panX += delta.x;
-        m_panY += delta.y;
-        Refresh();
+        float panX = m_smoothTransform.GetPanX() + delta.x;
+        float panY = m_smoothTransform.GetPanY() + delta.y;
+        m_smoothTransform.SetTransform(m_smoothTransform.GetZoom(), panX, panY);
     }
     
     // Pintura contínua quando botão esquerdo está pressionado
     if (event.LeftIsDown() && (m_currentTool == TOOL_PAINT || m_currentTool == TOOL_ERASE || m_currentTool == TOOL_COLLISION)) {
-        wxPoint worldPos((currentPos.x - m_panX) / m_zoom, (currentPos.y - m_panY) / m_zoom);
+        float zoom = m_smoothTransform.GetZoom();
+        float panX = m_smoothTransform.GetPanX();
+        float panY = m_smoothTransform.GetPanY();
+        wxPoint worldPos((currentPos.x - panX) / zoom, (currentPos.y - panY) / zoom);
         wxPoint tilePos = WorldToTile(worldPos);
         
         // Verificar limites do mapa para pintura contínua
@@ -633,32 +651,37 @@ void ViewportPanel::OnToolSelectCircle(wxCommandEvent& WXUNUSED(event))
 
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
 {
-    m_glCanvas->m_zoom *= 1.25f;
-    // Limitar zoom máximo a 4.0x
-    if (m_glCanvas->m_zoom > 4.0f) {
-        m_glCanvas->m_zoom = 4.0f;
-    }
-    m_glCanvas->Refresh();
-    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_zoom * 100.0f);
+    // Configurar limites de zoom
+    TransformBounds bounds;
+    bounds.enableBounds = true;
+    bounds.minZoom = 0.25f;
+    bounds.maxZoom = 4.0f;
+    m_glCanvas->m_smoothTransform.SetBounds(bounds);
+    
+    // Zoom suave
+    m_glCanvas->m_smoothTransform.ZoomIn();
+    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_smoothTransform.GetZoom() * 100.0f);
 }
 
 void ViewportPanel::OnZoomOut(wxCommandEvent& WXUNUSED(event))
 {
-    m_glCanvas->m_zoom /= 1.25f;
-    // Limitar zoom mínimo a 0.25x
-    if (m_glCanvas->m_zoom < 0.25f) {
-        m_glCanvas->m_zoom = 0.25f;
-    }
-    m_glCanvas->Refresh();
-    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_zoom * 100.0f);
+    // Configurar limites de zoom
+    TransformBounds bounds;
+    bounds.enableBounds = true;
+    bounds.minZoom = 0.25f;
+    bounds.maxZoom = 4.0f;
+    m_glCanvas->m_smoothTransform.SetBounds(bounds);
+    
+    // Zoom suave
+    m_glCanvas->m_smoothTransform.ZoomOut();
+    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_smoothTransform.GetZoom() * 100.0f);
 }
 
 void ViewportPanel::OnResetView(wxCommandEvent& WXUNUSED(event))
 {
-    m_glCanvas->m_zoom = 1.0f;
-    m_glCanvas->m_panX = 0.0f;
-    m_glCanvas->m_panY = 0.0f;
-    m_glCanvas->Refresh();
+    // Reset suave
+    m_glCanvas->m_smoothTransform.ResetZoom();
+    m_glCanvas->m_smoothTransform.AnimatePan(0.0f, 0.0f, 300);
 }
 
 void ViewportPanel::SetSelectedTile(int tileId)
@@ -704,26 +727,39 @@ void ViewportPanel::NotifyMapModified()
 
 void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
 {
+    // Configurar limites de zoom
+    TransformBounds bounds;
+    bounds.enableBounds = true;
+    bounds.minZoom = 0.25f;
+    bounds.maxZoom = 4.0f;
+    m_smoothTransform.SetBounds(bounds);
+    
+    // Calcular ponto do mundo sob o cursor
+    wxPoint mousePos = event.GetPosition();
+    float currentZoom = m_smoothTransform.GetZoom();
+    float currentPanX = m_smoothTransform.GetPanX();
+    float currentPanY = m_smoothTransform.GetPanY();
+    
+    float worldX = (mousePos.x - currentPanX) / currentZoom;
+    float worldY = (mousePos.y - currentPanY) / currentZoom;
+    
+    // Calcular novo zoom
     float rotation = event.GetWheelRotation();
+    float targetZoom = currentZoom;
     if (rotation > 0) {
-        m_zoom *= 1.1f;
-        // Limitar zoom máximo a 4.0x
-        if (m_zoom > 4.0f) {
-            m_zoom = 4.0f;
-        }
+        targetZoom *= 1.1f;
     } else if (rotation < 0) {
-        m_zoom /= 1.1f;
-        // Limitar zoom mínimo a 0.25x
-        if (m_zoom < 0.25f) {
-            m_zoom = 0.25f;
-        }
+        targetZoom /= 1.1f;
     }
-    Refresh();
+    
+    // Aplicar zoom suave centrado no cursor
+    wxSize canvasSize = GetClientSize();
+    m_smoothTransform.ZoomToPoint(targetZoom, worldX, worldY, canvasSize.x, canvasSize.y);
     
     // Mostrar zoom atual na status bar
     ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
     if (viewportPanel) {
-        wxLogStatus("Zoom: %.0f%%", m_zoom * 100.0f);
+        wxLogStatus("Zoom: %.0f%%", targetZoom * 100.0f);
     }
     
     event.Skip();
