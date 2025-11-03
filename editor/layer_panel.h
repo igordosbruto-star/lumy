@@ -75,6 +75,7 @@ private:
     void OnLayerDoubleClick(wxListEvent& event);
     void OnToggleVisibility(wxMouseEvent& event);
     void OnToggleLock(wxMouseEvent& event);
+    void OnOpacityChanged(wxScrollEvent& event);
     
     // Context menu
     void ShowContextMenu(const wxPoint& pos, int layerIndex);
@@ -104,6 +105,8 @@ private:
     // UI Controls
     wxToolBar* m_toolbar;
     LayerListCtrl* m_layerList;
+    wxSlider* m_opacitySlider;
+    wxStaticText* m_opacityLabel;
     
     // Icons and images
     wxImageList* m_imageList;
@@ -133,6 +136,7 @@ enum LayerPanelEventIds
     ID_LAYER_MOVE_UP,
     ID_LAYER_MOVE_DOWN,
     ID_LAYER_LIST,
+    ID_OPACITY_SLIDER,
     
     // Context menu
     ID_CONTEXT_NEW_LAYER,

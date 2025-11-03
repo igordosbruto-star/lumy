@@ -31,17 +31,22 @@
 
 ---
 
-### M1 — **Brilho** *(In Progress)* 📝
+### M1 — **Brilho** *(In Progress - 85%)* 🔥
 **Meta:** editor wx funcional com edição de mapas/eventos e hot-reload.  
 **Entregas:**
-- Editor: **wxAUI** (docks), **Árvore do Projeto**, **PropertyGrid**, **Viewport GL**.
-- Pintura de tiles/colisão, camadas e regiões.
-- **Hot-reload** de mapas/eventos.
-- Tutoriais de 10 minutos (mapa/evento).
+- ✅ Editor: **wxAUI** (docks), **Árvore do Projeto**, **PropertyGrid**, **Viewport**.
+- ✅ Sistema completo de **Layers** com opacidade
+- ✅ **4 Ferramentas de Pintura** (Pincel, Balde, Seleção, Borracha)
+- ✅ **Gerenciamento de Tilesets** com propriedades
+- 🔄 Sistema **Undo/Redo** (header completo, implementação pendente)
+- 🔄 **Hot-reload** de mapas (FileWatcher OK, integração com runtime pendente)
+- ❌ Tutoriais de 10 minutos (planejado pós-release)
 
 **DoD:**
-- Editar → Salvar → Ver no runtime sem reiniciar.
-- Projeto de exemplo inteiramente editável no editor.
+- ✅ Editar mapas visualmente com múltiplas layers
+- 🔄 Salvar e abrir projetos completos  
+- ❌ Ver mudanças no runtime sem reiniciar (pending)
+- ✅ Projeto de exemplo editável no editor
 
 ---
 
@@ -82,11 +87,15 @@
 - [x] **Save/Load** de switches/variáveis/posição. *(Done)*
 - [x] Exemplo `hello-town` + README. *(Done)*
 
-### M1 — Brilho
-- [ ] Editor wx: panes, árvore, property grid. *(In Progress)*
-- [ ] Viewport GL com grade, seleção e pincéis. *(Planned)*
-- [ ] Ferramenta de colisão/regiões. *(Planned)*
-- [ ] Hot-reload de mapas/eventos. *(Planned)*
+### M1 — Brilho (85% Completo)
+- [x] Editor wx: panes, árvore, property grid. *(Done)*
+- [x] Sistema de Layers completo com UI. *(Done)*
+- [x] 4 Ferramentas de pintura implementadas. *(Done)*
+- [ ] Viewport GL com grade, seleção e pincéis. *(In Progress - 60%)*
+- [x] Gerenciamento de tilesets com propriedades. *(Done)*
+- [ ] Sistema Undo/Redo. *(In Progress - 50%)*
+- [ ] Ferramenta de colisão/regiões. *(Planned - visualização pendente)*
+- [ ] Hot-reload de mapas/eventos. *(In Progress - FileWatcher OK)*
 - [ ] Tutoriais curtos (vídeo/gif ou passo-a-passo). *(Planned)*
 
 ### M2 — Chama

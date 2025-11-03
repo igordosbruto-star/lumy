@@ -38,6 +38,7 @@ wxEND_EVENT_TABLE()
 ViewportPanel::ViewportPanel(wxWindow* parent)
     : wxPanel(parent, wxID_ANY)
     , m_mapManager(nullptr)
+    , m_currentMap(nullptr)
 {
     CreateControls();
 }
@@ -538,16 +539,23 @@ void ViewportPanel::OnToolCollision(wxCommandEvent& WXUNUSED(event))
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_zoom *= 1.25f;
+    // Limitar zoom máximo a 4.0x
+    if (m_glCanvas->m_zoom > 4.0f) {
+        m_glCanvas->m_zoom = 4.0f;
+    }
     m_glCanvas->Refresh();
+    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_zoom * 100.0f);
 }
 
 void ViewportPanel::OnZoomOut(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_zoom /= 1.25f;
-    if (m_glCanvas->m_zoom < 0.1f) {
-        m_glCanvas->m_zoom = 0.1f;
+    // Limitar zoom mínimo a 0.25x
+    if (m_glCanvas->m_zoom < 0.25f) {
+        m_glCanvas->m_zoom = 0.25f;
     }
     m_glCanvas->Refresh();
+    wxLogStatus("Zoom: %.0f%%", m_glCanvas->m_zoom * 100.0f);
 }
 
 void ViewportPanel::OnResetView(wxCommandEvent& WXUNUSED(event))
@@ -568,6 +576,12 @@ void ViewportPanel::SetSelectedTile(int tileId)
 void ViewportPanel::SetMapManager(MapManager* mapManager)
 {
     m_mapManager = mapManager;
+    RefreshMapDisplay();
+}
+
+void ViewportPanel::SetCurrentMap(Map* map)
+{
+    m_currentMap = map;
     RefreshMapDisplay();
 }
 
@@ -598,13 +612,25 @@ void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
     float rotation = event.GetWheelRotation();
     if (rotation > 0) {
         m_zoom *= 1.1f;
+        // Limitar zoom máximo a 4.0x
+        if (m_zoom > 4.0f) {
+            m_zoom = 4.0f;
+        }
     } else if (rotation < 0) {
         m_zoom /= 1.1f;
-        if (m_zoom < 0.1f) {
-            m_zoom = 0.1f;
+        // Limitar zoom mínimo a 0.25x
+        if (m_zoom < 0.25f) {
+            m_zoom = 0.25f;
         }
     }
     Refresh();
+    
+    // Mostrar zoom atual na status bar
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    if (viewportPanel) {
+        wxLogStatus("Zoom: %.0f%%", m_zoom * 100.0f);
+    }
+    
     event.Skip();
 }
 

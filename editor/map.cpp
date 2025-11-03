@@ -18,6 +18,10 @@ Map::Map()
 {
     m_metadata = MapMetadata(); // Usar valores padrão
     InitializeDefaultLayers();
+    m_modified = false; // Garantir que inicia limpo
+    if (m_layerManager) {
+        m_layerManager->MarkAllLayersSaved();
+    }
 }
 
 // Construtor com dimensões específicas
@@ -30,6 +34,10 @@ Map::Map(int width, int height, int tileSize)
     m_metadata.height = height;
     m_metadata.tileSize = tileSize;
     InitializeDefaultLayers();
+    m_modified = false; // Garantir que inicia limpo
+    if (m_layerManager) {
+        m_layerManager->MarkAllLayersSaved();
+    }
 }
 
 // Construtor de cópia

@@ -18,6 +18,9 @@ LayerManager::LayerManager()
     defaultProps.name = "Fundo";
     defaultProps.type = LayerType::BACKGROUND_LAYER;
     CreateLayer(25, 15, defaultProps);
+    
+    // Marcar como salvo para não iniciar com modified=true
+    MarkAllLayersSaved();
 }
 
 Layer* LayerManager::CreateLayer(const LayerProperties& properties)

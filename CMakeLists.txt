@@ -74,6 +74,7 @@ set(EDITOR_SOURCES
     editor/properties_tabs_panel.cpp
     editor/left_side_panel.cpp
     editor/viewport_panel.cpp
+    editor/map_tabs_panel.cpp
     editor/tileset_panel.cpp
     editor/tileset_manager.cpp
     editor/tile_properties_dialog.cpp
@@ -84,6 +85,7 @@ set(EDITOR_SOURCES
     editor/paint_toolbar.cpp
     editor/map.cpp
     editor/map_manager.cpp
+    editor/command.cpp
     editor/file_watcher.cpp
     editor/editor_events.cpp
     editor/project_manager.cpp
@@ -193,6 +195,30 @@ add_custom_command(TARGET lumy-tests PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}"
 )
 add_test(NAME basic_startup COMMAND lumy-tests WORKING_DIRECTORY "${OUT_DIR}")
+
+# ===== Testes do Editor =====
+add_executable(lumy-editor-tests
+  tests/editor/layer_manager_test.cpp
+  tests/editor/map_test.cpp
+  tests/editor/paint_tools_test.cpp
+  editor/layer.cpp
+  editor/layer_manager.cpp
+  editor/map.cpp
+  editor/paint_tools.cpp
+)
+
+target_link_libraries(lumy-editor-tests PRIVATE
+  GTest::gtest_main
+  wx::core wx::base
+  nlohmann_json::nlohmann_json
+)
+
+target_include_directories(lumy-editor-tests PRIVATE
+  ${CMAKE_SOURCE_DIR}/editor
+)
+
+set_property(TARGET lumy-editor-tests PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
+add_test(NAME editor_tests COMMAND lumy-editor-tests WORKING_DIRECTORY "${OUT_DIR}")
 
 # ===== Instalação opcional =====
 include(GNUInstallDirs)

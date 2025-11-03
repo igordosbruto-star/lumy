@@ -10,6 +10,7 @@
 #include "properties_tabs_panel.h"
 #include "paint_toolbar.h"
 #include "viewport_panel.h"
+#include "map_tabs_panel.h"
 #include "tileset_panel.h"
 #include "new_project_dialog.h"
 #include "utf8_strings.h"
@@ -68,9 +69,12 @@ EditorFrame::EditorFrame()
     // Inicializar map manager
     m_mapManager = std::make_unique<MapManager>();
     
-    // Conectar viewport com map manager
-    if (m_viewport) {
-        m_viewport->SetMapManager(m_mapManager.get());
+    // Conectar viewport com map manager (via MapTabsPanel)
+    if (m_mapTabsPanel) {
+        ViewportPanel* currentViewport = m_mapTabsPanel->GetCurrentViewport();
+        if (currentViewport) {
+            currentViewport->SetMapManager(m_mapManager.get());
+        }
     }
     
     // Carregar projeto padrão (diretório atual)
@@ -137,8 +141,8 @@ void EditorFrame::CreateAuiPanes()
     // Criar panes
     m_leftSidePanel = std::make_unique<LeftSidePanel>(this);
     m_propertiesTabsPanel = std::make_unique<PropertiesTabsPanel>(this);
-    m_paintToolbar = std::make_unique<PaintToolbar>(this);
-    m_viewport = std::make_unique<ViewportPanel>(this);
+    // m_paintToolbar removido - toolbar agora é parte do ViewportPanel
+    m_mapTabsPanel = std::make_unique<MapTabsPanel>(this);
 
     // Adicionar panes ao AUI Manager
     
@@ -166,23 +170,11 @@ void EditorFrame::CreateAuiPanes()
         .MaximizeButton(false)
     );
 
-    // Paint Toolbar (topo do centro)
-    m_auiManager.AddPane(m_paintToolbar.get(),
+    // Map Tabs (centro) - Gerenciamento de múltiplas abas de mapa
+    m_auiManager.AddPane(m_mapTabsPanel.get(),
         wxAuiPaneInfo()
-        .Name("PaintToolbar")
-        .Caption("Ferramentas de Pintura")
-        .Top()
-        .MinSize(450, 40)
-        .ToolbarPane()
-        .Gripper(false)
-        .CloseButton(false)
-    );
-
-    // Viewport (centro)
-    m_auiManager.AddPane(m_viewport.get(),
-        wxAuiPaneInfo()
-        .Name("Viewport")
-        .Caption("Editor de Mapa")
+        .Name("MapTabs")
+        .Caption(UTF8("Mapas"))
         .Center()
         .CloseButton(false)
         .MaximizeButton(true)
@@ -452,12 +444,15 @@ void EditorFrame::OnTilesetSelectionChanged(wxCommandEvent& event)
 {
     int selectedTile = event.GetInt();
     
-    // Atualizar o tile selecionado no viewport
-    if (m_viewport) {
-        m_viewport->SetSelectedTile(selectedTile);
-        
-        wxLogMessage("Tile selecionado alterado para: %d", selectedTile);
-        SetStatusText(wxString::Format("Tile para pintura: %d", selectedTile), 0);
+    // Atualizar o tile selecionado no viewport atual
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport) {
+            viewport->SetSelectedTile(selectedTile);
+            
+            wxLogMessage("Tile selecionado alterado para: %d", selectedTile);
+            SetStatusText(wxString::Format("Tile para pintura: %d", selectedTile), 0);
+        }
     }
 }
 
@@ -466,13 +461,16 @@ void EditorFrame::OnMapFileChanged(const wxString& path, const wxString& filenam
 {
     wxLogMessage("Mapa modificado: %s", filename);
     
-    // Recarregar no viewport
-    if (m_viewport) {
-        // TODO: Implementar recarga real do mapa
-        SetStatusText(wxString::Format("Hot-reload: %s", filename), 0);
-        
-        // For now, just refresh the viewport
-        m_viewport->Refresh();
+    // Recarregar no viewport atual
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport) {
+            // TODO: Implementar recarga real do mapa
+            SetStatusText(wxString::Format("Hot-reload: %s", filename), 0);
+            
+            // For now, just refresh the viewport
+            viewport->Refresh();
+        }
     }
 }
 
@@ -572,9 +570,12 @@ void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
     }
     
     // Atualizar viewport se necessário
-    if (m_viewport && info.type == SelectionType::TILE) {
-        // TODO: Highlight tile no viewport
-        wxLogMessage("Highlighting tile at (%d, %d)", info.tilePosition.x, info.tilePosition.y);
+    if (m_mapTabsPanel && info.type == SelectionType::TILE) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport) {
+            // TODO: Highlight tile no viewport
+            wxLogMessage("Highlighting tile at (%d, %d)", info.tilePosition.x, info.tilePosition.y);
+        }
     }
     
     // Atualizar status bar
@@ -593,9 +594,12 @@ void EditorFrame::OnPropertyChanged(PropertyChangeEvent& event)
     wxLogMessage("Property changed: %s = %s", propertyName, propertyValue.GetString());
     
     // Propagar mudança para viewport se necessário
-    if (m_viewport) {
-        // TODO: Aplicar mudanças de propriedade no viewport
-        m_viewport->Refresh();
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport) {
+            // TODO: Aplicar mudanças de propriedade no viewport
+            viewport->Refresh();
+        }
     }
     
     // Atualizar status
@@ -619,9 +623,12 @@ void EditorFrame::OnProjectChanged(ProjectChangeEvent& event)
             // TODO: Limpar property grid
         }
         
-        if (m_viewport) {
-            // TODO: Carregar mapa padrão do projeto
-            m_viewport->Refresh();
+        if (m_mapTabsPanel) {
+            ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+            if (viewport) {
+                // TODO: Carregar mapa padrão do projeto
+                viewport->Refresh();
+            }
         }
     } else {
         wxLogMessage("Project unloaded");
@@ -646,8 +653,8 @@ void EditorFrame::BroadcastSelectionChange(const SelectionInfo& info)
         m_propertiesTabsPanel->GetPropertyGrid()->GetEventHandler()->ProcessEvent(event);
     }
     
-    if (m_viewport) {
-        m_viewport->GetEventHandler()->ProcessEvent(event);
+    if (m_mapTabsPanel) {
+        m_mapTabsPanel->GetEventHandler()->ProcessEvent(event);
     }
     
     // Processar também no frame principal
@@ -660,8 +667,8 @@ void EditorFrame::BroadcastPropertyChange(const wxString& propertyName, const wx
     event.SetPropertyChange(propertyName, value);
     
     // Enviar para viewport principalmente
-    if (m_viewport) {
-        m_viewport->GetEventHandler()->ProcessEvent(event);
+    if (m_mapTabsPanel) {
+        m_mapTabsPanel->GetEventHandler()->ProcessEvent(event);
     }
     
     // Processar no frame principal
@@ -682,8 +689,8 @@ void EditorFrame::BroadcastProjectChange(const wxString& projectPath, bool loade
         m_propertiesTabsPanel->GetPropertyGrid()->GetEventHandler()->ProcessEvent(event);
     }
     
-    if (m_viewport) {
-        m_viewport->GetEventHandler()->ProcessEvent(event);
+    if (m_mapTabsPanel) {
+        m_mapTabsPanel->GetEventHandler()->ProcessEvent(event);
     }
     
     // Processar no frame principal
@@ -703,15 +710,26 @@ bool EditorFrame::IsMapInMapsFolder(const wxString& filePath)
 
 void EditorFrame::LoadMapFromPath(const wxString& filePath)
 {
-    SetStatusText("Carregando mapa da árvore...", 0);
+    SetStatusText("Carregando mapa...", 0);
     
     if (m_mapManager->LoadMap(filePath.ToStdString())) {
         // Mapa carregado com sucesso
         wxFileName fileName(filePath);
         
-        // Atualizar viewport
-        if (m_viewport) {
-            m_viewport->RefreshMapDisplay();
+        // Adicionar mapa ao MapTabsPanel ou atualizar aba existente
+        if (m_mapTabsPanel) {
+            auto mapPtr = m_mapManager->GetCurrentMap();
+            if (mapPtr) {
+                // Adicionar mapa à aba
+                m_mapTabsPanel->AddMap(mapPtr, filePath);
+                
+                // Atualizar viewport
+                ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+                if (viewport) {
+                    viewport->SetCurrentMap(mapPtr.get());
+                    viewport->RefreshMapDisplay();
+                }
+            }
         }
         
         // Atualizar caminho do mapa atual
@@ -720,11 +738,11 @@ void EditorFrame::LoadMapFromPath(const wxString& filePath)
         // Atualizar título da janela
         UpdateWindowTitle();
         
-        SetStatusText(wxString::Format("Mapa carregado da árvore: %s", fileName.GetName()), 0);
-        wxLogMessage("Mapa carregado da árvore com sucesso: %s", filePath);
+        SetStatusText(wxString::Format("Mapa carregado: %s", fileName.GetName()), 0);
+        wxLogMessage("Mapa carregado com sucesso: %s", filePath);
     } else {
-        SetStatusText("Erro ao carregar mapa da árvore", 0);
-        wxLogError("Erro ao carregar o mapa da árvore: %s", filePath);
+        SetStatusText("Erro ao carregar mapa", 0);
+        wxLogError("Erro ao carregar o mapa: %s", filePath);
         wxMessageBox("Erro ao carregar o mapa selecionado. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
     }
 }

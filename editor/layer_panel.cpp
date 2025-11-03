@@ -77,6 +77,9 @@ wxBEGIN_EVENT_TABLE(LayerPanel, wxPanel)
     // Mouse events for clicking on visibility/lock icons
     EVT_LEFT_UP(LayerPanel::OnToggleVisibility)
     
+    // Opacity slider
+    EVT_COMMAND_SCROLL(ID_OPACITY_SLIDER, LayerPanel::OnOpacityChanged)
+    
     // Context menu
     EVT_MENU(ID_CONTEXT_NEW_LAYER, LayerPanel::OnContextMenuNewLayer)
     EVT_MENU(ID_CONTEXT_DELETE_LAYER, LayerPanel::OnContextMenuDeleteLayer)
@@ -89,6 +92,8 @@ LayerPanel::LayerPanel(wxWindow* parent, wxWindowID id)
     : wxPanel(parent, id)
     , m_toolbar(nullptr)
     , m_layerList(nullptr)
+    , m_opacitySlider(nullptr)
+    , m_opacityLabel(nullptr)
     , m_imageList(nullptr)
     , m_currentMap(nullptr)
     , m_layerManager(nullptr)
@@ -157,6 +162,12 @@ void LayerPanel::CreateLayerList()
 {
     m_layerList = new LayerListCtrl(this, ID_LAYER_LIST, wxDefaultPosition, wxDefaultSize,
                                    wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_NO_HEADER);
+    
+    // Create opacity control
+    m_opacityLabel = new wxStaticText(this, wxID_ANY, "Opacidade: 100%");
+    m_opacitySlider = new wxSlider(this, ID_OPACITY_SLIDER, 100, 0, 100,
+                                   wxDefaultPosition, wxDefaultSize,
+                                   wxSL_HORIZONTAL | wxSL_LABELS);
 }
 
 void LayerPanel::SetupImageList()
@@ -195,6 +206,10 @@ void LayerPanel::SetupLayout()
     
     // Add layer list
     mainSizer->Add(m_layerList, 1, wxEXPAND | wxALL, 2);
+    
+    // Add opacity controls
+    mainSizer->Add(m_opacityLabel, 0, wxALL, 5);
+    mainSizer->Add(m_opacitySlider, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
     
     SetSizer(mainSizer);
 }
@@ -416,6 +431,16 @@ void LayerPanel::OnLayerSelected(wxListEvent& event)
     {
         m_selectedLayerIndex = layerIndex;
         m_layerManager->SetActiveLayer(layerIndex);
+        
+        // Update opacity slider
+        Layer* layer = m_layerManager->GetLayer(layerIndex);
+        if (layer && m_opacitySlider)
+        {
+            int opacityValue = static_cast<int>(layer->GetOpacity() * 100.0f);
+            m_opacitySlider->SetValue(opacityValue);
+            m_opacityLabel->SetLabel(wxString::Format("Opacidade: %d%%", opacityValue));
+        }
+        
         BroadcastLayerSelectionChanged(layerIndex);
     }
 }
@@ -679,4 +704,23 @@ void LayerPanel::OnLayerSelectionChanged(int layerIndex)
 void LayerPanel::OnLayerPropertiesChanged(int layerIndex)
 {
     RefreshLayerList();
+}
+
+void LayerPanel::OnOpacityChanged(wxScrollEvent& event)
+{
+    if (!m_layerManager || m_selectedLayerIndex < 0)
+        return;
+    
+    Layer* layer = m_layerManager->GetLayer(m_selectedLayerIndex);
+    if (!layer)
+        return;
+    
+    float opacity = m_opacitySlider->GetValue() / 100.0f;
+    layer->SetOpacity(opacity);
+    
+    // Update label
+    m_opacityLabel->SetLabel(wxString::Format("Opacidade: %d%%", m_opacitySlider->GetValue()));
+    
+    // Broadcast change
+    BroadcastLayerPropertiesChanged(m_selectedLayerIndex);
 }

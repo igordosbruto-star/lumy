@@ -21,6 +21,7 @@
 class ProjectTreePanel;
 class PropertyGridPanel;  
 class ViewportPanel;
+class MapTabsPanel;
 class TilesetPanel;
 class LayerPanel;
 class PropertiesTabsPanel;
@@ -67,7 +68,8 @@ private:
     std::unique_ptr<LeftSidePanel> m_leftSidePanel;
     std::unique_ptr<PropertiesTabsPanel> m_propertiesTabsPanel;
     std::unique_ptr<PaintToolbar> m_paintToolbar;
-    std::unique_ptr<ViewportPanel> m_viewport;
+    std::unique_ptr<MapTabsPanel> m_mapTabsPanel;  // Gerenciador de múltiplas abas de mapa
+    std::unique_ptr<ViewportPanel> m_viewport;  // Mantido para compatibilidade se necessário
     
     // Hot-reload system
     std::unique_ptr<FileWatcher> m_fileWatcher;

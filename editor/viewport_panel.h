@@ -20,6 +20,7 @@ public:
     // Interface pública
     void SetSelectedTile(int tileId);
     void SetMapManager(MapManager* mapManager);
+    void SetCurrentMap(class Map* map); // Novo: usar Map diretamente
     void RefreshMapDisplay();
     void NotifyMapModified(); // Notificar EditorFrame sobre modificações no mapa
 
@@ -104,8 +105,9 @@ private:
     void OnZoomOut(wxCommandEvent& event);
     void OnResetView(wxCommandEvent& event);
     
-    // Map Manager
+    // Map Manager e Map direto
     MapManager* m_mapManager;
+    class Map* m_currentMap;
 
     wxDECLARE_EVENT_TABLE();
 };
