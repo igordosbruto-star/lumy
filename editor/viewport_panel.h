@@ -6,10 +6,12 @@
 
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
+#include <memory>
 
 // Forward declarations
 class MapManager;
 class EditorFrame;
+class CommandHistory;
 
 class ViewportPanel : public wxPanel
 {
@@ -23,6 +25,13 @@ public:
     void SetCurrentMap(class Map* map); // Novo: usar Map diretamente
     void RefreshMapDisplay();
     void NotifyMapModified(); // Notificar EditorFrame sobre modificações no mapa
+    
+    // Undo/Redo
+    CommandHistory* GetCommandHistory() { return m_commandHistory.get(); }
+    bool CanUndo() const;
+    bool CanRedo() const;
+    bool Undo();
+    bool Redo();
 
 private:
     void CreateControls();
@@ -114,6 +123,9 @@ private:
     // Map Manager e Map direto
     MapManager* m_mapManager;
     class Map* m_currentMap;
+    
+    // Command History para Undo/Redo
+    std::unique_ptr<CommandHistory> m_commandHistory;
 
     wxDECLARE_EVENT_TABLE();
 };

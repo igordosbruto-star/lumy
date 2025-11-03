@@ -12,6 +12,7 @@
 #include "viewport_panel.h"
 #include "map_tabs_panel.h"
 #include "tileset_panel.h"
+#include "command.h"
 #include "new_project_dialog.h"
 #include "utf8_strings.h"
 #include "i18n.h"
@@ -31,6 +32,12 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_MENU(ID_OpenMap, EditorFrame::OnOpenMap)
     EVT_MENU(ID_SaveMap, EditorFrame::OnSaveMap)
     EVT_MENU(ID_SaveMapAs, EditorFrame::OnSaveMapAs)
+    // Edit menu
+    EVT_MENU(ID_Undo, EditorFrame::OnUndo)
+    EVT_MENU(ID_Redo, EditorFrame::OnRedo)
+    EVT_UPDATE_UI(ID_Undo, EditorFrame::OnUpdateUndo)
+    EVT_UPDATE_UI(ID_Redo, EditorFrame::OnUpdateRedo)
+    // Language menu
     EVT_MENU(ID_SetLanguagePtBr, EditorFrame::OnSetLanguagePtBr)
     EVT_MENU(ID_SetLanguageEnUs, EditorFrame::OnSetLanguageEnUs)
     EVT_CLOSE(EditorFrame::OnClose)
@@ -114,6 +121,11 @@ void EditorFrame::CreateMenuBar()
     fileMenu->Append(ID_SaveProject, L_("menu.save") + "\tCtrl+S");
     fileMenu->AppendSeparator();
     fileMenu->Append(wxID_EXIT, L_("menu.exit") + "\tAlt+F4");
+    
+    // Menu Edit
+    wxMenu* editMenu = new wxMenu;
+    editMenu->Append(ID_Undo, "&Desfazer\tCtrl+Z");
+    editMenu->Append(ID_Redo, "&Refazer\tCtrl+Y");
 
     // Menu Mapa
     wxMenu* mapMenu = new wxMenu;
@@ -138,6 +150,7 @@ void EditorFrame::CreateMenuBar()
     // Criar barra de menu
     wxMenuBar* menuBar = new wxMenuBar;
     menuBar->Append(fileMenu, L_("menu.file"));
+    menuBar->Append(editMenu, "&Editar");
     menuBar->Append(mapMenu, L_("menu.map"));
     menuBar->Append(helpMenu, L_("menu.help"));
 
@@ -895,5 +908,77 @@ void EditorFrame::OnSetLanguageEnUs(wxCommandEvent& WXUNUSED(event))
             wxOK | wxICON_ERROR,
             this
         );
+    }
+}
+
+// ============================================================================
+// Handlers de Undo/Redo
+// ============================================================================
+
+void EditorFrame::OnUndo(wxCommandEvent& WXUNUSED(event))
+{
+    // Obter o viewport atual do MapTabsPanel
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport && viewport->CanUndo()) {
+            viewport->Undo();
+            SetStatusText("Ação desfeita", 0);
+        }
+    }
+}
+
+void EditorFrame::OnRedo(wxCommandEvent& WXUNUSED(event))
+{
+    // Obter o viewport atual do MapTabsPanel
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport && viewport->CanRedo()) {
+            viewport->Redo();
+            SetStatusText("Ação refeita", 0);
+        }
+    }
+}
+
+void EditorFrame::OnUpdateUndo(wxUpdateUIEvent& event)
+{
+    // Habilitar/desabilitar o menu Undo baseado no estado do CommandHistory
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        event.Enable(viewport && viewport->CanUndo());
+        
+        // Atualizar texto do menu com nome do comando (opcional)
+        if (viewport && viewport->CanUndo()) {
+            CommandHistory* history = viewport->GetCommandHistory();
+            if (history) {
+                wxString undoName = history->GetUndoName();
+                if (!undoName.IsEmpty()) {
+                    event.SetText(wxString::Format("&Desfazer %s\tCtrl+Z", undoName));
+                }
+            }
+        }
+    } else {
+        event.Enable(false);
+    }
+}
+
+void EditorFrame::OnUpdateRedo(wxUpdateUIEvent& event)
+{
+    // Habilitar/desabilitar o menu Redo baseado no estado do CommandHistory
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        event.Enable(viewport && viewport->CanRedo());
+        
+        // Atualizar texto do menu com nome do comando (opcional)
+        if (viewport && viewport->CanRedo()) {
+            CommandHistory* history = viewport->GetCommandHistory();
+            if (history) {
+                wxString redoName = history->GetRedoName();
+                if (!redoName.IsEmpty()) {
+                    event.SetText(wxString::Format("&Refazer %s\tCtrl+Y", redoName));
+                }
+            }
+        }
+    } else {
+        event.Enable(false);
     }
 }

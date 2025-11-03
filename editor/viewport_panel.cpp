@@ -8,6 +8,8 @@
 #include "editor_frame.h"
 #include "utf8_strings.h"
 #include "i18n.h"
+#include "command.h"
+#include "map.h"
 #include <wx/toolbar.h>
 #include <GL/gl.h>
 #include <cmath>
@@ -43,6 +45,7 @@ ViewportPanel::ViewportPanel(wxWindow* parent)
     : wxPanel(parent, wxID_ANY)
     , m_mapManager(nullptr)
     , m_currentMap(nullptr)
+    , m_commandHistory(std::make_unique<CommandHistory>(100))
 {
     CreateControls();
 }
@@ -816,4 +819,46 @@ void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
             }
         }
     }
+}
+
+// ============================================================================
+// Métodos Undo/Redo do ViewportPanel
+// ============================================================================
+
+bool ViewportPanel::CanUndo() const
+{
+    return m_commandHistory && m_commandHistory->CanUndo();
+}
+
+bool ViewportPanel::CanRedo() const
+{
+    return m_commandHistory && m_commandHistory->CanRedo();
+}
+
+bool ViewportPanel::Undo()
+{
+    if (!m_commandHistory) {
+        return false;
+    }
+    
+    bool success = m_commandHistory->Undo();
+    if (success) {
+        RefreshMapDisplay();
+        NotifyMapModified();
+    }
+    return success;
+}
+
+bool ViewportPanel::Redo()
+{
+    if (!m_commandHistory) {
+        return false;
+    }
+    
+    bool success = m_commandHistory->Redo();
+    if (success) {
+        RefreshMapDisplay();
+        NotifyMapModified();
+    }
+    return success;
 }
