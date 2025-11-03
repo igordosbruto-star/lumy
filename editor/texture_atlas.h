@@ -12,6 +12,9 @@
 #include <string>
 #include <memory>
 
+// Forward declarations
+struct TilesetInfo;
+
 /**
  * Coordenadas UV normalizadas para um tile específico
  */
@@ -76,13 +79,21 @@ public:
     
     /**
      * Carrega um tileset a partir de um arquivo de imagem
-     * 
+     *
      * @param filePath Caminho para o arquivo de imagem (PNG, BMP, etc.)
      * @param tileWidth Largura de cada tile em pixels
      * @param tileHeight Altura de cada tile em pixels
      * @return true se carregado com sucesso
      */
     bool LoadTileset(const wxString& filePath, int tileWidth = 32, int tileHeight = 32);
+
+    /**
+     * Carrega um tileset diretamente de uma estrutura TilesetInfo
+     *
+     * @param tilesetInfo Informações do tileset carregado pelo TilesetManager
+     * @return true se o atlas foi construído corretamente
+     */
+    bool LoadFromTilesetInfo(const TilesetInfo& tilesetInfo);
     
     /**
      * Descarrega o tileset e libera a textura OpenGL
@@ -163,6 +174,15 @@ private:
      * Método interno usado por GetTileUV
      */
     TileUV CalculateTileUV(int tileId) const;
+
+    /**
+     * Inicializa o atlas a partir de uma imagem já carregada em memória
+     */
+    bool LoadFromImage(const wxImage& image,
+                       int tileWidth,
+                       int tileHeight,
+                       const wxString& sourceName,
+                       int totalTilesOverride = -1);
 };
 
 /**

@@ -9,6 +9,7 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 ### Changed
 
 ### Fixed
+- Corrigido o carregamento do atlas de tiles no viewport para usar o tileset atual e evitar avisos de TileId inválido.
 
 ### Docs
 

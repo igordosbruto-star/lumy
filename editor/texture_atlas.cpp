@@ -3,8 +3,10 @@
  */
 
 #include "texture_atlas.h"
+#include "tileset_manager.h"
 #include <wx/log.h>
 #include <cmath>
+#include <algorithm>
 
 // ============================================================================
 // TextureAtlas
@@ -44,53 +46,147 @@ TextureAtlas& TextureAtlas::operator=(TextureAtlas&& other) noexcept
 
 bool TextureAtlas::LoadTileset(const wxString& filePath, int tileWidth, int tileHeight)
 {
-    // Descarregar tileset anterior se existir
-    if (IsLoaded()) {
-        Unload();
-    }
-    
-    // Verificar se o arquivo existe
     if (!wxFileExists(filePath)) {
         wxLogError("TextureAtlas: Arquivo não encontrado: %s", filePath);
         return false;
     }
-    
-    // Carregar imagem usando wxImage (suporta PNG, BMP, JPG, etc.)
+
     wxImage image;
     if (!image.LoadFile(filePath)) {
         wxLogError("TextureAtlas: Falha ao carregar imagem: %s", filePath);
         return false;
     }
-    
-    // Verificar se a imagem é válida
-    if (!image.IsOk() || image.GetWidth() == 0 || image.GetHeight() == 0) {
-        wxLogError("TextureAtlas: Imagem inválida: %s", filePath);
+
+    return LoadFromImage(image, tileWidth, tileHeight, filePath);
+}
+
+bool TextureAtlas::LoadFromTilesetInfo(const TilesetInfo& tilesetInfo)
+{
+    if (tilesetInfo.tiles.empty()) {
+        wxLogError("TextureAtlas: TilesetInfo '%s' está vazio", tilesetInfo.name);
         return false;
     }
-    
-    // Criar textura OpenGL
+
+    int tileWidth = tilesetInfo.tileSize.GetWidth();
+    int tileHeight = tilesetInfo.tileSize.GetHeight();
+    if (tileWidth <= 0 || tileHeight <= 0) {
+        wxLogError("TextureAtlas: Tamanho de tile inválido (%d x %d) para tileset '%s'",
+                   tileWidth, tileHeight, tilesetInfo.name);
+        return false;
+    }
+
+    int tilesPerRow = tilesetInfo.tilesPerRow > 0
+        ? tilesetInfo.tilesPerRow
+        : static_cast<int>(std::ceil(std::sqrt(static_cast<double>(tilesetInfo.tiles.size()))));
+
+    int totalTiles = static_cast<int>(tilesetInfo.tiles.size());
+    int rows = (totalTiles + tilesPerRow - 1) / tilesPerRow;
+
+    if (tilesPerRow <= 0 || rows <= 0) {
+        wxLogError("TextureAtlas: Configuração inválida para tileset '%s'", tilesetInfo.name);
+        return false;
+    }
+
+    int atlasWidth = tilesPerRow * tileWidth;
+    int atlasHeight = rows * tileHeight;
+
+    wxImage atlasImage(atlasWidth, atlasHeight, false);
+    atlasImage.InitAlpha();
+
+    unsigned char* atlasData = atlasImage.GetData();
+    unsigned char* atlasAlpha = atlasImage.GetAlpha();
+
+    std::fill(atlasData, atlasData + atlasWidth * atlasHeight * 3, 0);
+    if (atlasAlpha) {
+        std::fill(atlasAlpha, atlasAlpha + atlasWidth * atlasHeight, 0);
+    }
+
+    for (int index = 0; index < totalTiles; ++index) {
+        const TileInfo& tileInfo = tilesetInfo.tiles[index];
+        wxImage tileImage = tileInfo.image;
+        if (!tileImage.IsOk()) {
+            continue;
+        }
+
+        if (tileImage.GetWidth() != tileWidth || tileImage.GetHeight() != tileHeight) {
+            tileImage = tileImage.Scale(tileWidth, tileHeight, wxIMAGE_QUALITY_NEAREST);
+        }
+
+        if (!tileImage.HasAlpha()) {
+            tileImage.InitAlpha();
+            unsigned char* tileAlphaPtr = tileImage.GetAlpha();
+            if (tileAlphaPtr) {
+                std::fill(tileAlphaPtr, tileAlphaPtr + tileWidth * tileHeight, 255);
+            }
+        }
+
+        unsigned char* tileData = tileImage.GetData();
+        unsigned char* tileAlpha = tileImage.GetAlpha();
+
+        int col = index % tilesPerRow;
+        int row = index / tilesPerRow;
+        int destX = col * tileWidth;
+        int destY = row * tileHeight;
+
+        for (int y = 0; y < tileHeight; ++y) {
+            for (int x = 0; x < tileWidth; ++x) {
+                int srcIndex = y * tileWidth + x;
+                int destIndex = (destY + y) * atlasWidth + (destX + x);
+
+                atlasData[destIndex * 3 + 0] = tileData[srcIndex * 3 + 0];
+                atlasData[destIndex * 3 + 1] = tileData[srcIndex * 3 + 1];
+                atlasData[destIndex * 3 + 2] = tileData[srcIndex * 3 + 2];
+
+                if (atlasAlpha && tileAlpha) {
+                    atlasAlpha[destIndex] = tileAlpha[srcIndex];
+                }
+            }
+        }
+    }
+
+    wxString sourceName = tilesetInfo.name.IsEmpty() ? wxString("<inline>") : tilesetInfo.name;
+    int totalOverride = tilesetInfo.totalTiles > 0 ? tilesetInfo.totalTiles : totalTiles;
+
+    return LoadFromImage(atlasImage, tileWidth, tileHeight, sourceName, totalOverride);
+}
+
+bool TextureAtlas::LoadFromImage(const wxImage& image,
+                                 int tileWidth,
+                                 int tileHeight,
+                                 const wxString& sourceName,
+                                 int totalTilesOverride)
+{
+    if (IsLoaded()) {
+        Unload();
+    }
+
+    if (!image.IsOk() || image.GetWidth() == 0 || image.GetHeight() == 0) {
+        wxLogError("TextureAtlas: Imagem inválida ao carregar atlas de '%s'", sourceName);
+        return false;
+    }
+
     m_textureId = CreateTextureFromImage(image);
     if (m_textureId == 0) {
-        wxLogError("TextureAtlas: Falha ao criar textura OpenGL: %s", filePath);
+        wxLogError("TextureAtlas: Falha ao criar textura OpenGL para '%s'", sourceName);
         return false;
     }
-    
-    // Preencher informações do tileset
-    m_info.filePath = filePath;
+
+    m_info.filePath = sourceName;
     m_info.textureWidth = image.GetWidth();
     m_info.textureHeight = image.GetHeight();
     m_info.tileWidth = tileWidth;
     m_info.tileHeight = tileHeight;
-    m_info.tilesPerRow = m_info.textureWidth / tileWidth;
-    m_info.tilesPerColumn = m_info.textureHeight / tileHeight;
-    m_info.totalTiles = m_info.tilesPerRow * m_info.tilesPerColumn;
-    
-    // Limpar cache de UVs
+    m_info.tilesPerRow = tileWidth > 0 ? m_info.textureWidth / tileWidth : 0;
+    m_info.tilesPerColumn = tileHeight > 0 ? m_info.textureHeight / tileHeight : 0;
+    m_info.totalTiles = (totalTilesOverride >= 0)
+        ? totalTilesOverride
+        : m_info.tilesPerRow * m_info.tilesPerColumn;
+
     m_uvCache.clear();
-    
-    wxLogMessage("TextureAtlas: Tileset carregado com sucesso: %s (%dx%d tiles, %d total)",
-                 filePath, m_info.tilesPerRow, m_info.tilesPerColumn, m_info.totalTiles);
-    
+
+    wxLogMessage("TextureAtlas: Tileset carregado: %s (%dx%d tiles, %d total)",
+                 sourceName, m_info.tilesPerRow, m_info.tilesPerColumn, m_info.totalTiles);
+
     return true;
 }
 
