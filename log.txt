@@ -29,3 +29,87 @@
 02:08:59: InitGL: Pulando MapRenderer e TextureAtlas (debug)
 02:08:59: InitGL: Pulando GridRenderer (debug)
 02:08:59: InitGL: InicializaÃ§Ã£o completa!
+16:23:13: DiretÃ³rio de locale encontrado: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug/locale
+16:23:13: Arquivo de traduÃ§Ã£o carregado: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug/locale/pt_BR.json
+16:23:13: Idioma carregado com sucesso: pt_BR
+16:23:13: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:13: Tileset 'PadrÃ£o' adicionado com 10 tiles
+16:23:13: Tileset atual alterado para: PadrÃ£o
+16:23:13: Tileset atual alterado para: PadrÃ£o
+16:23:13: Aba alterada para: Propriedades
+16:23:14: Layer adicionado: Fundo (total: 1)
+16:23:14: Layer adicionado: Base (total: 2)
+16:23:14: Mapa adicionado: Sem tÃ­tulo 1 (aba 0)
+16:23:14: Callback registrado para arquivos: tmx
+16:23:14: Callback registrado para arquivos: json
+16:23:14: Hot-reload ativo: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: Hot-reload configurado para: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: ProjectTree: Caminho do projeto atualizado para: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: Projeto carregado: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: ProjectTree: Caminho do projeto atualizado para: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy\build\msvc\bin\Debug
+16:23:14: Splitter position set to 279 (40.0% of 699)
+16:23:14: InitGL: Iniciando inicializaÃ§Ã£o OpenGL
+16:23:14: InitGL: GLEW inicializado com sucesso
+16:23:14: InitGL: ConfiguraÃ§Ãµes bÃ¡sicas OK
+16:23:14: InitGL: Carregando shaders
+16:23:14: ShaderProgram: Shader carregado com sucesso (ID: 3)
+16:23:14: InitGL: Shaders carregados com sucesso
+16:23:14: InitGL: Inicializando MapRenderer e TextureAtlas
+16:23:14: InitGL: MapRenderer configurado
+16:23:14: InitGL: Pulando GridRenderer (debug)
+16:23:14: InitGL: InicializaÃ§Ã£o completa!
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: TextureAtlas: TileId invÃ¡lido: 1 (max: -1)
+16:23:14: MapRenderer: Layer 0 reconstruÃ­da - 51 tiles visÃ­veis em 4.00 ms
+16:23:14: MapRenderer: Layer 1 reconstruÃ­da - 0 tiles visÃ­veis em 0.02 ms
