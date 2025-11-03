@@ -4,6 +4,7 @@
 
 #pragma execution_character_set("utf-8")
 
+#include <GL/glew.h>  // GLEW deve vir antes de qualquer header OpenGL
 #include "editor_frame.h"
 #include "left_side_panel.h"
 #include "project_tree_panel.h"

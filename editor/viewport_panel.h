@@ -4,14 +4,21 @@
 
 #pragma once
 
+#include <GL/glew.h>  // GLEW deve vir antes de qualquer header OpenGL
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 #include <memory>
+#include "smooth_transform.h"
+#include "collision_overlay.h"
 
 // Forward declarations
 class MapManager;
 class EditorFrame;
 class CommandHistory;
+class ShaderProgram;
+class MapRenderer;
+class TextureAtlas;
+class GridRenderer;
 
 class ViewportPanel : public wxPanel
 {
@@ -22,9 +29,11 @@ public:
     // Interface pública
     void SetSelectedTile(int tileId);
     void SetMapManager(MapManager* mapManager);
+    void SetTilesetManager(class TilesetManager* tilesetManager);
     void SetCurrentMap(class Map* map); // Novo: usar Map diretamente
     void RefreshMapDisplay();
     void NotifyMapModified(); // Notificar EditorFrame sobre modificações no mapa
+    void UpdateTileCoordinatesInStatusBar(int tileX, int tileY); // Atualizar coordenadas na status bar
     
     // Undo/Redo
     CommandHistory* GetCommandHistory() { return m_commandHistory.get(); }
@@ -55,6 +64,7 @@ private:
         void OnMouseMiddleDown(wxMouseEvent& event);
         void OnMouseMiddleUp(wxMouseEvent& event);
         void OnKeyDown(wxKeyEvent& event);
+        void OnKeyUp(wxKeyEvent& event);
         
         // Helper functions
         wxPoint WorldToTile(const wxPoint& worldPos);
@@ -62,6 +72,7 @@ private:
         void PaintTile(int tileX, int tileY);
         void EraseTile(int tileX, int tileY);
         void ToggleCollision(int tileX, int tileY);
+        void UpdateViewportBounds(); // Atualizar limites dinâmicos baseados no mapa
         
     private:
         void InitGL();
@@ -69,13 +80,19 @@ private:
         void DrawGrid();
         void DrawMap();
         void DrawSelection();
+        void DrawTilePreview(); // Preview do tile ao pintar
+        void DrawMinimap(); // Mini-mapa no canto do viewport
         
         wxGLContext* m_glContext;
         bool m_glInitialized;
         
         // Estado da visualização
-        float m_zoom;
-        float m_panX, m_panY;
+        SmoothTransform m_smoothTransform;
+        CollisionOverlay m_collisionOverlay;
+        std::unique_ptr<ShaderProgram> m_overlayShader;
+        std::unique_ptr<MapRenderer> m_mapRenderer;
+        std::unique_ptr<TextureAtlas> m_tileAtlas;
+        std::unique_ptr<GridRenderer> m_gridRenderer;
         bool m_showGrid;
         bool m_showCollision;
         
@@ -88,7 +105,14 @@ private:
         // Editing state
         int m_selectedTile;
         bool m_isPanning;
+        bool m_isTemporaryPanning; // Pan temporário com tecla Espaço
         wxPoint m_lastMousePos;
+        wxPoint m_hoveredTile;     // Tile sob o cursor (-1,-1 = nenhum)
+        bool m_showTileHighlight;  // Se mostra highlight do tile
+        bool m_showTilePreview;    // Se mostra preview ao pintar
+        bool m_showMinimap;        // Se mostra mini-mapa
+        wxPoint m_minimapPos;      // Posição do mini-mapa (canto inferior direito)
+        wxSize m_minimapSize;      // Tamanho do mini-mapa (200x150)
         
         // Ferramentas de edição
         enum Tool {
@@ -116,12 +140,14 @@ private:
     void OnToolCollision(wxCommandEvent& event);
     void OnToolSelectRect(wxCommandEvent& event);  // Novo: Seleção retangular
     void OnToolSelectCircle(wxCommandEvent& event); // Novo: Seleção circular
+    void OnToggleTileHighlight(wxCommandEvent& event); // Toggle highlight do tile
     void OnZoomIn(wxCommandEvent& event);
     void OnZoomOut(wxCommandEvent& event);
     void OnResetView(wxCommandEvent& event);
     
-    // Map Manager e Map direto
+    // Map Manager, TilesetManager e Map direto
     MapManager* m_mapManager;
+    class TilesetManager* m_tilesetManager;
     class Map* m_currentMap;
     
     // Command History para Undo/Redo
@@ -140,6 +166,7 @@ enum ViewportToolIds
     ID_VP_TOOL_COLLISION,
     ID_VP_TOOL_SELECT_RECT,   // Novo: Seleção retangular
     ID_VP_TOOL_SELECT_CIRCLE, // Novo: Seleção circular
+    ID_VP_TOGGLE_TILE_HIGHLIGHT, // Toggle highlight do tile
     ID_VP_ZOOM_IN,
     ID_VP_ZOOM_OUT,
     ID_VP_RESET_VIEW
