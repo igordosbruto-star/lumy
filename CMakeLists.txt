@@ -95,6 +95,7 @@ set(EDITOR_SOURCES
     editor/texture_atlas.cpp
     editor/map_renderer.cpp
     editor/shader_program.cpp
+    editor/grid_renderer.cpp
 )
 
 # wxWidgets
