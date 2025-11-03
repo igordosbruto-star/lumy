@@ -877,7 +877,14 @@ void ViewportPanel::SetTilesetManager(TilesetManager* tilesetManager)
 {
     m_tilesetManager = tilesetManager;
     if (m_glCanvas) {
-        m_glCanvas->m_collisionOverlay.MarkDirty();
+        // Rebuildar CollisionOverlay com novo TilesetManager
+        if (m_currentMap && tilesetManager) {
+            m_glCanvas->m_collisionOverlay.BuildFromMap(m_currentMap, tilesetManager);
+            wxLogMessage("CollisionOverlay: Rebuilt with new TilesetManager (%d collision tiles)",
+                        m_glCanvas->m_collisionOverlay.GetStats().collisionTiles);
+        } else {
+            m_glCanvas->m_collisionOverlay.MarkDirty();
+        }
     }
     RefreshMapDisplay();
 }
@@ -888,8 +895,14 @@ void ViewportPanel::SetCurrentMap(Map* map)
     if (m_glCanvas) {
         m_glCanvas->UpdateViewportBounds();
         
-        // Atualizar collision overlay
-        m_glCanvas->m_collisionOverlay.MarkDirty();
+        // Atualizar CollisionOverlay com dados reais
+        if (map && m_tilesetManager) {
+            m_glCanvas->m_collisionOverlay.BuildFromMap(map, m_tilesetManager);
+            wxLogMessage("CollisionOverlay: Built from map with %d collision tiles",
+                        m_glCanvas->m_collisionOverlay.GetStats().collisionTiles);
+        } else {
+            m_glCanvas->m_collisionOverlay.MarkDirty();
+        }
         
         // Atualizar MapRenderer com novo mapa
         if (m_glCanvas->m_mapRenderer && map) {
@@ -1082,11 +1095,19 @@ void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
             wxVariant collisionVariant = tilesetManager->GetTileProperty(tileId, "hasCollision");
             bool hasCollision = collisionVariant.GetBool();
             
-            // Toggle collisão
+            // Toggle colisão
             tilesetManager->SetTileProperty(tileId, "hasCollision", wxVariant(!hasCollision));
             
-            // Atualizar overlay
-            m_collisionOverlay.MarkDirty();
+            // Rebuildar overlay com dados atualizados
+            if (mapManager && mapManager->HasMap()) {
+                // Obter mapa real do ViewportPanel parent
+                Map* currentMap = viewportPanel ? viewportPanel->m_currentMap : nullptr;
+                if (currentMap) {
+                    m_collisionOverlay.BuildFromMap(currentMap, tilesetManager);
+                }
+            } else {
+                m_collisionOverlay.MarkDirty();
+            }
             
             // Notificar EditorFrame para atualizar título
             viewportPanel->NotifyMapModified();
