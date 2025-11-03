@@ -8,6 +8,7 @@
     "nlohmann-json",
     "lua",
     "sol2",
-    "gtest"
+    "gtest",
+    "glew"
   ]
 }

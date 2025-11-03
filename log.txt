@@ -1,0 +1,31 @@
+02:08:59: DiretÃ³rio de locale encontrado: C:\Users\fanta\source\repos\softwares\lumy\build\bin\Debug/locale
+02:08:59: Arquivo de traduÃ§Ã£o carregado: C:\Users\fanta\source\repos\softwares\lumy\build\bin\Debug/locale/pt_BR.json
+02:08:59: Idioma carregado com sucesso: pt_BR
+02:08:59: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Tileset 'PadrÃ£o' adicionado com 10 tiles
+02:08:59: Tileset atual alterado para: PadrÃ£o
+02:08:59: Tileset atual alterado para: PadrÃ£o
+02:08:59: Aba alterada para: Propriedades
+02:08:59: Layer adicionado: Fundo (total: 1)
+02:08:59: Layer adicionado: Base (total: 2)
+02:08:59: Mapa adicionado: Sem tÃ­tulo 1 (aba 0)
+02:08:59: Callback registrado para arquivos: tmx
+02:08:59: Callback registrado para arquivos: json
+02:08:59: Hot-reload ativo: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Hot-reload configurado para: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: ProjectTree: Caminho do projeto atualizado para: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Projeto carregado: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: ProjectTree: Caminho do projeto atualizado para: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Escaneamento de mapas concluÃ­do para projeto: C:\Users\fanta\source\repos\softwares\lumy
+02:08:59: Splitter position set to 279 (40.0% of 699)
+02:08:59: InitGL: Iniciando inicializaÃ§Ã£o OpenGL
+02:08:59: InitGL: ConfiguraÃ§Ãµes bÃ¡sicas OK
+02:08:59: InitGL: Carregando shaders
+02:08:59: ShaderProgram: Arquivo nÃ£o encontrado: shaders/overlay.vert
+02:08:59: ShaderProgram: Arquivo nÃ£o encontrado: shaders/overlay.frag
+02:08:59: ShaderProgram: Falha ao carregar arquivos de shader
+02:08:59: Falha ao carregar shader de overlay
+02:08:59: InitGL: Pulando MapRenderer e TextureAtlas (debug)
+02:08:59: InitGL: Pulando GridRenderer (debug)
+02:08:59: InitGL: InicializaÃ§Ã£o completa!

@@ -91,10 +91,20 @@ set(EDITOR_SOURCES
     editor/project_manager.cpp
     editor/new_project_dialog.cpp
     editor/i18n.cpp
+    editor/gl_buffer.cpp
+    editor/texture_atlas.cpp
+    editor/map_renderer.cpp
+    editor/shader_program.cpp
+    editor/grid_renderer.cpp
+    editor/collision_overlay.cpp
+    editor/smooth_transform.cpp
 )
 
 # wxWidgets
 find_package(wxWidgets CONFIG REQUIRED COMPONENTS core base aui propgrid gl)
+
+# GLEW para extensões OpenGL
+find_package(GLEW REQUIRED)
 
 add_executable(lumy-editor ${EDITOR_SOURCES})
 target_compile_features(lumy-editor PRIVATE cxx_std_20)
@@ -103,6 +113,8 @@ target_compile_features(lumy-editor PRIVATE cxx_std_20)
 target_link_libraries(lumy-editor PRIVATE
   wx::core wx::base wx::aui wx::propgrid wx::gl
   nlohmann_json::nlohmann_json
+  GLEW::GLEW
+  opengl32
 )
 
 # Definir flags específicas do wxWidgets para Windows
@@ -142,6 +154,18 @@ if(EXISTS "${LOCALE_DIR}")
     COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/locale"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/locale"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${LOCALE_DIR}" "${OUT_DIR}/locale"
+    VERBATIM
+  )
+endif()
+
+# ===== Cópia de shaders para o editor =====
+set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/editor/shaders")
+if(EXISTS "${SHADERS_DIR}")
+  add_custom_command(TARGET lumy-editor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando shaders de ${SHADERS_DIR} para ${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${SHADERS_DIR}" "${OUT_DIR}/shaders"
     VERBATIM
   )
 endif()
