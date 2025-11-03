@@ -198,16 +198,27 @@ void ViewportPanel::GLCanvas::InitGL()
     if (m_glInitialized) return;
     
     wxLogMessage("InitGL: Iniciando inicialização OpenGL");
-    
+
     SetCurrent(*m_glContext);
-    
+
+    // Inicializar GLEW antes de usar qualquer função OpenGL moderna
+    glewExperimental = GL_TRUE;
+    GLenum glewStatus = glewInit();
+    if (glewStatus != GLEW_OK) {
+        wxLogError("InitGL: Falha ao inicializar GLEW: %s", glewGetErrorString(glewStatus));
+        wxLogWarning("InitGL: Abortando inicialização do viewport - GLEW não disponível");
+        return;
+    }
+
+    wxLogMessage("InitGL: GLEW inicializado com sucesso");
+
     // Configurações OpenGL básicas
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+
     wxLogMessage("InitGL: Configurações básicas OK");
-    
+
     // Inicializar shader de overlay
     wxLogMessage("InitGL: Carregando shaders");
     m_overlayShader = std::make_unique<ShaderProgram>();
@@ -216,26 +227,17 @@ void ViewportPanel::GLCanvas::InitGL()
     } else {
         wxLogMessage("InitGL: Shaders carregados com sucesso");
     }
-    
+
     // Inicializar MapRenderer e TextureAtlas
     wxLogMessage("InitGL: Inicializando MapRenderer e TextureAtlas");
-    
-    // Verificar se GLEW está inicializado
-    GLenum glewStatus = glewInit();
-    if (glewStatus == GLEW_OK) {
-        wxLogMessage("InitGL: GLEW inicializado com sucesso");
-        
-        m_mapRenderer = std::make_unique<MapRenderer>();
-        m_tileAtlas = std::make_unique<TextureAtlas>();
-        
-        // Configurar MapRenderer
-        m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
-        m_mapRenderer->SetFrustumCullingEnabled(true);
-        wxLogMessage("InitGL: MapRenderer configurado");
-    } else {
-        wxLogError("InitGL: Falha ao inicializar GLEW: %s", glewGetErrorString(glewStatus));
-        wxLogWarning("InitGL: MapRenderer desativado - GLEW não disponível");
-    }
+
+    m_mapRenderer = std::make_unique<MapRenderer>();
+    m_tileAtlas = std::make_unique<TextureAtlas>();
+
+    // Configurar MapRenderer
+    m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
+    m_mapRenderer->SetFrustumCullingEnabled(true);
+    wxLogMessage("InitGL: MapRenderer configurado");
     
     // Inicializar GridRenderer - TEMPORARIAMENTE DESATIVADO PARA DEBUG
     wxLogMessage("InitGL: Pulando GridRenderer (debug)");
