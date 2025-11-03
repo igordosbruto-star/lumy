@@ -29,6 +29,7 @@ wxBEGIN_EVENT_TABLE(ViewportPanel, wxPanel)
     EVT_TOOL(ID_VP_TOOL_COLLISION, ViewportPanel::OnToolCollision)
     EVT_TOOL(ID_VP_TOOL_SELECT_RECT, ViewportPanel::OnToolSelectRect)
     EVT_TOOL(ID_VP_TOOL_SELECT_CIRCLE, ViewportPanel::OnToolSelectCircle)
+    EVT_TOOL(ID_VP_TOGGLE_TILE_HIGHLIGHT, ViewportPanel::OnToggleTileHighlight)
     EVT_TOOL(ID_VP_ZOOM_IN, ViewportPanel::OnZoomIn)
     EVT_TOOL(ID_VP_ZOOM_OUT, ViewportPanel::OnZoomOut)
     EVT_TOOL(ID_VP_RESET_VIEW, ViewportPanel::OnResetView)
@@ -106,6 +107,12 @@ void ViewportPanel::CreateToolbox()
     m_toolbox->AddSeparator();
     
     // Ferramentas de visualização
+    wxBitmap highlightBmp = CreateSimpleBitmap(wxColour(255, 200, 0)); // Laranja
+    m_toolbox->AddCheckTool(ID_VP_TOGGLE_TILE_HIGHLIGHT, "Highlight", highlightBmp, wxNullBitmap, "Toggle Tile Highlight");
+    m_toolbox->ToggleTool(ID_VP_TOGGLE_TILE_HIGHLIGHT, true); // Ativado por padrão
+    
+    m_toolbox->AddSeparator();
+    
     m_toolbox->AddTool(ID_VP_ZOOM_IN, L_("tools.zoom_in"), zoomInBmp, L_("tools.zoom_in_desc"));
     m_toolbox->AddTool(ID_VP_ZOOM_OUT, L_("tools.zoom_out"), zoomOutBmp, L_("tools.zoom_out_desc"));
     m_toolbox->AddTool(ID_VP_RESET_VIEW, L_("tools.reset"), resetBmp, L_("tools.reset_desc"));
@@ -146,6 +153,13 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
     , m_selectedTile(1) // Padrão: wall tile
     , m_isPanning(false)
     , m_isTemporaryPanning(false)
+    , m_lastMousePos(0, 0)
+    , m_hoveredTile(-1, -1)
+    , m_showTileHighlight(true)
+    , m_showTilePreview(true)
+    , m_showMinimap(true)  // Ativado novamente
+    , m_minimapPos(0, 0)
+    , m_minimapSize(200, 150)
     , m_currentTool(TOOL_SELECT)
 {
     // Criar contexto OpenGL
@@ -183,6 +197,8 @@ void ViewportPanel::GLCanvas::InitGL()
 {
     if (m_glInitialized) return;
     
+    wxLogMessage("InitGL: Iniciando inicialização OpenGL");
+    
     SetCurrent(*m_glContext);
     
     // Configurações OpenGL básicas
@@ -190,33 +206,52 @@ void ViewportPanel::GLCanvas::InitGL()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
+    wxLogMessage("InitGL: Configurações básicas OK");
+    
     // Inicializar shader de overlay
+    wxLogMessage("InitGL: Carregando shaders");
     m_overlayShader = std::make_unique<ShaderProgram>();
     if (!m_overlayShader->LoadFromFiles("shaders/overlay.vert", "shaders/overlay.frag")) {
         wxLogError("Falha ao carregar shader de overlay");
+    } else {
+        wxLogMessage("InitGL: Shaders carregados com sucesso");
     }
     
     // Inicializar MapRenderer e TextureAtlas
-    m_mapRenderer = std::make_unique<MapRenderer>();
-    m_tileAtlas = std::make_unique<TextureAtlas>();
+    wxLogMessage("InitGL: Inicializando MapRenderer e TextureAtlas");
     
-    // Configurar MapRenderer
-    m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
-    m_mapRenderer->SetFrustumCullingEnabled(true);
+    // Verificar se GLEW está inicializado
+    GLenum glewStatus = glewInit();
+    if (glewStatus == GLEW_OK) {
+        wxLogMessage("InitGL: GLEW inicializado com sucesso");
+        
+        m_mapRenderer = std::make_unique<MapRenderer>();
+        m_tileAtlas = std::make_unique<TextureAtlas>();
+        
+        // Configurar MapRenderer
+        m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
+        m_mapRenderer->SetFrustumCullingEnabled(true);
+        wxLogMessage("InitGL: MapRenderer configurado");
+    } else {
+        wxLogError("InitGL: Falha ao inicializar GLEW: %s", glewGetErrorString(glewStatus));
+        wxLogWarning("InitGL: MapRenderer desativado - GLEW não disponível");
+    }
     
-    // Inicializar GridRenderer
-    m_gridRenderer = std::make_unique<GridRenderer>();
-    GridConfig gridConfig;
-    gridConfig.tileSize = 32.0f;
-    gridConfig.color[0] = 0.3f; // R
-    gridConfig.color[1] = 0.3f; // G
-    gridConfig.color[2] = 0.3f; // B
-    gridConfig.color[3] = 0.5f; // A (50% transparente)
-    gridConfig.adaptive = true;
-    m_gridRenderer->SetConfig(gridConfig);
-    m_gridRenderer->SetGridSize(100, 100); // Grid grande por padrão
-    m_gridRenderer->SetEnabled(m_showGrid);
+    // Inicializar GridRenderer - TEMPORARIAMENTE DESATIVADO PARA DEBUG
+    wxLogMessage("InitGL: Pulando GridRenderer (debug)");
+    // m_gridRenderer = std::make_unique<GridRenderer>();
+    // GridConfig gridConfig;
+    // gridConfig.tileSize = 32.0f;
+    // gridConfig.color[0] = 0.3f; // R
+    // gridConfig.color[1] = 0.3f; // G
+    // gridConfig.color[2] = 0.3f; // B
+    // gridConfig.color[3] = 0.5f; // A (50% transparente)
+    // gridConfig.adaptive = true;
+    // m_gridRenderer->SetConfig(gridConfig);
+    // m_gridRenderer->SetGridSize(100, 100); // Grid grande por padrão
+    // m_gridRenderer->SetEnabled(m_showGrid);
     
+    wxLogMessage("InitGL: Inicialização completa!");
     m_glInitialized = true;
 }
 
@@ -239,9 +274,16 @@ void ViewportPanel::GLCanvas::OnSize(wxSizeEvent& event)
 {
     if (!IsShown()) return;
     
-    SetCurrent(*m_glContext);
-    
     wxSize size = GetClientSize();
+    if (size.x <= 0 || size.y <= 0) {
+        event.Skip();
+        return;
+    }
+    
+    if (m_glContext) {
+        SetCurrent(*m_glContext);
+    }
+    
     glViewport(0, 0, size.x, size.y);
     
     // Configurar projeção ortográfica
@@ -254,6 +296,11 @@ void ViewportPanel::GLCanvas::OnSize(wxSizeEvent& event)
     
     // Atualizar limites de viewport baseados no tamanho
     UpdateViewportBounds();
+    
+    // Atualizar posição do mini-mapa (canto inferior direito com margem)
+    int margin = 10;
+    m_minimapPos.x = size.x - m_minimapSize.x - margin;
+    m_minimapPos.y = size.y - m_minimapSize.y - margin;
     
     event.Skip();
 }
@@ -289,8 +336,14 @@ void ViewportPanel::GLCanvas::Render()
     }
     
     DrawSelection();
+    DrawTilePreview();
     
     glPopMatrix();
+    
+    // Desenhar mini-mapa (fora da transformção de câmera)
+    if (m_showMinimap) {
+        DrawMinimap();
+    }
 }
 
 void ViewportPanel::GLCanvas::DrawGrid()
@@ -492,8 +545,287 @@ void ViewportPanel::GLCanvas::DrawMap()
 
 void ViewportPanel::GLCanvas::DrawSelection()
 {
-    // TODO: Implementar desenho de seleção baseado na ferramenta atual
-    // Para M1, apenas mostrar que a funcionalidade existe
+    if (!m_showTileHighlight) {
+        return;
+    }
+    
+    // Desenhar highlight do tile sob o cursor
+    if (m_hoveredTile.x >= 0 && m_hoveredTile.y >= 0) {
+        float x = m_hoveredTile.x * TILE_SIZE;
+        float y = m_hoveredTile.y * TILE_SIZE;
+        float size = TILE_SIZE;
+        
+        // Highlight semi-transparente amarelo
+        glColor4f(1.0f, 1.0f, 0.0f, 0.3f);
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+        
+        // Outline branco ao redor
+        glLineWidth(2.0f);
+        glColor4f(1.0f, 1.0f, 1.0f, 0.8f);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+        glLineWidth(1.0f);
+    }
+}
+
+void ViewportPanel::GLCanvas::DrawTilePreview()
+{
+    // Mostrar preview apenas quando Paint, Erase ou Bucket estão ativos
+    if (!m_showTilePreview) {
+        return;
+    }
+    
+    if (m_currentTool != TOOL_PAINT && m_currentTool != TOOL_ERASE && m_currentTool != TOOL_BUCKET) {
+        return;
+    }
+    
+    // Verificar se há tile sob o cursor
+    if (m_hoveredTile.x < 0 || m_hoveredTile.y < 0) {
+        return;
+    }
+    
+    // Obter referência ao ViewportPanel parent
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    // Verificar se posição é válida
+    bool isValidPosition = false;
+    if (mapManager && mapManager->HasMap()) {
+        isValidPosition = mapManager->IsValidPosition(m_hoveredTile.x, m_hoveredTile.y);
+    } else {
+        isValidPosition = (m_hoveredTile.x >= 0 && m_hoveredTile.x < MAP_WIDTH && 
+                          m_hoveredTile.y >= 0 && m_hoveredTile.y < MAP_HEIGHT);
+    }
+    
+    if (!isValidPosition) {
+        return;
+    }
+    
+    float x = m_hoveredTile.x * TILE_SIZE;
+    float y = m_hoveredTile.y * TILE_SIZE;
+    float size = TILE_SIZE;
+    
+    // Desenhar preview baseado na ferramenta
+    if (m_currentTool == TOOL_PAINT) {
+        // Preview do tile selecionado com cor baseada no tileId
+        float r = 0.5f, g = 0.5f, b = 0.5f;
+        
+        switch (m_selectedTile) {
+            case 0: // Grass
+                r = 0.4f; g = 0.8f; b = 0.4f;
+                break;
+            case 1: // Wall
+                r = 0.6f; g = 0.4f; b = 0.2f;
+                break;
+            case 2: // Water
+                r = 0.2f; g = 0.4f; b = 0.8f;
+                break;
+            case 3: // Stone
+                r = 0.5f; g = 0.5f; b = 0.5f;
+                break;
+            case 4: // Tree
+                r = 0.2f; g = 0.6f; b = 0.2f;
+                break;
+            default:
+                // Cor dinâmica baseada no ID
+                float hue = (m_selectedTile % 10) / 10.0f;
+                r = 0.5f + hue * 0.5f;
+                g = 0.3f + hue * 0.4f;
+                b = 0.3f + hue * 0.4f;
+                break;
+        }
+        
+        // Desenhar tile com 50% de transparência
+        glColor4f(r, g, b, 0.5f);
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+        
+    } else if (m_currentTool == TOOL_ERASE) {
+        // Preview de erasão - mostrar tile vazio (grass) semi-transparente
+        glColor4f(0.4f, 0.8f, 0.4f, 0.5f);
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+        
+    } else if (m_currentTool == TOOL_BUCKET) {
+        // Preview de bucket - mesmo que paint mas com indicação visual diferente
+        float r = 0.5f, g = 0.5f, b = 0.5f;
+        
+        switch (m_selectedTile) {
+            case 0: r = 0.4f; g = 0.8f; b = 0.4f; break;
+            case 1: r = 0.6f; g = 0.4f; b = 0.2f; break;
+            case 2: r = 0.2f; g = 0.4f; b = 0.8f; break;
+            case 3: r = 0.5f; g = 0.5f; b = 0.5f; break;
+            case 4: r = 0.2f; g = 0.6f; b = 0.2f; break;
+            default:
+                float hue = (m_selectedTile % 10) / 10.0f;
+                r = 0.5f + hue * 0.5f;
+                g = 0.3f + hue * 0.4f;
+                b = 0.3f + hue * 0.4f;
+                break;
+        }
+        
+        glColor4f(r, g, b, 0.6f);
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+    }
+    
+    // Outline mais grosso para diferenciar do highlight
+    glLineWidth(3.0f);
+    glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x, y);
+    glVertex2f(x + size, y);
+    glVertex2f(x + size, y + size);
+    glVertex2f(x, y + size);
+    glEnd();
+    glLineWidth(1.0f);
+}
+
+void ViewportPanel::GLCanvas::DrawMinimap()
+{
+    if (!m_showMinimap) {
+        return;
+    }
+    
+    // Obter referência ao ViewportPanel parent
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    // Determinar dimensões do mapa
+    int mapWidth = MAP_WIDTH;
+    int mapHeight = MAP_HEIGHT;
+    
+    if (mapManager && mapManager->HasMap()) {
+        mapWidth = mapManager->GetMapWidth();
+        mapHeight = mapManager->GetMapHeight();
+    }
+    
+    // Calcular escala do mini-mapa
+    float scaleX = static_cast<float>(m_minimapSize.x) / (mapWidth * TILE_SIZE);
+    float scaleY = static_cast<float>(m_minimapSize.y) / (mapHeight * TILE_SIZE);
+    float scale = std::min(scaleX, scaleY) * 0.9f; // 90% para deixar margem
+    
+    // Centralizar mini-mapa no retângulo
+    float minimapWidth = mapWidth * TILE_SIZE * scale;
+    float minimapHeight = mapHeight * TILE_SIZE * scale;
+    float offsetX = m_minimapPos.x + (m_minimapSize.x - minimapWidth) / 2.0f;
+    float offsetY = m_minimapPos.y + (m_minimapSize.y - minimapHeight) / 2.0f;
+    
+    // Desenhar fundo semi-transparente
+    glColor4f(0.1f, 0.1f, 0.1f, 0.7f);
+    glBegin(GL_QUADS);
+    glVertex2f(m_minimapPos.x, m_minimapPos.y);
+    glVertex2f(m_minimapPos.x + m_minimapSize.x, m_minimapPos.y);
+    glVertex2f(m_minimapPos.x + m_minimapSize.x, m_minimapPos.y + m_minimapSize.y);
+    glVertex2f(m_minimapPos.x, m_minimapPos.y + m_minimapSize.y);
+    glEnd();
+    
+    // Desenhar borda do mini-mapa
+    glLineWidth(2.0f);
+    glColor4f(0.5f, 0.5f, 0.5f, 0.9f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(m_minimapPos.x, m_minimapPos.y);
+    glVertex2f(m_minimapPos.x + m_minimapSize.x, m_minimapPos.y);
+    glVertex2f(m_minimapPos.x + m_minimapSize.x, m_minimapPos.y + m_minimapSize.y);
+    glVertex2f(m_minimapPos.x, m_minimapPos.y + m_minimapSize.y);
+    glEnd();
+    glLineWidth(1.0f);
+    
+    // Desenhar mapa simplificado
+    glBegin(GL_QUADS);
+    for (int y = 0; y < mapHeight; ++y) {
+        for (int x = 0; x < mapWidth; ++x) {
+            int tileType = 0;
+            
+            if (mapManager && mapManager->HasMap()) {
+                tileType = mapManager->GetTile(x, y);
+            } else {
+                tileType = m_mapTiles[y][x];
+            }
+            
+            // Cores simplificadas
+            float r = 0.5f, g = 0.5f, b = 0.5f;
+            switch (tileType) {
+                case 0: r = 0.4f; g = 0.8f; b = 0.4f; break; // Grass
+                case 1: r = 0.6f; g = 0.4f; b = 0.2f; break; // Wall
+                case 2: r = 0.2f; g = 0.4f; b = 0.8f; break; // Water
+                case 3: r = 0.5f; g = 0.5f; b = 0.5f; break; // Stone
+                case 4: r = 0.2f; g = 0.6f; b = 0.2f; break; // Tree
+                default:
+                    float hue = (tileType % 10) / 10.0f;
+                    r = 0.5f + hue * 0.5f;
+                    g = 0.3f + hue * 0.4f;
+                    b = 0.3f + hue * 0.4f;
+                    break;
+            }
+            
+            glColor4f(r, g, b, 1.0f);
+            
+            float tileX = offsetX + x * TILE_SIZE * scale;
+            float tileY = offsetY + y * TILE_SIZE * scale;
+            float tileW = TILE_SIZE * scale;
+            float tileH = TILE_SIZE * scale;
+            
+            glVertex2f(tileX, tileY);
+            glVertex2f(tileX + tileW, tileY);
+            glVertex2f(tileX + tileW, tileY + tileH);
+            glVertex2f(tileX, tileY + tileH);
+        }
+    }
+    glEnd();
+    
+    // Desenhar retângulo do viewport atual
+    float zoom = m_smoothTransform.GetZoom();
+    float panX = m_smoothTransform.GetPanX();
+    float panY = m_smoothTransform.GetPanY();
+    
+    wxSize canvasSize = GetClientSize();
+    
+    // Converter coordenadas de viewport para mini-mapa
+    float viewX = offsetX + (-panX / zoom) * scale;
+    float viewY = offsetY + (-panY / zoom) * scale;
+    float viewW = (canvasSize.x / zoom) * scale;
+    float viewH = (canvasSize.y / zoom) * scale;
+    
+    // Desenhar retângulo do viewport com outline
+    glColor4f(1.0f, 1.0f, 0.0f, 0.3f);
+    glBegin(GL_QUADS);
+    glVertex2f(viewX, viewY);
+    glVertex2f(viewX + viewW, viewY);
+    glVertex2f(viewX + viewW, viewY + viewH);
+    glVertex2f(viewX, viewY + viewH);
+    glEnd();
+    
+    glLineWidth(2.0f);
+    glColor4f(1.0f, 1.0f, 0.0f, 1.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(viewX, viewY);
+    glVertex2f(viewX + viewW, viewY);
+    glVertex2f(viewX + viewW, viewY + viewH);
+    glVertex2f(viewX, viewY + viewH);
+    glEnd();
+    glLineWidth(1.0f);
 }
 
 void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
@@ -501,6 +833,50 @@ void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
     SetFocus(); // Para receber eventos de teclado
     
     wxPoint mousePos = event.GetPosition();
+    
+    // Verificar se clicou no mini-mapa
+    if (m_showMinimap && 
+        mousePos.x >= m_minimapPos.x && mousePos.x <= m_minimapPos.x + m_minimapSize.x &&
+        mousePos.y >= m_minimapPos.y && mousePos.y <= m_minimapPos.y + m_minimapSize.y) {
+        
+        // Obter referência ao ViewportPanel parent
+        ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+        MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+        
+        // Determinar dimensões do mapa
+        int mapWidth = MAP_WIDTH;
+        int mapHeight = MAP_HEIGHT;
+        
+        if (mapManager && mapManager->HasMap()) {
+            mapWidth = mapManager->GetMapWidth();
+            mapHeight = mapManager->GetMapHeight();
+        }
+        
+        // Calcular escala do mini-mapa
+        float scaleX = static_cast<float>(m_minimapSize.x) / (mapWidth * TILE_SIZE);
+        float scaleY = static_cast<float>(m_minimapSize.y) / (mapHeight * TILE_SIZE);
+        float scale = std::min(scaleX, scaleY) * 0.9f;
+        
+        float minimapWidth = mapWidth * TILE_SIZE * scale;
+        float minimapHeight = mapHeight * TILE_SIZE * scale;
+        float offsetX = m_minimapPos.x + (m_minimapSize.x - minimapWidth) / 2.0f;
+        float offsetY = m_minimapPos.y + (m_minimapSize.y - minimapHeight) / 2.0f;
+        
+        // Converter clique em coordenadas do mapa
+        float mapClickX = (mousePos.x - offsetX) / scale;
+        float mapClickY = (mousePos.y - offsetY) / scale;
+        
+        // Centralizar viewport nessa posição
+        wxSize canvasSize = GetClientSize();
+        float zoom = m_smoothTransform.GetZoom();
+        float newPanX = -(mapClickX - canvasSize.x / (2.0f * zoom)) * zoom;
+        float newPanY = -(mapClickY - canvasSize.y / (2.0f * zoom)) * zoom;
+        
+        m_smoothTransform.AnimatePan(newPanX, newPanY, 200);
+        Refresh();
+        return;
+    }
+    
     float zoom = m_smoothTransform.GetZoom();
     float panX = m_smoothTransform.GetPanX();
     float panY = m_smoothTransform.GetPanY();
@@ -586,6 +962,20 @@ void ViewportPanel::GLCanvas::OnMouseMove(wxMouseEvent& event)
         m_smoothTransform.SetTransform(m_smoothTransform.GetZoom(), panX, panY);
     }
     
+    // Atualizar tile sob o cursor
+    float zoom = m_smoothTransform.GetZoom();
+    float panX = m_smoothTransform.GetPanX();
+    float panY = m_smoothTransform.GetPanY();
+    wxPoint worldPos((currentPos.x - panX) / zoom, (currentPos.y - panY) / zoom);
+    wxPoint tilePos = WorldToTile(worldPos);
+    m_hoveredTile = tilePos;
+    
+    // Atualizar coordenadas na status bar
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    if (viewportPanel) {
+        viewportPanel->UpdateTileCoordinatesInStatusBar(tilePos.x, tilePos.y);
+    }
+    
     // Pintura contínua quando botão esquerdo está pressionado (mas não em pan temporário)
     if (event.LeftIsDown() && !m_isTemporaryPanning && (m_currentTool == TOOL_PAINT || m_currentTool == TOOL_ERASE || m_currentTool == TOOL_COLLISION)) {
         float zoom = m_smoothTransform.GetZoom();
@@ -651,6 +1041,13 @@ void ViewportPanel::GLCanvas::OnKeyDown(wxKeyEvent& event)
             m_showCollision = !m_showCollision;
             m_collisionOverlay.SetEnabled(m_showCollision);
             wxLogStatus("Collision Overlay: %s", m_showCollision ? "ON" : "OFF");
+            Refresh();
+            break;
+            
+        case 'M':
+            // Toggle minimap visibility
+            m_showMinimap = !m_showMinimap;
+            wxLogStatus("Minimap: %s", m_showMinimap ? "ON" : "OFF");
             Refresh();
             break;
             
@@ -827,6 +1224,14 @@ void ViewportPanel::OnToolSelectCircle(wxCommandEvent& WXUNUSED(event))
     m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, true);
     m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
     wxLogMessage("Átil: Ferramenta Seleção Circular selecionada");
+}
+
+void ViewportPanel::OnToggleTileHighlight(wxCommandEvent& event)
+{
+    // Toggle highlight do tile
+    m_glCanvas->m_showTileHighlight = event.IsChecked();
+    m_glCanvas->Refresh();
+    wxLogStatus("Tile Highlight: %s", m_glCanvas->m_showTileHighlight ? "ON" : "OFF");
 }
 
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
@@ -1169,6 +1574,31 @@ bool ViewportPanel::Redo()
         NotifyMapModified();
     }
     return success;
+}
+
+void ViewportPanel::UpdateTileCoordinatesInStatusBar(int tileX, int tileY)
+{
+    // Obter referência ao EditorFrame
+    EditorFrame* editorFrame = dynamic_cast<EditorFrame*>(GetParent());
+    if (!editorFrame) {
+        return;
+    }
+    
+    // Verificar se as coordenadas são válidas
+    bool isValid = false;
+    if (m_mapManager && m_mapManager->HasMap()) {
+        isValid = m_mapManager->IsValidPosition(tileX, tileY);
+    } else {
+        // Usar limites simulados
+        isValid = (tileX >= 0 && tileX < 25 && tileY >= 0 && tileY < 15);
+    }
+    
+    if (isValid) {
+        wxString coordText = wxString::Format("Tile: (%d, %d)", tileX, tileY);
+        editorFrame->SetStatusText(coordText, 2);
+    } else {
+        editorFrame->SetStatusText("", 2);
+    }
 }
 
 void ViewportPanel::GLCanvas::UpdateViewportBounds()

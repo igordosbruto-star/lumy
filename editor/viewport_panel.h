@@ -33,6 +33,7 @@ public:
     void SetCurrentMap(class Map* map); // Novo: usar Map diretamente
     void RefreshMapDisplay();
     void NotifyMapModified(); // Notificar EditorFrame sobre modificações no mapa
+    void UpdateTileCoordinatesInStatusBar(int tileX, int tileY); // Atualizar coordenadas na status bar
     
     // Undo/Redo
     CommandHistory* GetCommandHistory() { return m_commandHistory.get(); }
@@ -79,6 +80,8 @@ private:
         void DrawGrid();
         void DrawMap();
         void DrawSelection();
+        void DrawTilePreview(); // Preview do tile ao pintar
+        void DrawMinimap(); // Mini-mapa no canto do viewport
         
         wxGLContext* m_glContext;
         bool m_glInitialized;
@@ -104,6 +107,12 @@ private:
         bool m_isPanning;
         bool m_isTemporaryPanning; // Pan temporário com tecla Espaço
         wxPoint m_lastMousePos;
+        wxPoint m_hoveredTile;     // Tile sob o cursor (-1,-1 = nenhum)
+        bool m_showTileHighlight;  // Se mostra highlight do tile
+        bool m_showTilePreview;    // Se mostra preview ao pintar
+        bool m_showMinimap;        // Se mostra mini-mapa
+        wxPoint m_minimapPos;      // Posição do mini-mapa (canto inferior direito)
+        wxSize m_minimapSize;      // Tamanho do mini-mapa (200x150)
         
         // Ferramentas de edição
         enum Tool {
@@ -131,6 +140,7 @@ private:
     void OnToolCollision(wxCommandEvent& event);
     void OnToolSelectRect(wxCommandEvent& event);  // Novo: Seleção retangular
     void OnToolSelectCircle(wxCommandEvent& event); // Novo: Seleção circular
+    void OnToggleTileHighlight(wxCommandEvent& event); // Toggle highlight do tile
     void OnZoomIn(wxCommandEvent& event);
     void OnZoomOut(wxCommandEvent& event);
     void OnResetView(wxCommandEvent& event);
@@ -156,6 +166,7 @@ enum ViewportToolIds
     ID_VP_TOOL_COLLISION,
     ID_VP_TOOL_SELECT_RECT,   // Novo: Seleção retangular
     ID_VP_TOOL_SELECT_CIRCLE, // Novo: Seleção circular
+    ID_VP_TOGGLE_TILE_HIGHLIGHT, // Toggle highlight do tile
     ID_VP_ZOOM_IN,
     ID_VP_ZOOM_OUT,
     ID_VP_RESET_VIEW
