@@ -65,6 +65,12 @@ private:
     void OnSaveMap(wxCommandEvent& event);
     void OnSaveMapAs(wxCommandEvent& event);
     
+    // Event handlers para Edit
+    void OnUndo(wxCommandEvent& event);
+    void OnRedo(wxCommandEvent& event);
+    void OnUpdateUndo(wxUpdateUIEvent& event);
+    void OnUpdateRedo(wxUpdateUIEvent& event);
+    
     // AUI Manager
     wxAuiManager m_auiManager;
     
@@ -122,6 +128,9 @@ enum
     ID_OpenMap,
     ID_SaveMap,
     ID_SaveMapAs,
+    // Edit
+    ID_Undo,
+    ID_Redo,
     // Idiomas
     ID_SetLanguagePtBr,
     ID_SetLanguageEnUs

@@ -12,6 +12,7 @@
 #include "viewport_panel.h"
 #include "map_tabs_panel.h"
 #include "tileset_panel.h"
+#include "command.h"
 #include "new_project_dialog.h"
 #include "utf8_strings.h"
 #include "i18n.h"
@@ -31,6 +32,12 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_MENU(ID_OpenMap, EditorFrame::OnOpenMap)
     EVT_MENU(ID_SaveMap, EditorFrame::OnSaveMap)
     EVT_MENU(ID_SaveMapAs, EditorFrame::OnSaveMapAs)
+    // Edit menu
+    EVT_MENU(ID_Undo, EditorFrame::OnUndo)
+    EVT_MENU(ID_Redo, EditorFrame::OnRedo)
+    EVT_UPDATE_UI(ID_Undo, EditorFrame::OnUpdateUndo)
+    EVT_UPDATE_UI(ID_Redo, EditorFrame::OnUpdateRedo)
+    // Language menu
     EVT_MENU(ID_SetLanguagePtBr, EditorFrame::OnSetLanguagePtBr)
     EVT_MENU(ID_SetLanguageEnUs, EditorFrame::OnSetLanguageEnUs)
     EVT_CLOSE(EditorFrame::OnClose)
@@ -114,6 +121,11 @@ void EditorFrame::CreateMenuBar()
     fileMenu->Append(ID_SaveProject, L_("menu.save") + "\tCtrl+S");
     fileMenu->AppendSeparator();
     fileMenu->Append(wxID_EXIT, L_("menu.exit") + "\tAlt+F4");
+    
+    // Menu Edit
+    wxMenu* editMenu = new wxMenu;
+    editMenu->Append(ID_Undo, "&Desfazer\tCtrl+Z");
+    editMenu->Append(ID_Redo, "&Refazer\tCtrl+Y");
 
     // Menu Mapa
     wxMenu* mapMenu = new wxMenu;
@@ -138,6 +150,7 @@ void EditorFrame::CreateMenuBar()
     // Criar barra de menu
     wxMenuBar* menuBar = new wxMenuBar;
     menuBar->Append(fileMenu, L_("menu.file"));
+    menuBar->Append(editMenu, "&Editar");
     menuBar->Append(mapMenu, L_("menu.map"));
     menuBar->Append(helpMenu, L_("menu.help"));
 
@@ -580,9 +593,37 @@ void EditorFrame::OnSelectionChanged(SelectionChangeEvent& event)
     
     // Atualizar property grid com base na seleção (via painel de abas)
     if (m_propertiesTabsPanel && m_propertiesTabsPanel->GetPropertyGrid()) {
-        // TODO: Implementar atualização dinâmica do property grid
-        // Por enquanto, apenas log
-        wxLogMessage("Updating property grid for selection: %s", info.displayName);
+        PropertyGridPanel* propGrid = m_propertiesTabsPanel->GetPropertyGrid();
+        
+        switch (info.type) {
+            case SelectionType::TILE:
+                // Carregar propriedades do tile selecionado
+                propGrid->LoadTileProperties(
+                    info.tilePosition.x, 
+                    info.tilePosition.y, 
+                    info.tileType,
+                    false  // TODO: obter collision flag real
+                );
+                wxLogMessage("PropertyGrid atualizado para tile em (%d, %d)", 
+                            info.tilePosition.x, info.tilePosition.y);
+                break;
+                
+            case SelectionType::MAP_FILE:
+                // Carregar propriedades do mapa atual se houver
+                if (m_mapManager && m_mapManager->HasMap()) {
+                    // TODO: obter Map* do MapManager
+                    wxLogMessage("TODO: Carregar propriedades do mapa no PropertyGrid");
+                }
+                break;
+                
+            case SelectionType::NONE:
+                propGrid->ClearProperties();
+                break;
+                
+            default:
+                wxLogMessage("Tipo de seleção não tratado: %d", static_cast<int>(info.type));
+                break;
+        }
     }
     
     // Atualizar viewport se necessário
@@ -895,5 +936,77 @@ void EditorFrame::OnSetLanguageEnUs(wxCommandEvent& WXUNUSED(event))
             wxOK | wxICON_ERROR,
             this
         );
+    }
+}
+
+// ============================================================================
+// Handlers de Undo/Redo
+// ============================================================================
+
+void EditorFrame::OnUndo(wxCommandEvent& WXUNUSED(event))
+{
+    // Obter o viewport atual do MapTabsPanel
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport && viewport->CanUndo()) {
+            viewport->Undo();
+            SetStatusText("Ação desfeita", 0);
+        }
+    }
+}
+
+void EditorFrame::OnRedo(wxCommandEvent& WXUNUSED(event))
+{
+    // Obter o viewport atual do MapTabsPanel
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        if (viewport && viewport->CanRedo()) {
+            viewport->Redo();
+            SetStatusText("Ação refeita", 0);
+        }
+    }
+}
+
+void EditorFrame::OnUpdateUndo(wxUpdateUIEvent& event)
+{
+    // Habilitar/desabilitar o menu Undo baseado no estado do CommandHistory
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        event.Enable(viewport && viewport->CanUndo());
+        
+        // Atualizar texto do menu com nome do comando (opcional)
+        if (viewport && viewport->CanUndo()) {
+            CommandHistory* history = viewport->GetCommandHistory();
+            if (history) {
+                wxString undoName = history->GetUndoName();
+                if (!undoName.IsEmpty()) {
+                    event.SetText(wxString::Format("&Desfazer %s\tCtrl+Z", undoName));
+                }
+            }
+        }
+    } else {
+        event.Enable(false);
+    }
+}
+
+void EditorFrame::OnUpdateRedo(wxUpdateUIEvent& event)
+{
+    // Habilitar/desabilitar o menu Redo baseado no estado do CommandHistory
+    if (m_mapTabsPanel) {
+        ViewportPanel* viewport = m_mapTabsPanel->GetCurrentViewport();
+        event.Enable(viewport && viewport->CanRedo());
+        
+        // Atualizar texto do menu com nome do comando (opcional)
+        if (viewport && viewport->CanRedo()) {
+            CommandHistory* history = viewport->GetCommandHistory();
+            if (history) {
+                wxString redoName = history->GetRedoName();
+                if (!redoName.IsEmpty()) {
+                    event.SetText(wxString::Format("&Refazer %s\tCtrl+Y", redoName));
+                }
+            }
+        }
+    } else {
+        event.Enable(false);
     }
 }

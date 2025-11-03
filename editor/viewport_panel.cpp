@@ -6,8 +6,11 @@
 
 #include "viewport_panel.h"
 #include "editor_frame.h"
+#include "editor_events.h"
 #include "utf8_strings.h"
 #include "i18n.h"
+#include "command.h"
+#include "map.h"
 #include <wx/toolbar.h>
 #include <GL/gl.h>
 #include <cmath>
@@ -43,6 +46,7 @@ ViewportPanel::ViewportPanel(wxWindow* parent)
     : wxPanel(parent, wxID_ANY)
     , m_mapManager(nullptr)
     , m_currentMap(nullptr)
+    , m_commandHistory(std::make_unique<CommandHistory>(100))
 {
     CreateControls();
 }
@@ -413,7 +417,30 @@ void ViewportPanel::GLCanvas::OnMouseLeftDown(wxMouseEvent& event)
     // Ações baseadas na ferramenta atual
     switch (m_currentTool) {
         case TOOL_SELECT:
-            // TODO: Implementar seleção visual
+            // Disparar evento de seleção para atualizar PropertyGrid
+            {
+                SelectionInfo info;
+                info.type = SelectionType::TILE;
+                info.tilePosition = tilePos;
+                info.displayName = wxString::Format("Tile (%d, %d)", tilePos.x, tilePos.y);
+                
+                // Obter tile ID do mapa
+                if (mapManager && mapManager->HasMap()) {
+                    info.tileType = mapManager->GetTile(tilePos.x, tilePos.y);
+                } else {
+                    info.tileType = m_mapTiles[tilePos.y][tilePos.x];
+                }
+                
+                // Enviar evento para EditorFrame
+                if (viewportPanel) {
+                    EditorFrame* editorFrame = dynamic_cast<EditorFrame*>(viewportPanel->GetParent());
+                    if (editorFrame) {
+                        SelectionChangeEvent selEvent(EVT_SELECTION_CHANGED);
+                        selEvent.SetSelectionInfo(info);
+                        editorFrame->GetEventHandler()->ProcessEvent(selEvent);
+                    }
+                }
+            }
             break;
         case TOOL_PAINT:
             PaintTile(tilePos.x, tilePos.y);
@@ -816,4 +843,46 @@ void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
             }
         }
     }
+}
+
+// ============================================================================
+// Métodos Undo/Redo do ViewportPanel
+// ============================================================================
+
+bool ViewportPanel::CanUndo() const
+{
+    return m_commandHistory && m_commandHistory->CanUndo();
+}
+
+bool ViewportPanel::CanRedo() const
+{
+    return m_commandHistory && m_commandHistory->CanRedo();
+}
+
+bool ViewportPanel::Undo()
+{
+    if (!m_commandHistory) {
+        return false;
+    }
+    
+    bool success = m_commandHistory->Undo();
+    if (success) {
+        RefreshMapDisplay();
+        NotifyMapModified();
+    }
+    return success;
+}
+
+bool ViewportPanel::Redo()
+{
+    if (!m_commandHistory) {
+        return false;
+    }
+    
+    bool success = m_commandHistory->Redo();
+    if (success) {
+        RefreshMapDisplay();
+        NotifyMapModified();
+    }
+    return success;
 }
