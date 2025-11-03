@@ -26,7 +26,7 @@ public:
 
 private:
     void CreateControls();
-    void CreateToolbar();
+    void CreateToolbox();  // Renomeado de CreateToolbar
     wxBitmap CreateSimpleBitmap(const wxColour& color);
     
     // OpenGL Canvas para renderização
@@ -85,22 +85,28 @@ private:
         enum Tool {
             TOOL_SELECT,
             TOOL_PAINT,
+            TOOL_BUCKET,       // Balde de tinta
             TOOL_ERASE,
-            TOOL_COLLISION
+            TOOL_COLLISION,
+            TOOL_SELECT_RECT,  // Seleção retangular
+            TOOL_SELECT_CIRCLE // Seleção circular
         } m_currentTool;
         
         wxDECLARE_EVENT_TABLE();
     };
     
     // Controles
-    wxToolBar* m_toolbar;
+    wxToolBar* m_toolbox;  // Renomeado de m_toolbar para m_toolbox
     GLCanvas* m_glCanvas;
     
-    // Event handlers para toolbar
+    // Event handlers para toolbox
     void OnToolSelect(wxCommandEvent& event);
     void OnToolPaint(wxCommandEvent& event);
+    void OnToolBucket(wxCommandEvent& event);      // Novo: Balde
     void OnToolErase(wxCommandEvent& event);
     void OnToolCollision(wxCommandEvent& event);
+    void OnToolSelectRect(wxCommandEvent& event);  // Novo: Seleção retangular
+    void OnToolSelectCircle(wxCommandEvent& event); // Novo: Seleção circular
     void OnZoomIn(wxCommandEvent& event);
     void OnZoomOut(wxCommandEvent& event);
     void OnResetView(wxCommandEvent& event);
@@ -112,14 +118,17 @@ private:
     wxDECLARE_EVENT_TABLE();
 };
 
-// IDs dos tools
-enum
+// IDs dos tools do Viewport
+enum ViewportToolIds
 {
-    ID_TOOL_SELECT = wxID_HIGHEST + 100,
-    ID_TOOL_PAINT,
-    ID_TOOL_ERASE,
-    ID_TOOL_COLLISION,
-    ID_ZOOM_IN,
-    ID_ZOOM_OUT,
-    ID_RESET_VIEW
+    ID_VP_TOOL_SELECT = wxID_HIGHEST + 100,
+    ID_VP_TOOL_PAINT,
+    ID_VP_TOOL_BUCKET,        // Novo: Balde
+    ID_VP_TOOL_ERASE,
+    ID_VP_TOOL_COLLISION,
+    ID_VP_TOOL_SELECT_RECT,   // Novo: Seleção retangular
+    ID_VP_TOOL_SELECT_CIRCLE, // Novo: Seleção circular
+    ID_VP_ZOOM_IN,
+    ID_VP_ZOOM_OUT,
+    ID_VP_RESET_VIEW
 };

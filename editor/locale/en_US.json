@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "Lumy Editor - M1 Shine",
+    "version": "v0.1.1",
+    "localization_error": "Could not load translations, using default values"
+  },
+  "menu": {
+    "file": "File",
+    "map": "Map",
+    "help": "Help",
+    "new": "New",
+    "open": "Open",
+    "save": "Save",
+    "exit": "Exit",
+    "new_map": "New Map",
+    "open_map": "Open Map",
+    "save_map": "Save Map",
+    "save_map_as": "Save Map As",
+    "about": "About",
+    "language": "Language / Idioma"
+  },
+  "lang": {
+    "pt_BR": "Português (Brasil)",
+    "en_US": "English (US)"
+  },
+  "status": {
+    "ready": "Ready",
+    "creating_project": "Creating new project...",
+    "opening_project": "Opening project...",
+    "saving_project": "Saving project...",
+    "error_create_project": "Error creating project",
+    "error_load_project": "Error loading project",
+    "project_loaded": "Project loaded: %s",
+    "creating_map": "Creating new map...",
+    "opening_map": "Opening map...",
+    "saving_map": "Saving map...",
+    "saving_map_as": "Saving map as...",
+    "new_map_created": "New map created (20x15)",
+    "map_loaded": "Map loaded: %s",
+    "map_saved": "Map saved successfully",
+    "map_saved_as": "Map saved as: %s",
+    "error_load_map": "Error loading map",
+    "error_save_map": "Error saving map",
+    "tile_selected": "Tile for painting: %d"
+  },
+  "dialog": {
+    "error": "Error",
+    "exit_title": "Confirm Exit",
+    "wip": "M1 - Work In Progress",
+    "select_project": "Select Lumy project folder",
+    "open_map": "Open Map",
+    "save_map_as": "Save Map As",
+    "confirm_exit": "Are you sure you want to exit the editor?"
+  },
+  "msg": {
+    "error_create_project": "Error creating the project. Check the logs for more details.",
+    "error_load_project": "Error loading project from the selected directory.",
+    "feature_not_implemented": "Save Project feature will be implemented soon!",
+    "no_map_loaded": "No map is loaded to save.",
+    "error_load_map": "Error loading the map. Check if the file is valid.",
+    "error_save_map": "Error saving the map. Check file permissions."
+  },
+  "panels": {
+    "project_tiles": "Project & Tiles",
+    "properties_layers": "Properties & Layers",
+    "maps": "Maps",
+    "project": "Project",
+    "properties": "Properties",
+    "layers": "Layers"
+  },
+  "tools": {
+    "select": "Select",
+    "select_desc": "Selection tool",
+    "paint": "Paint",
+    "paint_desc": "Paint tool",
+    "bucket": "Bucket",
+    "bucket_desc": "Bucket Fill",
+    "erase": "Erase",
+    "erase_desc": "Eraser tool",
+    "collision": "Collision",
+    "collision_desc": "Edit collision",
+    "select_rect": "Rectangle",
+    "select_rect_desc": "Rectangular selection",
+    "select_circle": "Circle",
+    "select_circle_desc": "Circular selection",
+    "zoom_in": "Zoom +",
+    "zoom_in_desc": "Zoom in",
+    "zoom_out": "Zoom -",
+    "zoom_out_desc": "Zoom out",
+    "reset": "Reset",
+    "reset_desc": "Reset view"
+  }
+}

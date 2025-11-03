@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Lumy Editor",
+    "version": "M1 - Brilho"
+  },
+  "menu": {
+    "file": "&Arquivo",
+    "new": "&Novo",
+    "open": "&Abrir",
+    "save": "&Salvar",
+    "save_as": "Salvar &Como...",
+    "exit": "Sai&r",
+    "edit": "&Editar",
+    "undo": "&Desfazer",
+    "redo": "&Refazer",
+    "map": "&Mapa",
+    "new_map": "&Novo Mapa",
+    "open_map": "&Abrir Mapa",
+    "save_map": "&Salvar Mapa",
+    "save_map_as": "Salvar Mapa &Como...",
+    "help": "&Ajuda",
+    "about": "&Sobre"
+  },
+  "tools": {
+    "select": "Selecionar",
+    "paint": "Pintar",
+    "bucket": "Balde",
+    "erase": "Apagar",
+    "collision": "Colisão",
+    "rect_select": "Retângulo",
+    "circle_select": "Círculo",
+    "zoom_in": "Zoom +",
+    "zoom_out": "Zoom -",
+    "reset_view": "Reset"
+  },
+  "tooltips": {
+    "select": "Ferramenta de seleção",
+    "paint": "Ferramenta de pintura",
+    "bucket": "Preenchimento (Balde)",
+    "erase": "Ferramenta de apagar",
+    "collision": "Editar colisão",
+    "rect_select": "Seleção retangular",
+    "circle_select": "Seleção circular",
+    "zoom_in": "Aumentar zoom",
+    "zoom_out": "Diminuir zoom",
+    "reset_view": "Resetar visualização"
+  },
+  "panels": {
+    "project": "Projeto",
+    "tiles": "Tiles",
+    "properties": "Propriedades",
+    "layers": "Camadas",
+    "viewport": "Editor de Mapa",
+    "maps": "Mapas"
+  },
+  "properties": {
+    "name": "Nome",
+    "width": "Largura",
+    "height": "Altura",
+    "tile_size": "Tamanho do Tile",
+    "author": "Autor",
+    "description": "Descrição",
+    "version": "Versão",
+    "visible": "Visível",
+    "opacity": "Opacidade",
+    "locked": "Bloqueada",
+    "type": "Tipo"
+  },
+  "messages": {
+    "save_changes": "Deseja salvar as alterações?",
+    "unsaved_changes": "Há alterações não salvas",
+    "close_confirm": "Deseja realmente sair do editor?",
+    "map_modified": "O mapa '%s' foi modificado.\n\nDeseja salvar as alterações antes de continuar?",
+    "file_not_found": "Arquivo não encontrado: %s",
+    "error_loading": "Erro ao carregar: %s",
+    "error_saving": "Erro ao salvar: %s",
+    "success_saved": "Salvo com sucesso: %s",
+    "no_map_loaded": "Nenhum mapa carregado",
+    "map_loaded": "Mapa carregado: %s"
+  },
+  "status": {
+    "ready": "Pronto",
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "zoom": "Zoom: %.0f%%"
+  },
+  "dialogs": {
+    "new_project": "Novo Projeto",
+    "open_project": "Abrir Projeto",
+    "new_map": "Novo Mapa",
+    "open_map": "Abrir Mapa",
+    "save_map": "Salvar Mapa",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "ok": "OK",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "tabs": {
+    "untitled": "Sem título %d",
+    "close": "Fechar",
+    "close_others": "Fechar Outras",
+    "close_all": "Fechar Todas"
+  }
+}

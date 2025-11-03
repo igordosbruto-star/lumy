@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Lumy Editor",
+    "version": "M1 - Brightness"
+  },
+  "menu": {
+    "file": "&File",
+    "new": "&New",
+    "open": "&Open",
+    "save": "&Save",
+    "save_as": "Save &As...",
+    "exit": "E&xit",
+    "edit": "&Edit",
+    "undo": "&Undo",
+    "redo": "&Redo",
+    "map": "&Map",
+    "new_map": "&New Map",
+    "open_map": "&Open Map",
+    "save_map": "&Save Map",
+    "save_map_as": "Save Map &As...",
+    "help": "&Help",
+    "about": "&About"
+  },
+  "tools": {
+    "select": "Select",
+    "paint": "Paint",
+    "bucket": "Bucket",
+    "erase": "Erase",
+    "collision": "Collision",
+    "rect_select": "Rectangle",
+    "circle_select": "Circle",
+    "zoom_in": "Zoom +",
+    "zoom_out": "Zoom -",
+    "reset_view": "Reset"
+  },
+  "tooltips": {
+    "select": "Selection tool",
+    "paint": "Paint tool",
+    "bucket": "Fill tool (Bucket)",
+    "erase": "Eraser tool",
+    "collision": "Edit collision",
+    "rect_select": "Rectangle selection",
+    "circle_select": "Circle selection",
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "reset_view": "Reset view"
+  },
+  "panels": {
+    "project": "Project",
+    "tiles": "Tiles",
+    "properties": "Properties",
+    "layers": "Layers",
+    "viewport": "Map Editor",
+    "maps": "Maps"
+  },
+  "properties": {
+    "name": "Name",
+    "width": "Width",
+    "height": "Height",
+    "tile_size": "Tile Size",
+    "author": "Author",
+    "description": "Description",
+    "version": "Version",
+    "visible": "Visible",
+    "opacity": "Opacity",
+    "locked": "Locked",
+    "type": "Type"
+  },
+  "messages": {
+    "save_changes": "Do you want to save the changes?",
+    "unsaved_changes": "There are unsaved changes",
+    "close_confirm": "Do you really want to exit the editor?",
+    "map_modified": "The map '%s' has been modified.\n\nDo you want to save the changes before continuing?",
+    "file_not_found": "File not found: %s",
+    "error_loading": "Error loading: %s",
+    "error_saving": "Error saving: %s",
+    "success_saved": "Successfully saved: %s",
+    "no_map_loaded": "No map loaded",
+    "map_loaded": "Map loaded: %s"
+  },
+  "status": {
+    "ready": "Ready",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "zoom": "Zoom: %.0f%%"
+  },
+  "dialogs": {
+    "new_project": "New Project",
+    "open_project": "Open Project",
+    "new_map": "New Map",
+    "open_map": "Open Map",
+    "save_map": "Save Map",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "tabs": {
+    "untitled": "Untitled %d",
+    "close": "Close",
+    "close_others": "Close Others",
+    "close_all": "Close All"
+  }
+}

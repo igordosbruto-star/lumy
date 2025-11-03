@@ -90,6 +90,7 @@ set(EDITOR_SOURCES
     editor/editor_events.cpp
     editor/project_manager.cpp
     editor/new_project_dialog.cpp
+    editor/i18n.cpp
 )
 
 # wxWidgets
@@ -129,11 +130,23 @@ else()
   target_compile_options(lumy-editor PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-# Saída do editor
+# ===== Saída padrão para todos os executáveis =====
+set(OUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
 set_property(TARGET lumy-editor PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
 
-# ===== Saída + cópia de assets do diretório game =====
-set(OUT_DIR "${CMAKE_BINARY_DIR}/bin/$<CONFIG>")
+# ===== Cópia de arquivos de tradução (locale) para o editor =====
+set(LOCALE_DIR "${CMAKE_SOURCE_DIR}/editor/locale")
+if(EXISTS "${LOCALE_DIR}")
+  add_custom_command(TARGET lumy-editor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando arquivos de tradução de ${LOCALE_DIR} para ${OUT_DIR}/locale"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/locale"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/locale"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${LOCALE_DIR}" "${OUT_DIR}/locale"
+    VERBATIM
+  )
+endif()
+
+# ===== Cópia de assets do diretório game =====
 set_property(TARGET hello-town PROPERTY RUNTIME_OUTPUT_DIRECTORY "${OUT_DIR}")
 
 set(ASSETS_DIR "${CMAKE_SOURCE_DIR}/game")

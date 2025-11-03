@@ -7,19 +7,23 @@
 #include "viewport_panel.h"
 #include "editor_frame.h"
 #include "utf8_strings.h"
+#include "i18n.h"
 #include <wx/toolbar.h>
 #include <GL/gl.h>
 #include <cmath>
 
 // Event table principal
 wxBEGIN_EVENT_TABLE(ViewportPanel, wxPanel)
-    EVT_TOOL(ID_TOOL_SELECT, ViewportPanel::OnToolSelect)
-    EVT_TOOL(ID_TOOL_PAINT, ViewportPanel::OnToolPaint)
-    EVT_TOOL(ID_TOOL_ERASE, ViewportPanel::OnToolErase)
-    EVT_TOOL(ID_TOOL_COLLISION, ViewportPanel::OnToolCollision)
-    EVT_TOOL(ID_ZOOM_IN, ViewportPanel::OnZoomIn)
-    EVT_TOOL(ID_ZOOM_OUT, ViewportPanel::OnZoomOut)
-    EVT_TOOL(ID_RESET_VIEW, ViewportPanel::OnResetView)
+    EVT_TOOL(ID_VP_TOOL_SELECT, ViewportPanel::OnToolSelect)
+    EVT_TOOL(ID_VP_TOOL_PAINT, ViewportPanel::OnToolPaint)
+    EVT_TOOL(ID_VP_TOOL_BUCKET, ViewportPanel::OnToolBucket)
+    EVT_TOOL(ID_VP_TOOL_ERASE, ViewportPanel::OnToolErase)
+    EVT_TOOL(ID_VP_TOOL_COLLISION, ViewportPanel::OnToolCollision)
+    EVT_TOOL(ID_VP_TOOL_SELECT_RECT, ViewportPanel::OnToolSelectRect)
+    EVT_TOOL(ID_VP_TOOL_SELECT_CIRCLE, ViewportPanel::OnToolSelectCircle)
+    EVT_TOOL(ID_VP_ZOOM_IN, ViewportPanel::OnZoomIn)
+    EVT_TOOL(ID_VP_ZOOM_OUT, ViewportPanel::OnZoomOut)
+    EVT_TOOL(ID_VP_RESET_VIEW, ViewportPanel::OnResetView)
 wxEND_EVENT_TABLE()
 
 // Event table para GLCanvas
@@ -48,9 +52,9 @@ void ViewportPanel::CreateControls()
     // Layout principal
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
     
-    // Criar toolbar
-    CreateToolbar();
-    sizer->Add(m_toolbar, 0, wxEXPAND);
+    // Criar toolbox
+    CreateToolbox();
+    sizer->Add(m_toolbox, 0, wxEXPAND);
     
     // Criar canvas OpenGL
     m_glCanvas = new GLCanvas(this);
@@ -59,36 +63,46 @@ void ViewportPanel::CreateControls()
     SetSizer(sizer);
 }
 
-void ViewportPanel::CreateToolbar()
+void ViewportPanel::CreateToolbox()
 {
-    m_toolbar = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL | wxTB_TEXT);
+    m_toolbox = new wxToolBar(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTB_HORIZONTAL | wxTB_TEXT);
     
     // Criar bitmaps simples (16x16) temporários
-    wxBitmap selectBmp = CreateSimpleBitmap(wxColour(100, 150, 255)); // Azul
-    wxBitmap paintBmp = CreateSimpleBitmap(wxColour(100, 255, 100));  // Verde
-    wxBitmap eraseBmp = CreateSimpleBitmap(wxColour(255, 100, 100));  // Vermelho
-    wxBitmap collisionBmp = CreateSimpleBitmap(wxColour(255, 255, 100)); // Amarelo
-    wxBitmap zoomInBmp = CreateSimpleBitmap(wxColour(150, 150, 150)); // Cinza
-    wxBitmap zoomOutBmp = CreateSimpleBitmap(wxColour(120, 120, 120)); // Cinza escuro
-    wxBitmap resetBmp = CreateSimpleBitmap(wxColour(180, 180, 180)); // Cinza claro
+    wxBitmap selectBmp = CreateSimpleBitmap(wxColour(100, 150, 255));     // Azul
+    wxBitmap paintBmp = CreateSimpleBitmap(wxColour(100, 255, 100));      // Verde
+    wxBitmap bucketBmp = CreateSimpleBitmap(wxColour(0, 200, 200));       // Ciano
+    wxBitmap eraseBmp = CreateSimpleBitmap(wxColour(255, 100, 100));      // Vermelho
+    wxBitmap collisionBmp = CreateSimpleBitmap(wxColour(255, 255, 100));  // Amarelo
+    wxBitmap selectRectBmp = CreateSimpleBitmap(wxColour(150, 100, 255)); // Roxo
+    wxBitmap selectCircleBmp = CreateSimpleBitmap(wxColour(255, 150, 200)); // Rosa
+    wxBitmap zoomInBmp = CreateSimpleBitmap(wxColour(150, 150, 150));     // Cinza
+    wxBitmap zoomOutBmp = CreateSimpleBitmap(wxColour(120, 120, 120));    // Cinza escuro
+    wxBitmap resetBmp = CreateSimpleBitmap(wxColour(180, 180, 180));      // Cinza claro
     
     // Ferramentas de edição (usar AddCheckTool para ter estado visual de pressionado)
-    m_toolbar->AddCheckTool(ID_TOOL_SELECT, "Selecionar", selectBmp, wxNullBitmap, UTF8("Ferramenta de seleção"));
-    m_toolbar->AddCheckTool(ID_TOOL_PAINT, "Pintar", paintBmp, wxNullBitmap, "Ferramenta de pintura");
-    m_toolbar->AddCheckTool(ID_TOOL_ERASE, "Apagar", eraseBmp, wxNullBitmap, "Ferramenta de apagar");
-    m_toolbar->AddCheckTool(ID_TOOL_COLLISION, UTF8("Colisão"), collisionBmp, wxNullBitmap, UTF8("Editar colisão"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_SELECT, L_("tools.select"), selectBmp, wxNullBitmap, L_("tools.select_desc"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_PAINT, L_("tools.paint"), paintBmp, wxNullBitmap, L_("tools.paint_desc"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_BUCKET, L_("tools.bucket"), bucketBmp, wxNullBitmap, L_("tools.bucket_desc"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_ERASE, L_("tools.erase"), eraseBmp, wxNullBitmap, L_("tools.erase_desc"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_COLLISION, L_("tools.collision"), collisionBmp, wxNullBitmap, L_("tools.collision_desc"));
     
-    m_toolbar->AddSeparator();
+    m_toolbox->AddSeparator();
+    
+    // Ferramentas de seleção
+    m_toolbox->AddCheckTool(ID_VP_TOOL_SELECT_RECT, L_("tools.select_rect"), selectRectBmp, wxNullBitmap, L_("tools.select_rect_desc"));
+    m_toolbox->AddCheckTool(ID_VP_TOOL_SELECT_CIRCLE, L_("tools.select_circle"), selectCircleBmp, wxNullBitmap, L_("tools.select_circle_desc"));
+    
+    m_toolbox->AddSeparator();
     
     // Ferramentas de visualização
-    m_toolbar->AddTool(ID_ZOOM_IN, "Zoom +", zoomInBmp, "Aumentar zoom");
-    m_toolbar->AddTool(ID_ZOOM_OUT, "Zoom -", zoomOutBmp, "Diminuir zoom");
-    m_toolbar->AddTool(ID_RESET_VIEW, "Reset", resetBmp, UTF8("Resetar visualização"));
+    m_toolbox->AddTool(ID_VP_ZOOM_IN, L_("tools.zoom_in"), zoomInBmp, L_("tools.zoom_in_desc"));
+    m_toolbox->AddTool(ID_VP_ZOOM_OUT, L_("tools.zoom_out"), zoomOutBmp, L_("tools.zoom_out_desc"));
+    m_toolbox->AddTool(ID_VP_RESET_VIEW, L_("tools.reset"), resetBmp, L_("tools.reset_desc"));
     
     // Selecionar ferramenta inicial
-    m_toolbar->ToggleTool(ID_TOOL_SELECT, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, true);
     
-    m_toolbar->Realize();
+    m_toolbox->Realize();
 }
 
 wxBitmap ViewportPanel::CreateSimpleBitmap(const wxColour& color)
@@ -499,41 +513,95 @@ void ViewportPanel::GLCanvas::OnKeyDown(wxKeyEvent& event)
 void ViewportPanel::OnToolSelect(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_currentTool = GLCanvas::TOOL_SELECT;
-    m_toolbar->ToggleTool(ID_TOOL_SELECT, true);
-    m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
-    m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
-    m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
     m_glCanvas->SetCursor(wxCursor(wxCURSOR_ARROW));
 }
 
 void ViewportPanel::OnToolPaint(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_currentTool = GLCanvas::TOOL_PAINT;
-    m_toolbar->ToggleTool(ID_TOOL_SELECT, false);
-    m_toolbar->ToggleTool(ID_TOOL_PAINT, true);
-    m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
-    m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
     m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
+}
+
+void ViewportPanel::OnToolBucket(wxCommandEvent& WXUNUSED(event))
+{
+    m_glCanvas->m_currentTool = GLCanvas::TOOL_BUCKET;
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_HAND));
+    wxLogMessage("Átil: Ferramenta Balde selecionada");
 }
 
 void ViewportPanel::OnToolErase(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_currentTool = GLCanvas::TOOL_ERASE;
-    m_toolbar->ToggleTool(ID_TOOL_SELECT, false);
-    m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
-    m_toolbar->ToggleTool(ID_TOOL_ERASE, true);
-    m_toolbar->ToggleTool(ID_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
     m_glCanvas->SetCursor(wxCursor(wxCURSOR_NO_ENTRY));
 }
 
 void ViewportPanel::OnToolCollision(wxCommandEvent& WXUNUSED(event))
 {
     m_glCanvas->m_currentTool = GLCanvas::TOOL_COLLISION;
-    m_toolbar->ToggleTool(ID_TOOL_SELECT, false);
-    m_toolbar->ToggleTool(ID_TOOL_PAINT, false);
-    m_toolbar->ToggleTool(ID_TOOL_ERASE, false);
-    m_toolbar->ToggleTool(ID_TOOL_COLLISION, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
     m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
+}
+
+void ViewportPanel::OnToolSelectRect(wxCommandEvent& WXUNUSED(event))
+{
+    m_glCanvas->m_currentTool = GLCanvas::TOOL_SELECT_RECT;
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, true);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, false);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
+    wxLogMessage("Átil: Ferramenta Seleção Retangular selecionada");
+}
+
+void ViewportPanel::OnToolSelectCircle(wxCommandEvent& WXUNUSED(event))
+{
+    m_glCanvas->m_currentTool = GLCanvas::TOOL_SELECT_CIRCLE;
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_PAINT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_BUCKET, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_ERASE, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_COLLISION, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_RECT, false);
+    m_toolbox->ToggleTool(ID_VP_TOOL_SELECT_CIRCLE, true);
+    m_glCanvas->SetCursor(wxCursor(wxCURSOR_CROSS));
+    wxLogMessage("Átil: Ferramenta Seleção Circular selecionada");
 }
 
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))

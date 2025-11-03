@@ -124,4 +124,16 @@ O `TextureManager` centraliza o carregamento de tilesets e reutiliza texturas j�
 - **M2 "Chama"** 📋 *(Planejado)* - Sistema de batalha + importador RPG Maker
 - **M3 "Aurora"** 📋 *(Planejado)* - Grid hexagonal + sistema de cartas
 
-Veja [ROADMAP.md](ROADMAP.md) para detalhes completos.
+Veja [docs/ROADMAP.md](docs/ROADMAP.md) para detalhes completos.
+
+## 📚 Documentação
+
+- [VISION.md](docs/VISION.md) - Manifesto e princípios do projeto
+- [ROADMAP.md](docs/ROADMAP.md) - Plano de desenvolvimento
+- [CHANGELOG.md](docs/CHANGELOG.md) - Histórico de versões
+- [CONTRIBUTING.md](docs/CONTRIBUTING.md) - Guia de contribuição
+- [CODING_STANDARDS.md](docs/CODING_STANDARDS.md) - Padrões de código
+
+## 📄 Licença
+
+MIT License - veja [LICENSE](LICENSE) para detalhes.

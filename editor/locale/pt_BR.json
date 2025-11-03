@@ -1,0 +1,93 @@
+{
+  "app": {
+    "title": "Lumy Editor - M1 Brilho",
+    "version": "v0.1.1",
+    "localization_error": "Não foi possível carregar traduções, usando valores padrão"
+  },
+  "menu": {
+    "file": "Arquivo",
+    "map": "Mapa",
+    "help": "Ajuda",
+    "new": "Novo",
+    "open": "Abrir",
+    "save": "Salvar",
+    "exit": "Sair",
+    "new_map": "Novo Mapa",
+    "open_map": "Abrir Mapa",
+    "save_map": "Salvar Mapa",
+    "save_map_as": "Salvar Mapa Como",
+    "about": "Sobre",
+    "language": "Idioma / Language"
+  },
+  "lang": {
+    "pt_BR": "Português (Brasil)",
+    "en_US": "English (US)"
+  },
+  "status": {
+    "ready": "Pronto",
+    "creating_project": "Criando novo projeto...",
+    "opening_project": "Abrindo projeto...",
+    "saving_project": "Salvando projeto...",
+    "error_create_project": "Erro ao criar projeto",
+    "error_load_project": "Erro ao carregar projeto",
+    "project_loaded": "Projeto carregado: %s",
+    "creating_map": "Criando novo mapa...",
+    "opening_map": "Abrindo mapa...",
+    "saving_map": "Salvando mapa...",
+    "saving_map_as": "Salvando mapa como...",
+    "new_map_created": "Novo mapa criado (20x15)",
+    "map_loaded": "Mapa carregado: %s",
+    "map_saved": "Mapa salvo com sucesso",
+    "map_saved_as": "Mapa salvo como: %s",
+    "error_load_map": "Erro ao carregar mapa",
+    "error_save_map": "Erro ao salvar mapa",
+    "tile_selected": "Tile para pintura: %d"
+  },
+  "dialog": {
+    "error": "Erro",
+    "exit_title": "Confirmar saída",
+    "wip": "M1 - Em Desenvolvimento",
+    "select_project": "Selecionar pasta do projeto Lumy",
+    "open_map": "Abrir Mapa",
+    "save_map_as": "Salvar Mapa Como",
+    "confirm_exit": "Deseja realmente sair do editor?"
+  },
+  "msg": {
+    "error_create_project": "Erro ao criar o projeto. Verifique os logs para mais detalhes.",
+    "error_load_project": "Erro ao carregar projeto do diretório selecionado.",
+    "feature_not_implemented": "Função 'Salvar Projeto' será implementada em breve!",
+    "no_map_loaded": "Nenhum mapa está carregado para salvar.",
+    "error_load_map": "Erro ao carregar o mapa. Verifique se o arquivo é válido.",
+    "error_save_map": "Erro ao salvar o mapa. Verifique as permissões do arquivo."
+  },
+  "panels": {
+    "project_tiles": "Projeto & Tiles",
+    "properties_layers": "Propriedades & Camadas",
+    "maps": "Mapas",
+    "project": "Projeto",
+    "properties": "Propriedades",
+    "layers": "Camadas"
+  },
+  "tools": {
+    "select": "Selecionar",
+    "select_desc": "Ferramenta de seleção",
+    "paint": "Pintar",
+    "paint_desc": "Ferramenta de pintura",
+    "bucket": "Balde",
+    "bucket_desc": "Preenchimento (Balde)",
+    "erase": "Apagar",
+    "erase_desc": "Ferramenta de apagar",
+    "collision": "Colisão",
+    "collision_desc": "Editar colisão",
+    "select_rect": "Retângulo",
+    "select_rect_desc": "Seleção retangular",
+    "select_circle": "Círculo",
+    "select_circle_desc": "Seleção circular",
+    "zoom_in": "Zoom +",
+    "zoom_in_desc": "Aumentar zoom",
+    "zoom_out": "Zoom -",
+    "zoom_out_desc": "Diminuir zoom",
+    "reset": "Reset",
+    "reset_desc": "Resetar visualização"
+  }
+}

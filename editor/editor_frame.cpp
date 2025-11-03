@@ -14,6 +14,7 @@
 #include "tileset_panel.h"
 #include "new_project_dialog.h"
 #include "utf8_strings.h"
+#include "i18n.h"
 #include <wx/dirdlg.h>
 #include <wx/filedlg.h>
 #include <wx/filename.h>
@@ -30,6 +31,8 @@ wxBEGIN_EVENT_TABLE(EditorFrame, wxFrame)
     EVT_MENU(ID_OpenMap, EditorFrame::OnOpenMap)
     EVT_MENU(ID_SaveMap, EditorFrame::OnSaveMap)
     EVT_MENU(ID_SaveMapAs, EditorFrame::OnSaveMapAs)
+    EVT_MENU(ID_SetLanguagePtBr, EditorFrame::OnSetLanguagePtBr)
+    EVT_MENU(ID_SetLanguageEnUs, EditorFrame::OnSetLanguageEnUs)
     EVT_CLOSE(EditorFrame::OnClose)
     // Eventos customizados para comunicação entre panes
     EVT_SELECTION_CHANGE(EditorFrame::OnSelectionChanged)
@@ -44,6 +47,11 @@ wxEND_EVENT_TABLE()
 EditorFrame::EditorFrame()
     : wxFrame(nullptr, wxID_ANY, "Lumy Editor - M1 Brilho", wxDefaultPosition, wxSize(1200, 800))
 {
+    // Inicializar sistema de localização
+    if (!Localization::Get().Initialize("pt_BR")) {
+        wxLogWarning(L_("app.localization_error"));
+    }
+    
     // Configurar ícone (se houver)
     // SetIcon(wxICON(sample)); // Comentado temporariamente
 
@@ -87,7 +95,7 @@ EditorFrame::EditorFrame()
     }
     
     // Status inicial
-    SetStatusText("Lumy Editor iniciado - Pronto para criar!");
+    SetStatusText(L_("status.ready"));
 }
 
 EditorFrame::~EditorFrame()
@@ -100,30 +108,38 @@ void EditorFrame::CreateMenuBar()
 {
     // Menu Arquivo
     wxMenu* fileMenu = new wxMenu;
-    fileMenu->Append(ID_NewProject, "&Novo Projeto\tCtrl+N", "Criar novo projeto Lumy");
-    fileMenu->Append(ID_OpenProject, "&Abrir Projeto\tCtrl+O", "Abrir projeto existente");
+    fileMenu->Append(ID_NewProject, L_("menu.new") + "\tCtrl+N");
+    fileMenu->Append(ID_OpenProject, L_("menu.open") + "\tCtrl+O");
     fileMenu->AppendSeparator();
-    fileMenu->Append(ID_SaveProject, "&Salvar Projeto\tCtrl+S", "Salvar projeto atual");
+    fileMenu->Append(ID_SaveProject, L_("menu.save") + "\tCtrl+S");
     fileMenu->AppendSeparator();
-    fileMenu->Append(wxID_EXIT, "Sai&r\tAlt+F4", "Sair do editor");
+    fileMenu->Append(wxID_EXIT, L_("menu.exit") + "\tAlt+F4");
 
     // Menu Mapa
     wxMenu* mapMenu = new wxMenu;
-    mapMenu->Append(ID_NewMap, "&Novo Mapa\tCtrl+Shift+N", "Criar novo mapa");
-    mapMenu->Append(ID_OpenMap, "&Abrir Mapa\tCtrl+Shift+O", "Abrir mapa existente");
+    mapMenu->Append(ID_NewMap, L_("menu.new_map") + "\tCtrl+Shift+N");
+    mapMenu->Append(ID_OpenMap, L_("menu.open_map") + "\tCtrl+Shift+O");
     mapMenu->AppendSeparator();
-    mapMenu->Append(ID_SaveMap, "&Salvar Mapa\tCtrl+Shift+S", "Salvar mapa atual");
-    mapMenu->Append(ID_SaveMapAs, "Salvar Mapa &Como...", "Salvar mapa com novo nome");
+    mapMenu->Append(ID_SaveMap, L_("menu.save_map") + "\tCtrl+Shift+S");
+    mapMenu->Append(ID_SaveMapAs, L_("menu.save_map_as"));
 
     // Menu Ajuda
     wxMenu* helpMenu = new wxMenu;
-    helpMenu->Append(wxID_ABOUT, "&Sobre", "Informações sobre o Lumy Editor");
+    
+    // Submenu de idiomas
+    wxMenu* langMenu = new wxMenu;
+    langMenu->Append(ID_SetLanguagePtBr, L_("lang.pt_BR"));
+    langMenu->Append(ID_SetLanguageEnUs, L_("lang.en_US"));
+    helpMenu->AppendSubMenu(langMenu, L_("menu.language"));
+    
+    helpMenu->AppendSeparator();
+    helpMenu->Append(wxID_ABOUT, L_("menu.about"));
 
     // Criar barra de menu
     wxMenuBar* menuBar = new wxMenuBar;
-    menuBar->Append(fileMenu, "&Arquivo");
-    menuBar->Append(mapMenu, "&Mapa");
-    menuBar->Append(helpMenu, "&Ajuda");
+    menuBar->Append(fileMenu, L_("menu.file"));
+    menuBar->Append(mapMenu, L_("menu.map"));
+    menuBar->Append(helpMenu, L_("menu.help"));
 
     SetMenuBar(menuBar);
 }
@@ -131,9 +147,9 @@ void EditorFrame::CreateMenuBar()
 void EditorFrame::CreateStatusBar()
 {
     wxFrame::CreateStatusBar(3);
-    SetStatusText("Pronto", 0);
-    SetStatusText("M1 - Brilho", 1);
-    SetStatusText("Nenhum projeto", 2);
+    SetStatusText(L_("status.ready"), 0);
+    SetStatusText(L_("app.version"), 1);
+    SetStatusText("", 2);
 }
 
 void EditorFrame::CreateAuiPanes()
@@ -150,7 +166,7 @@ void EditorFrame::CreateAuiPanes()
     m_auiManager.AddPane(m_leftSidePanel.get(),
         wxAuiPaneInfo()
         .Name("LeftSidePanel")
-        .Caption(UTF8("Projeto & Tiles"))
+        .Caption(L_("panels.project_tiles"))
         .Left()
         .MinSize(250, 400)
         .BestSize(280, 600)
@@ -162,7 +178,7 @@ void EditorFrame::CreateAuiPanes()
     m_auiManager.AddPane(m_propertiesTabsPanel.get(),
         wxAuiPaneInfo()
         .Name("PropertiesTabsPanel")
-        .Caption(UTF8("Propriedades & Camadas"))
+        .Caption(L_("panels.properties_layers"))
         .Right()
         .MinSize(280, 400)
         .BestSize(320, 500)
@@ -174,7 +190,7 @@ void EditorFrame::CreateAuiPanes()
     m_auiManager.AddPane(m_mapTabsPanel.get(),
         wxAuiPaneInfo()
         .Name("MapTabs")
-        .Caption(UTF8("Mapas"))
+        .Caption(L_("panels.maps"))
         .Center()
         .CloseButton(false)
         .MaximizeButton(true)
@@ -213,8 +229,8 @@ void EditorFrame::OnClose(wxCloseEvent& event)
     if (event.CanVeto())
     {
         int answer = wxMessageBox(
-            "Deseja realmente sair do editor?",
-            "Confirmar saída",
+            L_("dialog.confirm_exit"),
+            L_("dialog.exit_title"),
             wxYES_NO | wxICON_QUESTION,
             this
         );
@@ -234,7 +250,7 @@ void EditorFrame::OnClose(wxCloseEvent& event)
 
 void EditorFrame::OnNewProject(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Criando novo projeto...", 0);
+    SetStatusText(L_("status.creating_project"), 0);
     
     NewProjectDialog dialog(this);
     
@@ -261,45 +277,45 @@ void EditorFrame::OnNewProject(wxCommandEvent& WXUNUSED(event))
             
             wxLogMessage("Novo projeto criado com sucesso: %s", projectPath);
         } else {
-            SetStatusText("Erro ao criar projeto", 0);
-            wxMessageBox("Erro ao criar o projeto. Verifique os logs para mais detalhes.", "Erro", wxOK | wxICON_ERROR);
+            SetStatusText(L_("status.error_create_project"), 0);
+            wxMessageBox(L_("msg.error_create_project"), L_("dialog.error"), wxOK | wxICON_ERROR);
         }
     } else {
-        SetStatusText("Pronto", 0);
+        SetStatusText(L_("status.ready"), 0);
     }
 }
 
 void EditorFrame::OnOpenProject(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Abrindo projeto...", 0);
+    SetStatusText(L_("status.opening_project"), 0);
     
-    wxDirDialog dirDialog(this, "Selecionar pasta do projeto Lumy", m_currentProjectPath);
+    wxDirDialog dirDialog(this, L_("dialog.select_project"), m_currentProjectPath);
     
     if (dirDialog.ShowModal() == wxID_OK) {
         wxString selectedPath = dirDialog.GetPath();
         if (LoadProject(selectedPath)) {
-            SetStatusText(wxString::Format("Projeto carregado: %s", selectedPath), 0);
+            SetStatusText(wxString::Format(L_("status.project_loaded"), selectedPath), 0);
         } else {
-            SetStatusText("Erro ao carregar projeto", 0);
-            wxMessageBox("Erro ao carregar projeto do diretório selecionado.", "Erro", wxOK | wxICON_ERROR);
+            SetStatusText(L_("status.error_load_project"), 0);
+            wxMessageBox(L_("msg.error_load_project"), L_("dialog.error"), wxOK | wxICON_ERROR);
         }
     } else {
-        SetStatusText("Pronto", 0);
+        SetStatusText(L_("status.ready"), 0);
     }
 }
 
 void EditorFrame::OnSaveProject(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Salvando projeto...", 0);
+    SetStatusText(L_("status.saving_project"), 0);
     // TODO: Implementar salvamento de projeto
-    wxMessageBox("Função 'Salvar Projeto' será implementada em breve!", "M1 - Em Desenvolvimento", wxOK | wxICON_INFORMATION);
-    SetStatusText("Pronto", 0);
+    wxMessageBox(L_("msg.feature_not_implemented"), L_("dialog.wip"), wxOK | wxICON_INFORMATION);
+    SetStatusText(L_("status.ready"), 0);
 }
 
 // Handlers dos eventos de mapa
 void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Criando novo mapa...", 0);
+    SetStatusText(L_("status.creating_map"), 0);
     
     // Por enquanto, criar um mapa 20x15 básico
     auto newMap = std::make_shared<Map>(20, 15);
@@ -321,7 +337,7 @@ void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
         m_propertiesTabsPanel->SetMap(newMap.get());
     }
     
-    SetStatusText("Novo mapa criado (20x15)", 0);
+    SetStatusText(L_("status.new_map_created"), 0);
     wxLogMessage("Novo mapa criado com dimensões 20x15");
     
     // A árvore será atualizada quando o mapa for salvo
@@ -329,9 +345,9 @@ void EditorFrame::OnNewMap(wxCommandEvent& WXUNUSED(event))
 
 void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Abrindo mapa...", 0);
+    SetStatusText(L_("status.opening_map"), 0);
     
-    wxFileDialog openDialog(this, "Abrir Mapa", "", "",
+    wxFileDialog openDialog(this, L_("dialog.open_map"), "", "",
                            "Arquivos de Mapa (*.json)|*.json",
                            wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     
@@ -356,24 +372,24 @@ void EditorFrame::OnOpenMap(wxCommandEvent& WXUNUSED(event))
             }
             
             wxFileName fileName(filePath);
-            SetStatusText(wxString::Format("Mapa carregado: %s", fileName.GetName()), 0);
+            SetStatusText(wxString::Format(L_("status.map_loaded"), fileName.GetName()), 0);
             wxLogMessage("Mapa carregado com sucesso: %s", filePath);
         } else {
-            SetStatusText("Erro ao carregar mapa", 0);
-            wxMessageBox("Erro ao carregar o mapa. Verifique se o arquivo é válido.", "Erro", wxOK | wxICON_ERROR);
+            SetStatusText(L_("status.error_load_map"), 0);
+            wxMessageBox(L_("msg.error_load_map"), L_("dialog.error"), wxOK | wxICON_ERROR);
         }
     } else {
-        SetStatusText("Pronto", 0);
+        SetStatusText(L_("status.ready"), 0);
     }
 }
 
 void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Salvando mapa...", 0);
+    SetStatusText(L_("status.saving_map"), 0);
     
     if (!m_mapManager->GetCurrentMap()) {
-        wxMessageBox("Nenhum mapa está carregado para salvar.", "Erro", wxOK | wxICON_WARNING);
-        SetStatusText("Pronto", 0);
+        wxMessageBox(L_("msg.no_map_loaded"), L_("dialog.error"), wxOK | wxICON_WARNING);
+        SetStatusText(L_("status.ready"), 0);
         return;
     }
     
@@ -388,7 +404,7 @@ void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
         // Atualizar título da janela para remover o asterisco
         UpdateWindowTitle();
         
-        SetStatusText("Mapa salvo com sucesso", 0);
+        SetStatusText(L_("status.map_saved"), 0);
         wxLogMessage("Mapa salvo: %s", m_currentMapPath);
         
         // Atualizar árvore do projeto
@@ -396,22 +412,22 @@ void EditorFrame::OnSaveMap(wxCommandEvent& WXUNUSED(event))
             m_leftSidePanel->GetProjectTree()->RefreshMapList();
         }
     } else {
-        SetStatusText("Erro ao salvar mapa", 0);
-        wxMessageBox("Erro ao salvar o mapa. Verifique as permissões do arquivo.", "Erro", wxOK | wxICON_ERROR);
+        SetStatusText(L_("status.error_save_map"), 0);
+        wxMessageBox(L_("msg.error_save_map"), L_("dialog.error"), wxOK | wxICON_ERROR);
     }
 }
 
 void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
 {
-    SetStatusText("Salvando mapa como...", 0);
+    SetStatusText(L_("status.saving_map_as"), 0);
     
     if (!m_mapManager->GetCurrentMap()) {
-        wxMessageBox("Nenhum mapa está carregado para salvar.", "Erro", wxOK | wxICON_WARNING);
-        SetStatusText("Pronto", 0);
+        wxMessageBox(L_("msg.no_map_loaded"), L_("dialog.error"), wxOK | wxICON_WARNING);
+        SetStatusText(L_("status.ready"), 0);
         return;
     }
     
-    wxFileDialog saveDialog(this, "Salvar Mapa Como", "", "",
+    wxFileDialog saveDialog(this, L_("dialog.save_map_as"), "", "",
                            "Arquivos de Mapa (*.json)|*.json",
                            wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     
@@ -424,7 +440,7 @@ void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
             // Atualizar título da janela
             UpdateWindowTitle();
             
-            SetStatusText(wxString::Format("Mapa salvo como: %s", wxFileName(filePath).GetName()), 0);
+            SetStatusText(wxString::Format(L_("status.map_saved_as"), wxFileName(filePath).GetName()), 0);
             wxLogMessage("Mapa salvo como: %s", filePath);
             
             // Atualizar árvore do projeto
@@ -432,11 +448,11 @@ void EditorFrame::OnSaveMapAs(wxCommandEvent& WXUNUSED(event))
                 m_leftSidePanel->GetProjectTree()->RefreshMapList();
             }
         } else {
-            SetStatusText("Erro ao salvar mapa", 0);
-            wxMessageBox("Erro ao salvar o mapa. Verifique as permissões do arquivo.", "Erro", wxOK | wxICON_ERROR);
+            SetStatusText(L_("status.error_save_map"), 0);
+            wxMessageBox(L_("msg.error_save_map"), L_("dialog.error"), wxOK | wxICON_ERROR);
         }
     } else {
-        SetStatusText("Pronto", 0);
+        SetStatusText(L_("status.ready"), 0);
     }
 }
 
@@ -451,7 +467,7 @@ void EditorFrame::OnTilesetSelectionChanged(wxCommandEvent& event)
             viewport->SetSelectedTile(selectedTile);
             
             wxLogMessage("Tile selecionado alterado para: %d", selectedTile);
-            SetStatusText(wxString::Format("Tile para pintura: %d", selectedTile), 0);
+            SetStatusText(wxString::Format(L_("status.tile_selected"), selectedTile), 0);
         }
     }
 }
@@ -836,4 +852,48 @@ void EditorFrame::OnMapChangeRequest(MapChangeRequestEvent& event)
     wxLogMessage("Solicitação de troca de mapa recebida: %s", requestedMapPath);
     
     SafeLoadMapFromPath(requestedMapPath);
+}
+
+// ============================================================================
+// Handlers de Idioma
+// ============================================================================
+
+void EditorFrame::OnSetLanguagePtBr(wxCommandEvent& WXUNUSED(event))
+{
+    if (Localization::Get().LoadLanguage("pt_BR")) {
+        wxMessageBox(
+            UTF8("Idioma alterado para Português (Brasil).\n\nReinicie o editor para aplicar todas as mudanças."),
+            UTF8("Idioma Alterado"),
+            wxOK | wxICON_INFORMATION,
+            this
+        );
+        wxLogMessage("Idioma alterado para: pt_BR");
+    } else {
+        wxMessageBox(
+            UTF8("Erro ao carregar traduções em Português."),
+            UTF8("Erro"),
+            wxOK | wxICON_ERROR,
+            this
+        );
+    }
+}
+
+void EditorFrame::OnSetLanguageEnUs(wxCommandEvent& WXUNUSED(event))
+{
+    if (Localization::Get().LoadLanguage("en_US")) {
+        wxMessageBox(
+            "Language changed to English (US).\n\nRestart the editor to apply all changes.",
+            "Language Changed",
+            wxOK | wxICON_INFORMATION,
+            this
+        );
+        wxLogMessage("Language changed to: en_US");
+    } else {
+        wxMessageBox(
+            "Error loading English translations.",
+            "Error",
+            wxOK | wxICON_ERROR,
+            this
+        );
+    }
 }

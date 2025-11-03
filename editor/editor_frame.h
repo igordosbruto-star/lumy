@@ -16,6 +16,7 @@
 #include "project_manager.h"
 #include "map_manager.h"
 #include "map.h"
+#include "i18n.h"
 
 // Forward declarations
 class ProjectTreePanel;
@@ -45,11 +46,14 @@ private:
     void CreateStatusBar();
     void CreateAuiPanes();
     void LoadAuiPerspective();
+    void ApplyLocalization(); // Atualizar textos (menus, panes, status, toolbox)
     
     // Event handlers
     void OnExit(wxCommandEvent& event);
     void OnAbout(wxCommandEvent& event);
     void OnClose(wxCloseEvent& event);
+    void OnSetLanguagePtBr(wxCommandEvent& event);
+    void OnSetLanguageEnUs(wxCommandEvent& event);
     void OnNewProject(wxCommandEvent& event);
     void OnOpenProject(wxCommandEvent& event);
     void OnSaveProject(wxCommandEvent& event);
@@ -117,5 +121,8 @@ enum
     ID_NewMap,
     ID_OpenMap,
     ID_SaveMap,
-    ID_SaveMapAs
+    ID_SaveMapAs,
+    // Idiomas
+    ID_SetLanguagePtBr,
+    ID_SetLanguageEnUs
 };
