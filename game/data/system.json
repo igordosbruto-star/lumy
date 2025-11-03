@@ -1,0 +1,74 @@
+{
+  "system": {
+    "gameTitle": "Lumy - Hello Town",
+    "versionId": 10300,
+    "locale": "pt_BR",
+    "partyMembers": [1],
+    "currencyUnit": "G",
+    "windowTone": [0, 0, 0, 0],
+    "attackSkillId": 1,
+    "magicSkillIds": [2, 3],
+    "startMapId": 1,
+    "startX": 5,
+    "startY": 5,
+    "startDirection": 2,
+    "switches": {
+      "1": "Tutorial Completo",
+      "2": "Primeira Conversa",
+      "3": "Item Encontrado",
+      "4": "Porta Desbloqueada",
+      "5": "Boss Derrotado"
+    },
+    "variables": {
+      "1": "Ouro do Jogador",
+      "2": "Tempo de Jogo",
+      "3": "Passos Dados",
+      "4": "Inimigos Derrotados",
+      "5": "Level Médio do Grupo"
+    },
+    "elements": [
+      "Físico",
+      "Fogo",
+      "Gelo", 
+      "Trovão",
+      "Água",
+      "Terra",
+      "Vento",
+      "Luz",
+      "Trevas"
+    ],
+    "skillTypes": [
+      "Nenhum",
+      "Magia",
+      "Especial"
+    ],
+    "weaponTypes": [
+      "Nenhuma",
+      "Adaga", 
+      "Espada",
+      "Machado",
+      "Lança",
+      "Arco",
+      "Cajado"
+    ],
+    "armorTypes": [
+      "Nenhuma",
+      "Armadura",
+      "Escudo",
+      "Elmo",
+      "Acessório"
+    ],
+    "params": [
+      "PV",
+      "PM", 
+      "ATQ",
+      "DEF",
+      "INT",
+      "RES",
+      "AGI",
+      "SOR"
+    ]
+  },
+  "schema_version": "1.0",
+  "description": "Configurações do sistema Lumy"
+}

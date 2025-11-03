@@ -1,0 +1,103 @@
+{
+  "enemies": [
+    {
+      "id": 1,
+      "name": "Slime Verde",
+      "battlerName": "slime_green",
+      "battlerHue": 0,
+      "params": [25, 10, 8, 6, 5, 4, 3, 2],
+      "exp": 15,
+      "gold": 20,
+      "dropItems": [
+        {
+          "dataClass": "item",
+          "itemId": 1,
+          "denominator": 3
+        }
+      ],
+      "actions": [
+        {
+          "skillId": 1,
+          "conditionType": 0,
+          "conditionParam1": 0,
+          "conditionParam2": 0,
+          "rating": 5
+        }
+      ],
+      "traits": [
+        {
+          "code": 22,
+          "dataId": 0,
+          "value": 0.5
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Goblin Guerreiro",
+      "battlerName": "goblin_warrior",
+      "battlerHue": 0,
+      "params": [40, 18, 15, 12, 8, 6, 10, 5],
+      "exp": 35,
+      "gold": 45,
+      "dropItems": [
+        {
+          "dataClass": "item",
+          "itemId": 2,
+          "denominator": 8
+        }
+      ],
+      "actions": [
+        {
+          "skillId": 1,
+          "conditionType": 0,
+          "conditionParam1": 0,
+          "conditionParam2": 0,
+          "rating": 5
+        }
+      ],
+      "traits": []
+    },
+    {
+      "id": 3,
+      "name": "Mago Sombrio",
+      "battlerName": "dark_mage",
+      "battlerHue": 0,
+      "params": [30, 12, 10, 8, 20, 18, 6, 15],
+      "exp": 50,
+      "gold": 80,
+      "dropItems": [
+        {
+          "dataClass": "item",
+          "itemId": 1,
+          "denominator": 2
+        }
+      ],
+      "actions": [
+        {
+          "skillId": 1,
+          "conditionType": 0,
+          "conditionParam1": 0,
+          "conditionParam2": 0,
+          "rating": 3
+        },
+        {
+          "skillId": 3,
+          "conditionType": 0,
+          "conditionParam1": 0,
+          "conditionParam2": 0,
+          "rating": 7
+        }
+      ],
+      "traits": [
+        {
+          "code": 11,
+          "dataId": 2,
+          "value": 0.8
+        }
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "description": "Database de inimigos para o sistema Lumy"
+}

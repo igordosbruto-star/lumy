@@ -1,0 +1,128 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "name": "Tutorial NPC",
+      "x": 200,
+      "y": 200,
+      "pages": [
+        {
+          "conditions": {
+            "switchId": 0,
+            "variableId": 0
+          },
+          "commands": [
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Bem-vindo ao mundo de Lumy!"
+              }
+            },
+            {
+              "type": 121,
+              "parameters": {
+                "switchId": 1,
+                "value": true
+              }
+            },
+            {
+              "type": 122,
+              "parameters": {
+                "variableId": 1,
+                "value": 100
+              }
+            },
+            {
+              "type": 230,
+              "parameters": {
+                "frames": 60
+              }
+            },
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Use WASD para se mover e Enter/Space para interagir."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Conditional NPC",
+      "x": 300,
+      "y": 150,
+      "pages": [
+        {
+          "conditions": {
+            "switchId": 1,
+            "switchValue": true
+          },
+          "commands": [
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Você já falou com o primeiro NPC! Agora você conhece os básicos."
+              }
+            },
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Experimente usar F5 para salvar e F9 para carregar!"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": {
+            "switchId": 1,
+            "switchValue": false
+          },
+          "commands": [
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Fale primeiro com o NPC de tutorial!"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Save/Load Demo",
+      "x": 400,
+      "y": 300,
+      "pages": [
+        {
+          "conditions": {},
+          "commands": [
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Este é um exemplo de sistema de Save/Load."
+              }
+            },
+            {
+              "type": 122,
+              "parameters": {
+                "variableId": 2,
+                "value": 42
+              }
+            },
+            {
+              "type": 101,
+              "parameters": {
+                "text": "Variável 2 foi definida como 42. Use F5 para salvar!"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "description": "Eventos para o exemplo hello-town do Lumy"
+}

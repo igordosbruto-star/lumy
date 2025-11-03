@@ -14,7 +14,7 @@ TitleScene::TitleScene(SceneStack& stack, TextureManager& textures)
 void TitleScene::handleEvent(const sf::Event& event) {
     if (const auto* key = event.getIf<sf::Event::KeyPressed>();
         key && key->code == sf::Keyboard::Key::Enter) {
-        stack_.switchScene(std::make_unique<MapScene>(textures_));
+        stack_.switchScene(std::make_unique<MapScene>(stack_, textures_));
     }
 }
 

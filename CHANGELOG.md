@@ -5,6 +5,26 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 
 ## [Unreleased]
 ### Added
+
+### Changed
+
+### Fixed
+
+### Docs
+
+
+## [0.1.1] — 2025-10-05 🎯
+**M0 Fechamento - Consolidação do Marco Zero**
+
+### Added
+- **Sistema de Eventos completo**: 10 comandos básicos implementados (`ShowText`, `SetSwitch`, `SetVariable`, `Wait`, `ConditionalBranch`, `EndConditional`, `TransferPlayer`, `ChangeGold`, `PlaySound`, `ShowImage`).
+- **Sistema de Save/Load**: salvamento em múltiplos slots (JSON) com dados de posição, switches, variáveis, party e inventário.
+- **Esquemas JSON de dados**: estruturas para `actors.json`, `items.json`, `states.json`, `skills.json`, `enemies.json` e `system.json` em `game/data/`.
+- **Eventos de exemplo**: NPCs demonstrando comandos básicos e condicionais em `hello-town`.
+- **Atalhos de teclado para saves**: AltGr+número (salvar), Ctrl+AltGr+número (carregar), Shift+AltGr+número (deletar).
+- **Movimento WASD**: controle do personagem com teclas W/A/S/D com limitação aos bounds do mapa.
+- **UI de debug**: display de posição, controles e estado de switches/variáveis na tela.
+- **Headers necessários**: `<algorithm>` e `<cmath>` para funções matemáticas.
 - `CMakePresets.json` com preset **msvc-vcpkg** (Debug/Release) e`VCPKG_TARGET_TRIPLET=x64-windows`.
 - `src/main.cpp` (demo SFML 3) com janela, loop de eventos e animação.
 - `.vscode/launch.json` (Run/Debug pelo F5 usando CMake Tools).
@@ -36,8 +56,14 @@ Segue SemVer: MAJOR.MINOR.PATCH (ex.: 0.2.1).
 - `map_loader.py`: função `load_hello_map()` para parsear `hello.tmx` com tratamento de erros.
 - `src/map_scene.cpp`: posiciona o herói usando objeto `player`/`spawn` da camada de objetos do TMX com fallback.
 - `src/map.cpp`/`src/map_scene.cpp`: suporte a tiles colidíveis com bloqueio de movimento.
+- **Sistema de saves funcional**: arquivo `save1.json` com dados persistentes do jogo.
+- **Mapa expandido**: `hello.tmx` atualizado com dimensões 25x15 e estrutura de bordas.
 
 ### Changed
+- **`CMakeLists.txt`**: adicionados `event_system.cpp` e `save_system.cpp` ao build; dependência do Lua para integração com scripts.
+- **`src/map_scene.hpp` e `src/map_scene.cpp`**: integração completa com `EventSystem` e `SaveSystem`; movimento com limitação de bounds; atalhos de teclado; UI de debug.
+- **`vcpkg.json`**: removido `builtin-baseline` fixo para usar versão mais recente do vcpkg.
+- **Compatibilidade SFML 3**: correções em `sf::Text` (sem construtor padrão), `sf::Font::openFromFile`, `setPosition` com `sf::Vector2`, e `TextureManager::acquire`.
 - `CMakeLists.txt`: alvo **hello-town**; ajustes para **SFML 3** (componentes em maiúsculo e targets `SFML::`).
 - Integração **tmxlite** via `pkg-config` (`PkgConfig::TMXLITE`).
 - Integração **Lua** via `find_package(Lua)` (include/libs do FindLua nativo).

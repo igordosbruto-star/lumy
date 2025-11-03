@@ -1,0 +1,45 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Poção",
+      "description": "Restaura uma pequena quantidade de HP",
+      "iconIndex": 1,
+      "itemType": "consumable",
+      "price": 50,
+      "consumable": true,
+      "effects": [
+        {
+          "code": 11,
+          "dataId": 0,
+          "value1": 50,
+          "value2": 0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Espada de Ferro",
+      "description": "Uma espada básica de ferro",
+      "iconIndex": 2,
+      "itemType": "weapon",
+      "price": 250,
+      "consumable": false,
+      "params": [0, 10, 0, 0, 0, 0, 0, 0],
+      "traits": []
+    },
+    {
+      "id": 3,
+      "name": "Armadura de Couro",
+      "description": "Uma armadura leve de couro",
+      "iconIndex": 3,
+      "itemType": "armor",
+      "price": 200,
+      "consumable": false,
+      "params": [0, 0, 8, 0, 0, 0, 0, 0],
+      "traits": []
+    }
+  ],
+  "schema_version": "1.0",
+  "description": "Database de itens para o sistema Lumy"
+}

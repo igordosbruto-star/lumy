@@ -2,17 +2,19 @@
 
 > Este roadmap é um **documento vivo**.  
 > **Revisão:** quinzenal ou por release.  
-> **Última atualização:** 22-08-2025.  
+> **Última atualização:** 05-10-2025.
 > **Status:** `Planned` · `In Progress` · `Done` · `Parked` · `Dropped`.
 
 ## Histórico de alterações
 - 21-08-2025 — Criação do roadmap inicial (M0–M3).
 - 22-08-2025 — README com descrição da engine e guia de CMakePresets.
+- 31-08-2025 — ✅ **M0 "Faísca" concluído** com sucesso! Todas as entregas implementadas e testadas.
+- 05-10-2025 — ✅ **M0 oficialmente fechado** com v0.1.1. 🎆 **M1 "Brilho" iniciado** - foco no editor wxWidgets.
 
 
 ## Visão geral de marcos (releases)
 
-### M0 — **Faísca** *(Planned)*
+### M0 — **Faísca** *(Done)* ✅
 **Meta:** engine carrega mapas, executa eventos básicos e salva/fecha em segurança.  
 **Entregas:**
 - Loop + **SceneStack** (Boot → Title → Map).  
@@ -29,17 +31,22 @@
 
 ---
 
-### M1 — **Brilho** *(Planned)*
+### M1 — **Brilho** *(In Progress - 85%)* 🔥
 **Meta:** editor wx funcional com edição de mapas/eventos e hot-reload.  
 **Entregas:**
-- Editor: **wxAUI** (docks), **Árvore do Projeto**, **PropertyGrid**, **Viewport GL**.
-- Pintura de tiles/colisão, camadas e regiões.
-- **Hot-reload** de mapas/eventos.
-- Tutoriais de 10 minutos (mapa/evento).
+- ✅ Editor: **wxAUI** (docks), **Árvore do Projeto**, **PropertyGrid**, **Viewport**.
+- ✅ Sistema completo de **Layers** com opacidade
+- ✅ **4 Ferramentas de Pintura** (Pincel, Balde, Seleção, Borracha)
+- ✅ **Gerenciamento de Tilesets** com propriedades
+- 🔄 Sistema **Undo/Redo** (header completo, implementação pendente)
+- 🔄 **Hot-reload** de mapas (FileWatcher OK, integração com runtime pendente)
+- ❌ Tutoriais de 10 minutos (planejado pós-release)
 
 **DoD:**
-- Editar → Salvar → Ver no runtime sem reiniciar.
-- Projeto de exemplo inteiramente editável no editor.
+- ✅ Editar mapas visualmente com múltiplas layers
+- 🔄 Salvar e abrir projetos completos  
+- ❌ Ver mudanças no runtime sem reiniciar (pending)
+- ✅ Projeto de exemplo editável no editor
 
 ---
 
@@ -73,18 +80,22 @@
 ## Tarefas por marco (checklist de acompanhamento)
 
 ### M0 — Faísca
-- [ ] Definir esquemas **JSON** (actors/items/states/skills/enemies/system). *(Planned)*
-- [ ] Tabela de **comandos de evento** (10 básicos) com argumentos. *(Planned)*
-- [ ] Carregar **TMX** via tmxlite; desenhar layers e flags de colisão. *(Planned)*
- - [x] Implementar **SceneStack** e ciclo de jogo. *(Done)*
-- [ ] **Save/Load** de switches/variáveis/posição. *(Planned)*
-- [ ] Exemplo `hello-town` + README. *(Planned)*
+- [x] Definir esquemas **JSON** (actors/items/states/skills/enemies/system). *(Done)*
+- [x] Tabela de **comandos de evento** (10 básicos) com argumentos. *(Done)*
+- [x] Carregar **TMX** via tmxlite; desenhar layers e flags de colisão. *(Done)*
+- [x] Implementar **SceneStack** e ciclo de jogo. *(Done)*
+- [x] **Save/Load** de switches/variáveis/posição. *(Done)*
+- [x] Exemplo `hello-town` + README. *(Done)*
 
-### M1 — Brilho
-- [ ] Editor wx: panes, árvore, property grid. *(Planned)*
-- [ ] Viewport GL com grade, seleção e pincéis. *(Planned)*
-- [ ] Ferramenta de colisão/regiões. *(Planned)*
-- [ ] Hot-reload de mapas/eventos. *(Planned)*
+### M1 — Brilho (85% Completo)
+- [x] Editor wx: panes, árvore, property grid. *(Done)*
+- [x] Sistema de Layers completo com UI. *(Done)*
+- [x] 4 Ferramentas de pintura implementadas. *(Done)*
+- [ ] Viewport GL com grade, seleção e pincéis. *(In Progress - 60%)*
+- [x] Gerenciamento de tilesets com propriedades. *(Done)*
+- [ ] Sistema Undo/Redo. *(In Progress - 50%)*
+- [ ] Ferramenta de colisão/regiões. *(Planned - visualização pendente)*
+- [ ] Hot-reload de mapas/eventos. *(In Progress - FileWatcher OK)*
 - [ ] Tutoriais curtos (vídeo/gif ou passo-a-passo). *(Planned)*
 
 ### M2 — Chama

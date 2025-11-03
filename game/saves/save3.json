@@ -1,0 +1,19 @@
+{
+    "player": {
+        "direction": 2,
+        "exp": 0,
+        "gold": 0,
+        "inventory": [],
+        "level": 1,
+        "mapId": 1,
+        "party": [
+            1
+        ],
+        "x": 206.31900024414063,
+        "y": 211.76783752441406
+    },
+    "switches": null,
+    "timestamp": 1761600510,
+    "variables": null,
+    "version": "1.0"
+}

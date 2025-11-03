@@ -1,0 +1,90 @@
+{
+  "skills": [
+    {
+      "id": 1,
+      "name": "Ataque",
+      "description": "Um ataque físico básico",
+      "iconIndex": 1,
+      "scope": 1,
+      "mpCost": 0,
+      "tpCost": 0,
+      "occasion": 1,
+      "speed": 0,
+      "successRate": 95,
+      "repeats": 1,
+      "tpGain": 10,
+      "hitType": 0,
+      "animationId": 1,
+      "damage": {
+        "type": 1,
+        "elementId": 1,
+        "formula": "a.atk * 4 - b.def * 2",
+        "variance": 20,
+        "critical": true
+      },
+      "effects": [],
+      "requiredWtypeId1": 0,
+      "requiredWtypeId2": 0,
+      "addedSkillTypes": [],
+      "sealedSkillTypes": []
+    },
+    {
+      "id": 2,
+      "name": "Cura",
+      "description": "Restaura HP do alvo",
+      "iconIndex": 2,
+      "scope": 7,
+      "mpCost": 5,
+      "tpCost": 0,
+      "occasion": 0,
+      "speed": 0,
+      "successRate": 100,
+      "repeats": 1,
+      "tpGain": 0,
+      "hitType": 0,
+      "animationId": 2,
+      "damage": {
+        "type": 3,
+        "elementId": 0,
+        "formula": "a.mat * 2 + 50",
+        "variance": 20,
+        "critical": false
+      },
+      "effects": [],
+      "requiredWtypeId1": 0,
+      "requiredWtypeId2": 0,
+      "addedSkillTypes": [],
+      "sealedSkillTypes": []
+    },
+    {
+      "id": 3,
+      "name": "Bola de Fogo",
+      "description": "Ataque mágico de fogo",
+      "iconIndex": 3,
+      "scope": 1,
+      "mpCost": 8,
+      "tpCost": 0,
+      "occasion": 1,
+      "speed": 0,
+      "successRate": 90,
+      "repeats": 1,
+      "tpGain": 5,
+      "hitType": 2,
+      "animationId": 3,
+      "damage": {
+        "type": 2,
+        "elementId": 2,
+        "formula": "a.mat * 3 - b.mdf",
+        "variance": 15,
+        "critical": false
+      },
+      "effects": [],
+      "requiredWtypeId1": 0,
+      "requiredWtypeId2": 0,
+      "addedSkillTypes": [1],
+      "sealedSkillTypes": []
+    }
+  ],
+  "schema_version": "1.0",
+  "description": "Database de habilidades/skills para o sistema Lumy"
+}
