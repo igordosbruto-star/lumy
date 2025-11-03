@@ -16,6 +16,8 @@ class MapManager;
 class EditorFrame;
 class CommandHistory;
 class ShaderProgram;
+class MapRenderer;
+class TextureAtlas;
 
 class ViewportPanel : public wxPanel
 {
@@ -84,6 +86,8 @@ private:
         SmoothTransform m_smoothTransform;
         CollisionOverlay m_collisionOverlay;
         std::unique_ptr<ShaderProgram> m_overlayShader;
+        std::unique_ptr<MapRenderer> m_mapRenderer;
+        std::unique_ptr<TextureAtlas> m_tileAtlas;
         bool m_showGrid;
         bool m_showCollision;
         

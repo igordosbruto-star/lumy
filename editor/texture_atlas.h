@@ -25,9 +25,9 @@ struct TileUV {
 };
 
 /**
- * Informações sobre um tileset carregado
+ * Informações sobre um tileset carregado no atlas
  */
-struct TilesetInfo {
+struct AtlasTilesetInfo {
     wxString filePath;       // Caminho do arquivo de imagem
     int textureWidth;        // Largura da textura em pixels
     int textureHeight;       // Altura da textura em pixels
@@ -37,7 +37,7 @@ struct TilesetInfo {
     int tilesPerColumn;      // Número de tiles por coluna
     int totalTiles;          // Total de tiles no tileset
     
-    TilesetInfo()
+    AtlasTilesetInfo()
         : textureWidth(0), textureHeight(0)
         , tileWidth(32), tileHeight(32)
         , tilesPerRow(0), tilesPerColumn(0)
@@ -129,7 +129,7 @@ public:
     /**
      * Retorna informações sobre o tileset carregado
      */
-    const TilesetInfo& GetInfo() const { return m_info; }
+    const AtlasTilesetInfo& GetInfo() const { return m_info; }
     
     /**
      * Retorna o número total de tiles no tileset
@@ -145,7 +145,7 @@ public:
 
 private:
     GLuint m_textureId;           // ID da textura OpenGL
-    TilesetInfo m_info;           // Informações do tileset
+    AtlasTilesetInfo m_info;      // Informações do tileset
     
     // Cache de UVs calculados (opcional, para otimização)
     mutable std::unordered_map<int, TileUV> m_uvCache;

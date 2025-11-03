@@ -14,6 +14,8 @@
 #include "shader_program.h"
 #include "map_manager.h"
 #include "tileset_manager.h"
+#include "map_renderer.h"  // Inclui ViewportCamera
+#include "texture_atlas.h"
 #include <wx/toolbar.h>
 #include <cmath>
 
@@ -193,6 +195,14 @@ void ViewportPanel::GLCanvas::InitGL()
         wxLogError("Falha ao carregar shader de overlay");
     }
     
+    // Inicializar MapRenderer e TextureAtlas
+    m_mapRenderer = std::make_unique<MapRenderer>();
+    m_tileAtlas = std::make_unique<TextureAtlas>();
+    
+    // Configurar MapRenderer
+    m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
+    m_mapRenderer->SetFrustumCullingEnabled(true);
+    
     m_glInitialized = true;
 }
 
@@ -307,11 +317,36 @@ void ViewportPanel::GLCanvas::DrawGrid()
 
 void ViewportPanel::GLCanvas::DrawMap()
 {
-    // Obter referência para ViewportPanel parent para acessar MapManager
+    // Obter referência para ViewportPanel parent
     ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
     MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    Map* currentMap = viewportPanel ? viewportPanel->m_currentMap : nullptr;
     
-    // Se temos um MapManager com mapa carregado, usar dados reais
+    // Usar MapRenderer se disponível e mapa está configurado
+    if (m_mapRenderer && currentMap) {
+        // Configurar câmera do MapRenderer
+        ViewportCamera camera;
+        wxSize canvasSize = GetClientSize();
+        float zoom = m_smoothTransform.GetZoom();
+        float panX = m_smoothTransform.GetPanX();
+        float panY = m_smoothTransform.GetPanY();
+        
+        // Converter pan de pixels para tiles
+        camera.x = -panX / (TILE_SIZE * zoom);
+        camera.y = -panY / (TILE_SIZE * zoom);
+        camera.width = canvasSize.x / (TILE_SIZE * zoom);
+        camera.height = canvasSize.y / (TILE_SIZE * zoom);
+        camera.zoom = zoom;
+        
+        m_mapRenderer->SetCamera(camera);
+        m_mapRenderer->SetMap(currentMap);
+        
+        // Renderizar todas as layers
+        m_mapRenderer->RenderAllLayers();
+        return;
+    }
+    
+    // Fallback: OpenGL imediato com MapManager
     if (mapManager && mapManager->HasMap()) {
         int mapWidth = mapManager->GetMapWidth();
         int mapHeight = mapManager->GetMapHeight();
@@ -814,8 +849,15 @@ void ViewportPanel::SetCurrentMap(Map* map)
     m_currentMap = map;
     if (m_glCanvas) {
         m_glCanvas->UpdateViewportBounds();
+        
         // Atualizar collision overlay
         m_glCanvas->m_collisionOverlay.MarkDirty();
+        
+        // Atualizar MapRenderer com novo mapa
+        if (m_glCanvas->m_mapRenderer && map) {
+            m_glCanvas->m_mapRenderer->SetMap(map);
+            m_glCanvas->m_mapRenderer->RebuildAllLayers(true);
+        }
     }
     RefreshMapDisplay();
 }

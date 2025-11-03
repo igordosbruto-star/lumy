@@ -102,7 +102,7 @@ void TextureAtlas::Unload()
     }
     
     m_uvCache.clear();
-    m_info = TilesetInfo(); // Reset
+    m_info = AtlasTilesetInfo(); // Reset
 }
 
 void TextureAtlas::Bind() const
