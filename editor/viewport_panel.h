@@ -63,6 +63,7 @@ private:
         void PaintTile(int tileX, int tileY);
         void EraseTile(int tileX, int tileY);
         void ToggleCollision(int tileX, int tileY);
+        void UpdateViewportBounds(); // Atualizar limites dinâmicos baseados no mapa
         
     private:
         void InitGL();

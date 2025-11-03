@@ -213,6 +213,9 @@ void ViewportPanel::GLCanvas::OnSize(wxSizeEvent& event)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
+    // Atualizar limites de viewport baseados no tamanho
+    UpdateViewportBounds();
+    
     event.Skip();
 }
 
@@ -651,12 +654,8 @@ void ViewportPanel::OnToolSelectCircle(wxCommandEvent& WXUNUSED(event))
 
 void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
 {
-    // Configurar limites de zoom
-    TransformBounds bounds;
-    bounds.enableBounds = true;
-    bounds.minZoom = 0.25f;
-    bounds.maxZoom = 4.0f;
-    m_glCanvas->m_smoothTransform.SetBounds(bounds);
+    // Atualizar bounds antes do zoom
+    m_glCanvas->UpdateViewportBounds();
     
     // Zoom suave
     m_glCanvas->m_smoothTransform.ZoomIn();
@@ -665,12 +664,8 @@ void ViewportPanel::OnZoomIn(wxCommandEvent& WXUNUSED(event))
 
 void ViewportPanel::OnZoomOut(wxCommandEvent& WXUNUSED(event))
 {
-    // Configurar limites de zoom
-    TransformBounds bounds;
-    bounds.enableBounds = true;
-    bounds.minZoom = 0.25f;
-    bounds.maxZoom = 4.0f;
-    m_glCanvas->m_smoothTransform.SetBounds(bounds);
+    // Atualizar bounds antes do zoom
+    m_glCanvas->UpdateViewportBounds();
     
     // Zoom suave
     m_glCanvas->m_smoothTransform.ZoomOut();
@@ -694,12 +689,18 @@ void ViewportPanel::SetSelectedTile(int tileId)
 void ViewportPanel::SetMapManager(MapManager* mapManager)
 {
     m_mapManager = mapManager;
+    if (m_glCanvas) {
+        m_glCanvas->UpdateViewportBounds();
+    }
     RefreshMapDisplay();
 }
 
 void ViewportPanel::SetCurrentMap(Map* map)
 {
     m_currentMap = map;
+    if (m_glCanvas) {
+        m_glCanvas->UpdateViewportBounds();
+    }
     RefreshMapDisplay();
 }
 
@@ -727,12 +728,8 @@ void ViewportPanel::NotifyMapModified()
 
 void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
 {
-    // Configurar limites de zoom
-    TransformBounds bounds;
-    bounds.enableBounds = true;
-    bounds.minZoom = 0.25f;
-    bounds.maxZoom = 4.0f;
-    m_smoothTransform.SetBounds(bounds);
+    // Atualizar bounds antes do zoom
+    UpdateViewportBounds();
     
     // Calcular ponto do mundo sob o cursor
     wxPoint mousePos = event.GetPosition();
@@ -921,4 +918,50 @@ bool ViewportPanel::Redo()
         NotifyMapModified();
     }
     return success;
+}
+
+void ViewportPanel::GLCanvas::UpdateViewportBounds()
+{
+    // Obter referência para ViewportPanel parent para acessar MapManager
+    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+    MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    
+    wxSize canvasSize = GetClientSize();
+    if (canvasSize.x <= 0 || canvasSize.y <= 0) {
+        return; // Canvas ainda não está pronto
+    }
+    
+    // Determinar dimensões do mapa
+    int mapWidth = MAP_WIDTH;
+    int mapHeight = MAP_HEIGHT;
+    
+    if (mapManager && mapManager->HasMap()) {
+        mapWidth = mapManager->GetMapWidth();
+        mapHeight = mapManager->GetMapHeight();
+    }
+    
+    // Calcular dimensões do mapa em pixels
+    float mapPixelWidth = mapWidth * TILE_SIZE;
+    float mapPixelHeight = mapHeight * TILE_SIZE;
+    
+    // Configurar limites de zoom
+    TransformBounds bounds;
+    bounds.enableBounds = true;
+    bounds.minZoom = 0.25f;
+    bounds.maxZoom = 4.0f;
+    
+    // Calcular limites de pan dinâmicos
+    // Permitir pan até uma margem de 20% do canvas de cada lado
+    float margin = 0.2f;
+    float currentZoom = m_smoothTransform.GetZoom();
+    
+    // Limites mínimos: mapa não pode sair totalmente da tela pela direita/baixo
+    bounds.minPanX = -mapPixelWidth * currentZoom + canvasSize.x * (1.0f - margin);
+    bounds.minPanY = -mapPixelHeight * currentZoom + canvasSize.y * (1.0f - margin);
+    
+    // Limites máximos: mapa não pode sair totalmente da tela pela esquerda/topo
+    bounds.maxPanX = canvasSize.x * margin;
+    bounds.maxPanY = canvasSize.y * margin;
+    
+    m_smoothTransform.SetBounds(bounds);
 }
