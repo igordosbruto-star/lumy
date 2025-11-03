@@ -96,6 +96,7 @@ set(EDITOR_SOURCES
     editor/map_renderer.cpp
     editor/shader_program.cpp
     editor/grid_renderer.cpp
+    editor/collision_overlay.cpp
 )
 
 # wxWidgets
