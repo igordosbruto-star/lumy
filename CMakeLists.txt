@@ -93,6 +93,7 @@ set(EDITOR_SOURCES
     editor/i18n.cpp
     editor/gl_buffer.cpp
     editor/texture_atlas.cpp
+    editor/map_renderer.cpp
 )
 
 # wxWidgets
