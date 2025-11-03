@@ -40,6 +40,7 @@ wxBEGIN_EVENT_TABLE(ViewportPanel::GLCanvas, wxGLCanvas)
     EVT_MIDDLE_DOWN(ViewportPanel::GLCanvas::OnMouseMiddleDown)
     EVT_MIDDLE_UP(ViewportPanel::GLCanvas::OnMouseMiddleUp)
     EVT_KEY_DOWN(ViewportPanel::GLCanvas::OnKeyDown)
+    EVT_KEY_UP(ViewportPanel::GLCanvas::OnKeyUp)
 wxEND_EVENT_TABLE()
 
 ViewportPanel::ViewportPanel(wxWindow* parent)
@@ -138,6 +139,7 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
     , m_showCollision(false)
     , m_selectedTile(1) // Padrão: wall tile
     , m_isPanning(false)
+    , m_isTemporaryPanning(false)
     , m_currentTool(TOOL_SELECT)
 {
     // Criar contexto OpenGL
@@ -485,16 +487,16 @@ void ViewportPanel::GLCanvas::OnMouseMove(wxMouseEvent& event)
 {
     wxPoint currentPos = event.GetPosition();
     
-    // Pan com mouse do meio
-    if (m_isPanning) {
+    // Pan com mouse do meio ou Espaço+Botão esquerdo
+    if (m_isPanning || (m_isTemporaryPanning && event.LeftIsDown())) {
         wxPoint delta = currentPos - m_lastMousePos;
         float panX = m_smoothTransform.GetPanX() + delta.x;
         float panY = m_smoothTransform.GetPanY() + delta.y;
         m_smoothTransform.SetTransform(m_smoothTransform.GetZoom(), panX, panY);
     }
     
-    // Pintura contínua quando botão esquerdo está pressionado
-    if (event.LeftIsDown() && (m_currentTool == TOOL_PAINT || m_currentTool == TOOL_ERASE || m_currentTool == TOOL_COLLISION)) {
+    // Pintura contínua quando botão esquerdo está pressionado (mas não em pan temporário)
+    if (event.LeftIsDown() && !m_isTemporaryPanning && (m_currentTool == TOOL_PAINT || m_currentTool == TOOL_ERASE || m_currentTool == TOOL_COLLISION)) {
         float zoom = m_smoothTransform.GetZoom();
         float panX = m_smoothTransform.GetPanX();
         float panY = m_smoothTransform.GetPanY();
@@ -540,20 +542,96 @@ void ViewportPanel::GLCanvas::OnKeyDown(wxKeyEvent& event)
 {
     // Atalhos de teclado para navegação
     int key = event.GetKeyCode();
+    bool ctrl = event.ControlDown();
     
     switch (key) {
         case 'G':
             m_showGrid = !m_showGrid;
             Refresh();
             break;
+            
         case 'C':
             m_showCollision = !m_showCollision;
             Refresh();
             break;
+            
+        case WXK_SPACE:
+            // Espaço: ativar pan temporário
+            if (!m_isTemporaryPanning) {
+                m_isTemporaryPanning = true;
+                SetCursor(wxCursor(wxCURSOR_HAND));
+            }
+            break;
+            
+        case '0':
+            if (ctrl) {
+                // Ctrl+0: Reset zoom 100%
+                UpdateViewportBounds();
+                m_smoothTransform.ResetZoom();
+                m_smoothTransform.AnimatePan(0.0f, 0.0f, 300);
+            }
+            break;
+            
+        case '1':
+            if (ctrl) {
+                // Ctrl+1: Fit to map
+                ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+                MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+                
+                int mapWidth = MAP_WIDTH;
+                int mapHeight = MAP_HEIGHT;
+                
+                if (mapManager && mapManager->HasMap()) {
+                    mapWidth = mapManager->GetMapWidth();
+                    mapHeight = mapManager->GetMapHeight();
+                }
+                
+                wxSize canvasSize = GetClientSize();
+                m_smoothTransform.FitToView(
+                    mapWidth * TILE_SIZE, 
+                    mapHeight * TILE_SIZE,
+                    canvasSize.x,
+                    canvasSize.y
+                );
+            }
+            break;
+            
         default:
             event.Skip();
             break;
     }
+}
+
+void ViewportPanel::GLCanvas::OnKeyUp(wxKeyEvent& event)
+{
+    int key = event.GetKeyCode();
+    
+    if (key == WXK_SPACE) {
+        // Desativar pan temporário
+        if (m_isTemporaryPanning) {
+            m_isTemporaryPanning = false;
+            // Restaurar cursor da ferramenta atual
+            switch (m_currentTool) {
+                case TOOL_SELECT:
+                    SetCursor(wxCursor(wxCURSOR_ARROW));
+                    break;
+                case TOOL_PAINT:
+                    SetCursor(wxCursor(wxCURSOR_CROSS));
+                    break;
+                case TOOL_ERASE:
+                    SetCursor(wxCursor(wxCURSOR_NO_ENTRY));
+                    break;
+                case TOOL_COLLISION:
+                    SetCursor(wxCursor(wxCURSOR_CROSS));
+                    break;
+                default:
+                    SetCursor(wxCursor(wxCURSOR_ARROW));
+                    break;
+            }
+        }
+    }
+    
+    event.Skip();
 }
 
 // Event handlers da ViewportPanel
@@ -728,35 +806,46 @@ void ViewportPanel::NotifyMapModified()
 
 void ViewportPanel::GLCanvas::OnMouseWheel(wxMouseEvent& event)
 {
-    // Atualizar bounds antes do zoom
-    UpdateViewportBounds();
-    
-    // Calcular ponto do mundo sob o cursor
-    wxPoint mousePos = event.GetPosition();
-    float currentZoom = m_smoothTransform.GetZoom();
-    float currentPanX = m_smoothTransform.GetPanX();
-    float currentPanY = m_smoothTransform.GetPanY();
-    
-    float worldX = (mousePos.x - currentPanX) / currentZoom;
-    float worldY = (mousePos.y - currentPanY) / currentZoom;
-    
-    // Calcular novo zoom
+    bool ctrl = event.ControlDown();
+    bool shift = event.ShiftDown();
     float rotation = event.GetWheelRotation();
-    float targetZoom = currentZoom;
-    if (rotation > 0) {
-        targetZoom *= 1.1f;
-    } else if (rotation < 0) {
-        targetZoom /= 1.1f;
-    }
     
-    // Aplicar zoom suave centrado no cursor
-    wxSize canvasSize = GetClientSize();
-    m_smoothTransform.ZoomToPoint(targetZoom, worldX, worldY, canvasSize.x, canvasSize.y);
-    
-    // Mostrar zoom atual na status bar
-    ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
-    if (viewportPanel) {
-        wxLogStatus("Zoom: %.0f%%", targetZoom * 100.0f);
+    if (shift) {
+        // Shift+Scroll: Pan horizontal
+        float panDelta = (rotation > 0) ? 50.0f : -50.0f;
+        float panX = m_smoothTransform.GetPanX() + panDelta;
+        m_smoothTransform.AnimatePan(panX, m_smoothTransform.GetPanY(), 100);
+    } else {
+        // Atualizar bounds antes do zoom
+        UpdateViewportBounds();
+        
+        // Calcular ponto do mundo sob o cursor
+        wxPoint mousePos = event.GetPosition();
+        float currentZoom = m_smoothTransform.GetZoom();
+        float currentPanX = m_smoothTransform.GetPanX();
+        float currentPanY = m_smoothTransform.GetPanY();
+        
+        float worldX = (mousePos.x - currentPanX) / currentZoom;
+        float worldY = (mousePos.y - currentPanY) / currentZoom;
+        
+        // Calcular novo zoom (mais rápido com Ctrl)
+        float zoomFactor = ctrl ? 1.2f : 1.1f;
+        float targetZoom = currentZoom;
+        if (rotation > 0) {
+            targetZoom *= zoomFactor;
+        } else if (rotation < 0) {
+            targetZoom /= zoomFactor;
+        }
+        
+        // Aplicar zoom suave centrado no cursor
+        wxSize canvasSize = GetClientSize();
+        m_smoothTransform.ZoomToPoint(targetZoom, worldX, worldY, canvasSize.x, canvasSize.y);
+        
+        // Mostrar zoom atual na status bar
+        ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
+        if (viewportPanel) {
+            wxLogStatus("Zoom: %.0f%%", targetZoom * 100.0f);
+        }
     }
     
     event.Skip();

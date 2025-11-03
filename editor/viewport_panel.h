@@ -56,6 +56,7 @@ private:
         void OnMouseMiddleDown(wxMouseEvent& event);
         void OnMouseMiddleUp(wxMouseEvent& event);
         void OnKeyDown(wxKeyEvent& event);
+        void OnKeyUp(wxKeyEvent& event);
         
         // Helper functions
         wxPoint WorldToTile(const wxPoint& worldPos);
@@ -89,6 +90,7 @@ private:
         // Editing state
         int m_selectedTile;
         bool m_isPanning;
+        bool m_isTemporaryPanning; // Pan temporário com tecla Espaço
         wxPoint m_lastMousePos;
         
         // Ferramentas de edição
