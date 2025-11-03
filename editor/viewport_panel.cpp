@@ -11,8 +11,9 @@
 #include "i18n.h"
 #include "command.h"
 #include "map.h"
+#include "shader_program.h"
+#include "map_manager.h"
 #include <wx/toolbar.h>
-#include <GL/gl.h>
 #include <cmath>
 
 // Event table principal
@@ -152,6 +153,10 @@ ViewportPanel::GLCanvas::GLCanvas(wxWindow* parent)
         Refresh();
     });
     
+    // Configurar collision overlay
+    m_collisionOverlay.SetEnabled(true);  // Habilitado por padrão
+    m_collisionOverlay.SetOpacity(0.5f);
+    
     // Inicializar mapa com padrão (bordas = wall, interior = grass)
     for (int y = 0; y < MAP_HEIGHT; ++y) {
         for (int x = 0; x < MAP_WIDTH; ++x) {
@@ -179,6 +184,12 @@ void ViewportPanel::GLCanvas::InitGL()
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // Inicializar shader de overlay
+    m_overlayShader = std::make_unique<ShaderProgram>();
+    if (!m_overlayShader->LoadFromFiles("shaders/overlay.vert", "shaders/overlay.frag")) {
+        wxLogError("Falha ao carregar shader de overlay");
+    }
     
     m_glInitialized = true;
 }
@@ -241,6 +252,16 @@ void ViewportPanel::GLCanvas::Render()
     }
     
     DrawMap();
+    
+    // Desenhar collision overlay se habilitado
+    if (m_showCollision && m_collisionOverlay.IsEnabled()) {
+        if (m_overlayShader) {
+            m_overlayShader->Use();
+            m_collisionOverlay.Render();
+            glUseProgram(0);
+        }
+    }
+    
     DrawSelection();
     
     glPopMatrix();
@@ -551,7 +572,10 @@ void ViewportPanel::GLCanvas::OnKeyDown(wxKeyEvent& event)
             break;
             
         case 'C':
+            // Toggle collision overlay visibility
             m_showCollision = !m_showCollision;
+            m_collisionOverlay.SetEnabled(m_showCollision);
+            wxLogStatus("Collision Overlay: %s", m_showCollision ? "ON" : "OFF");
             Refresh();
             break;
             
@@ -769,6 +793,10 @@ void ViewportPanel::SetMapManager(MapManager* mapManager)
     m_mapManager = mapManager;
     if (m_glCanvas) {
         m_glCanvas->UpdateViewportBounds();
+        // Atualizar collision overlay
+        // TODO: Precisamos de acesso ao TilesetManager para construir o overlay
+        // Por ora, apenas marcar como dirty
+        m_glCanvas->m_collisionOverlay.MarkDirty();
     }
     RefreshMapDisplay();
 }
@@ -778,6 +806,8 @@ void ViewportPanel::SetCurrentMap(Map* map)
     m_currentMap = map;
     if (m_glCanvas) {
         m_glCanvas->UpdateViewportBounds();
+        // Atualizar collision overlay
+        m_glCanvas->m_collisionOverlay.MarkDirty();
     }
     RefreshMapDisplay();
 }

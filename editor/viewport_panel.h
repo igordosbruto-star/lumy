@@ -4,15 +4,18 @@
 
 #pragma once
 
+#include <GL/glew.h>  // GLEW deve vir antes de qualquer header OpenGL
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
 #include <memory>
 #include "smooth_transform.h"
+#include "collision_overlay.h"
 
 // Forward declarations
 class MapManager;
 class EditorFrame;
 class CommandHistory;
+class ShaderProgram;
 
 class ViewportPanel : public wxPanel
 {
@@ -78,6 +81,8 @@ private:
         
         // Estado da visualização
         SmoothTransform m_smoothTransform;
+        CollisionOverlay m_collisionOverlay;
+        std::unique_ptr<ShaderProgram> m_overlayShader;
         bool m_showGrid;
         bool m_showCollision;
         
