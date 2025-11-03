@@ -13,6 +13,7 @@
 #include "map.h"
 #include "shader_program.h"
 #include "map_manager.h"
+#include "tileset_manager.h"
 #include <wx/toolbar.h>
 #include <cmath>
 
@@ -47,6 +48,7 @@ wxEND_EVENT_TABLE()
 ViewportPanel::ViewportPanel(wxWindow* parent)
     : wxPanel(parent, wxID_ANY)
     , m_mapManager(nullptr)
+    , m_tilesetManager(nullptr)
     , m_currentMap(nullptr)
     , m_commandHistory(std::make_unique<CommandHistory>(100))
 {
@@ -793,9 +795,15 @@ void ViewportPanel::SetMapManager(MapManager* mapManager)
     m_mapManager = mapManager;
     if (m_glCanvas) {
         m_glCanvas->UpdateViewportBounds();
-        // Atualizar collision overlay
-        // TODO: Precisamos de acesso ao TilesetManager para construir o overlay
-        // Por ora, apenas marcar como dirty
+        m_glCanvas->m_collisionOverlay.MarkDirty();
+    }
+    RefreshMapDisplay();
+}
+
+void ViewportPanel::SetTilesetManager(TilesetManager* tilesetManager)
+{
+    m_tilesetManager = tilesetManager;
+    if (m_glCanvas) {
         m_glCanvas->m_collisionOverlay.MarkDirty();
     }
     RefreshMapDisplay();
@@ -964,23 +972,31 @@ void ViewportPanel::GLCanvas::EraseTile(int tileX, int tileY)
 
 void ViewportPanel::GLCanvas::ToggleCollision(int tileX, int tileY)
 {
-    // Obter referência para ViewportPanel parent para acessar MapManager
+    // Obter referência para ViewportPanel parent
     ViewportPanel* viewportPanel = dynamic_cast<ViewportPanel*>(GetParent());
     MapManager* mapManager = viewportPanel ? viewportPanel->m_mapManager : nullptr;
+    TilesetManager* tilesetManager = viewportPanel ? viewportPanel->m_tilesetManager : nullptr;
     
-    if (mapManager && mapManager->HasMap()) {
+    if (mapManager && mapManager->HasMap() && tilesetManager) {
         // Usar dados reais do mapa carregado
         if (mapManager->IsValidPosition(tileX, tileY)) {
-            int currentTile = mapManager->GetTile(tileX, tileY);
-            if (currentTile == 2) {
-                // Se já é collision, volta para grass
-                mapManager->SetTile(tileX, tileY, 0);
-            } else {
-                // Se não é collision, torna collision
-                mapManager->SetTile(tileX, tileY, 2);
-            }
+            // Obter tile ID atual
+            int tileId = mapManager->GetTile(tileX, tileY);
+            
+            // Obter propriedade de colisão atual
+            wxVariant collisionVariant = tilesetManager->GetTileProperty(tileId, "hasCollision");
+            bool hasCollision = collisionVariant.GetBool();
+            
+            // Toggle collisão
+            tilesetManager->SetTileProperty(tileId, "hasCollision", wxVariant(!hasCollision));
+            
+            // Atualizar overlay
+            m_collisionOverlay.MarkDirty();
+            
             // Notificar EditorFrame para atualizar título
             viewportPanel->NotifyMapModified();
+            
+            wxLogStatus("Tile %d collision: %s", tileId, !hasCollision ? "ON" : "OFF");
         }
     } else {
         // Fallback: usar dados simulados se não há mapa carregado
