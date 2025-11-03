@@ -56,8 +56,9 @@
 
 ---
 
-#### 2. Refatoração para wxGLCanvas (6h) ⚠️ CRÍTICO
-**Status:** ❌ 0% - Necessário para performance
+#### 2. Refatoração para wxGLCanvas (6h) ⏸️ ADIADO
+**Status:** ⏸️ ADIADO - OpenGL já funciona (immediate mode), modernização pode ser feita pós-M1
+**Nota:** ViewportPanel JÁ USA OpenGL com immediate mode. Refatoração para VBOs/Shaders é otimização, não blocker.
 
 **Arquivos:**
 - [ ] `editor/viewport_panel.h` - Herdar de wxGLCanvas
