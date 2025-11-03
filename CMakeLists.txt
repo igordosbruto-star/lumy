@@ -94,6 +94,7 @@ set(EDITOR_SOURCES
     editor/gl_buffer.cpp
     editor/texture_atlas.cpp
     editor/map_renderer.cpp
+    editor/shader_program.cpp
 )
 
 # wxWidgets
@@ -150,6 +151,18 @@ if(EXISTS "${LOCALE_DIR}")
     COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/locale"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/locale"
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${LOCALE_DIR}" "${OUT_DIR}/locale"
+    VERBATIM
+  )
+endif()
+
+# ===== Cópia de shaders para o editor =====
+set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/editor/shaders")
+if(EXISTS "${SHADERS_DIR}")
+  add_custom_command(TARGET lumy-editor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copiando shaders de ${SHADERS_DIR} para ${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf   "${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${OUT_DIR}/shaders"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${SHADERS_DIR}" "${OUT_DIR}/shaders"
     VERBATIM
   )
 endif()
