@@ -18,6 +18,7 @@ class CommandHistory;
 class ShaderProgram;
 class MapRenderer;
 class TextureAtlas;
+class GridRenderer;
 
 class ViewportPanel : public wxPanel
 {
@@ -88,6 +89,7 @@ private:
         std::unique_ptr<ShaderProgram> m_overlayShader;
         std::unique_ptr<MapRenderer> m_mapRenderer;
         std::unique_ptr<TextureAtlas> m_tileAtlas;
+        std::unique_ptr<GridRenderer> m_gridRenderer;
         bool m_showGrid;
         bool m_showCollision;
         

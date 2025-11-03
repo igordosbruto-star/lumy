@@ -16,6 +16,7 @@
 #include "tileset_manager.h"
 #include "map_renderer.h"  // Inclui ViewportCamera
 #include "texture_atlas.h"
+#include "grid_renderer.h"
 #include <wx/toolbar.h>
 #include <cmath>
 
@@ -203,6 +204,19 @@ void ViewportPanel::GLCanvas::InitGL()
     m_mapRenderer->SetTilesetAtlas(m_tileAtlas.get());
     m_mapRenderer->SetFrustumCullingEnabled(true);
     
+    // Inicializar GridRenderer
+    m_gridRenderer = std::make_unique<GridRenderer>();
+    GridConfig gridConfig;
+    gridConfig.tileSize = 32.0f;
+    gridConfig.color[0] = 0.3f; // R
+    gridConfig.color[1] = 0.3f; // G
+    gridConfig.color[2] = 0.3f; // B
+    gridConfig.color[3] = 0.5f; // A (50% transparente)
+    gridConfig.adaptive = true;
+    m_gridRenderer->SetConfig(gridConfig);
+    m_gridRenderer->SetGridSize(100, 100); // Grid grande por padrão
+    m_gridRenderer->SetEnabled(m_showGrid);
+    
     m_glInitialized = true;
 }
 
@@ -281,7 +295,26 @@ void ViewportPanel::GLCanvas::Render()
 
 void ViewportPanel::GLCanvas::DrawGrid()
 {
-    // Desenhar grade 32x32 pixels (tamanho padrão dos tiles)
+    // Usar GridRenderer se disponível
+    if (m_gridRenderer && m_showGrid) {
+        float zoom = m_smoothTransform.GetZoom();
+        
+        // Atualizar zoom do GridRenderer para grid adaptativo
+        if (m_gridRenderer->GetZoom() != zoom) {
+            m_gridRenderer->SetZoom(zoom);
+            m_gridRenderer->RebuildGrid();
+        }
+        
+        // Renderizar
+        if (m_overlayShader) {
+            m_overlayShader->Use();
+            m_gridRenderer->Render();
+            glUseProgram(0);
+        }
+        return;
+    }
+    
+    // Fallback: OpenGL imediato (legacy)
     const int gridSize = 32;
     wxSize canvasSize = GetClientSize();
     
@@ -604,7 +637,12 @@ void ViewportPanel::GLCanvas::OnKeyDown(wxKeyEvent& event)
     
     switch (key) {
         case 'G':
+            // Toggle grid visibility
             m_showGrid = !m_showGrid;
+            if (m_gridRenderer) {
+                m_gridRenderer->SetEnabled(m_showGrid);
+            }
+            wxLogStatus("Grid: %s", m_showGrid ? "ON" : "OFF");
             Refresh();
             break;
             
@@ -857,6 +895,21 @@ void ViewportPanel::SetCurrentMap(Map* map)
         if (m_glCanvas->m_mapRenderer && map) {
             m_glCanvas->m_mapRenderer->SetMap(map);
             m_glCanvas->m_mapRenderer->RebuildAllLayers(true);
+        }
+        
+        // Atualizar GridRenderer com tamanho do mapa
+        if (m_glCanvas->m_gridRenderer && map) {
+            // Obter dimensões do mapa
+            int mapWidth = 100;  // Padrão
+            int mapHeight = 100;
+            
+            if (m_mapManager && m_mapManager->HasMap()) {
+                mapWidth = m_mapManager->GetMapWidth();
+                mapHeight = m_mapManager->GetMapHeight();
+            }
+            
+            m_glCanvas->m_gridRenderer->SetGridSize(mapWidth, mapHeight);
+            m_glCanvas->m_gridRenderer->RebuildGrid();
         }
     }
     RefreshMapDisplay();
